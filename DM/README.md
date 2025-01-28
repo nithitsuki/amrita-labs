@@ -1,4 +1,7 @@
 # Revision for tommorows DM Lab Evaluation
+---
+
+## LAB1:
 
 ### Basical Logical Operators
 1. **Equality (`==`)**  
@@ -70,27 +73,64 @@ ans: logical false
  xor(P, Q)  
  ans: logical true  
  ```
+---
+
+### DM specific Logical Operators
+1. **Implication (`->`)**  
+P->Q can be written as ~P + Q
+```matlab
+~P | Q
+```
+
+2. **biconditional (`<->`)**  
+Negaton of XOR, i.e, both must be same for true
+```matlab
+~xor(P,Q)
+```
+---
+
 ### Creating Matrice of Binary numbers
 + Ascending form 0 to (2^n)-1
 ```matlab
 A = dec2bin(0:(2^n)-1)-'0';
-% dec2bin() return binary string
+% dec2bin() returns binary string
 % subtracting ascii char '0' from each char
 % so that '0' becomes 0 and '1' - '0' becomes 1
 ```
 + Descending form (2^n)-1 to 0
 ```matlab
-A = dec2bin(0:(2^n)-1)-'0';
-% dec2bin() return binary string
-% subtracting ascii char '0' from each char
-% so that '0' becomes 0 and '1' - '0' becomes 1
+dec2bin((2^n)-1:-1:0)-'0';
 ```
-for i = 1 : (2^n)
+---
+
 ### Creating Truth Tables Using For Loops
 ```matlab
-A = dec2bin(0:(2^n)-1)-'0'; 
-for i = 1 : (2^n)
+A = dec2bin(0:(2^2)-1)-'0'; % create matrix of binary numbers
+% start from 1 as Matrix indices start from 1
+for i = 1:(2^2)
     A(i,3)=xor(A(i,1),A(i,2));
+    % Make 3rd col as xor of 1st and 2nd
+    % applies to all rows from 1 to 2^n
 end
 A
 ```
+---
+### Checking for Tautology,contradiction, and contingency
+```matlab
+% ones(no_rows,no_cols)
+% zeros(no_rows,no_cols)
+
+if A (1:2^n,5)==ones(2^n, 1)
+        fprintf('Tautology')
+else
+if A (1:2^n,5)==zeros(2^n, 1)
+        fprintf('contradiction')
+else
+    fprintf('contingency')
+end
+```
+---
+
+## LAB 2:
+looking at lab1, I remembered lab2
+I dont need revision for it as of now
