@@ -1,7 +1,7 @@
 import java.util.Scanner;
 import java.math.*;
 
-public class BMI {
+public class LAB1{
     public static void main(String[] args)
     {
         Scanner inpt = new Scanner(System.in);
