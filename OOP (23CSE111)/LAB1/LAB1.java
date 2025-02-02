@@ -1,5 +1,7 @@
+// Problem Statement: take input and find Bmi using math
+// codename: BMI
+
 import java.util.Scanner;
-import java.math.*;
 
 public class LAB1{
     public static void main(String[] args)
