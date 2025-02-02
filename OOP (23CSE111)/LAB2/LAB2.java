@@ -1,3 +1,7 @@
+// Problem statement: Create functions for 7 questions
+// extra diffuculty: use classes
+//codename: Classes and Functions
+
 import java.util.*;
 
 class MYMATH{
@@ -36,26 +40,26 @@ public class LAB2 {
     public static void main(String[] args)
     {
         Scanner inpt = new Scanner(System.in);
-        System.out.print("Enter Your First Number: ");
+        System.out.print("Enter Your First Number (a): ");
         double a = inpt.nextDouble();
-        System.out.print("Enter Your Second Number: ");
+        System.out.print("Enter Your Second Number (b): ");
         double b = inpt.nextDouble();
-        System.out.print("Enter Your Third Number: ");
+        System.out.print("Enter Your Third Number (c): ");
         double c = inpt.nextDouble();
         //Question 1
         System.out.println("Sum of 2 numbers: " + MYMATH.add_2_nos(a, b));
         //Question 2
         System.out.println("Sum of 3 numbers: " + MYMATH.add_3_nos(a, b, c));
         //Question 3
-        System.out.println("Area of Squr (firs no): " + MYMATH.area_of_sqr(a));
+        System.out.println("Area of Square (a): " + MYMATH.area_of_sqr(a));
         //Question 4
-        System.out.println("Area of rect: " + MYMATH.area_of_rect(a, b));
+        System.out.println("Area of rectangle: (a*b)" + MYMATH.area_of_rect(a, b));
         //Question 5
-        System.out.println("Area of circle: " + MYMATH.area_of_circle(a));
+        System.out.println("Area of circle: (radius=a)" + MYMATH.area_of_circle(a));
         //Question 6
         System.out.println("Discriminant: " + MYMATH.find_disc(a, b, c));
         //Question 7
-        System.out.println("Squareroot of first number: " + MYMATH.find_sqrt(a));
+        System.out.println("Squareroot of first number (a): " + MYMATH.find_sqrt(a));
         inpt.close();
     }
 }
