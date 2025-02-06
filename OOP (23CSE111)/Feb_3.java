@@ -3,9 +3,9 @@ public class Feb_3
     public static void main(String[] args)
     {
         //These are the primitive types
-        
+
         /*Byte is 1 byte long */
-        System.out.println("min value of byte = " + ((byte)0x80)); //10000000
+        System.out.println("min value of byte = " + ((byte)0x80)); //100000005
         System.out.println("max value of byte = " + ((byte)0x7F) + "\n"); //01111111
         /*Short is 2 bytes big */
         System.out.println("min value of short = " + ((short)0x8000)); //1000000000000000
