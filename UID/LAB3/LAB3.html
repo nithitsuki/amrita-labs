@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>CSE24031 LAB3</title>
 </head>
 <style>
     * {
         text-align: center;
+        padding: 0%;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     body {
@@ -15,26 +19,89 @@
     }
 
     p {
+        max-width: 700px;
         text-align: justify;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+
+    th,td {
+        border: 1px solid black;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f4af61;
     }
 </style>
 <header>User Interface Design - 23CSE113 - LAB 3</header>
 <h2>CSE24031's LAB3 submission</h2>
-<hr>
-Today (1/1/25) in class, we mainly learnt about img float, maps, areas and bookmarks,<br>
-so i decided to make this catalogue of sorts to make full use of what we learnt today
-<hr>
+
 <body>
+
     <h1>Click on an anime character to view their information</h1>
     <img src="https://github.com/nithitsuki/amrita-labs/blob/main/UID/LAB3/imgs/CHARS_REDUCED.png?raw=true"
         width="1000px" height="500px" usemap="#anime">
 
+    <h2>A TABLE</h2>
+    <table>
+        <tr>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>Espresso</td>
+            <td>Strong, concentrated coffee served in small shots.</td>
+        </tr>
+        <tr>
+            <td>Latte</td>
+            <td>Espresso with steamed milk and a light layer of foam.</td>
+        </tr>
+        <tr>
+            <td>Cappuccino</td>
+            <td>Espresso with equal parts of steamed milk and milk foam.</td>
+        </tr>
+        <tr>
+            <td>Americano</td>
+            <td>Espresso diluted with hot water for a milder taste.</td>
+        </tr>
+    </table>
+
+    <h2>Favorite Foods Survey Form</h2>
+    <form>
+        <label for="fav-food">What is your favorite food?</label> <br>
+        <input type="text" id="fav-food" name="fav-food" required><br>
+
+        <br><label for="fav-cuisine">Which cuisine do you prefer?</label>
+        <select id="fav-cuisine" name="fav-cuisine">
+            <option value="italian">Italian</option>
+            <option value="japanese">Japanese</option>
+            <option value="mexican">Mexican</option>
+            <option value="indian">Indian</option>
+            <option value="other">Other</option>
+        </select><br>
+
+        <br><label for="fav-dessert">What is your favorite dessert?</label><br>
+        <input type="text" id="fav-dessert" name="fav-dessert"><br>
+
+        <br><label for="food-comments">Any additional comments about your food?</label><br>
+        <textarea id="food-comments" name="food-comments" style="width: 332px; height: 50px;"></textarea><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <u>
+        <h2>List of characters</h2>
+    </u>
     <ul>
         <h3 id="Koro-sensei">Koro-sensei</h3>
         <img alt="Korosensei"
             src="https://github.com/nithitsuki/amrita-labs/blob/main/UID/LAB3/imgs/Koro-sensei.jpg?raw=true" width="123"
             height="103">
-        <p>Koro-sensei is the main protagonist of the series *Assassination Classroom*. He is a highly skilled and
+        <p>Koro-sensei is the main protagonist of the series 'Assassination Classroom'. He is a highly skilled and
             powerful teacher who is tasked with educating the students of Class 3-E while also being a target for
             assassination. His true nature, as well as his tragic backstory, becomes an important aspect of the story as
             he teaches his students important life lessons.</p>
@@ -61,7 +128,7 @@ so i decided to make this catalogue of sorts to make full use of what we learnt 
         <h3 id="Tadaomi Karasuma">Tadaomi Karasuma</h3>
         <img alt="Tadaomi Karasuma"
             src="https://github.com/nithitsuki/amrita-labs/blob/main/UID/LAB3/imgs/Tadaomi%20Karasuma.jpg?raw=true"
-            width="123" height="103" >
+            width="123" height="103">
         <p>Tadaomi Karasuma is a professional government agent assigned to assist in the assassination mission against
             Koro-sensei. He is highly disciplined, skilled, and often comes into conflict with the students of Class 3-E
             due to his serious nature. Despite his no-nonsense attitude, he forms a bond with the class and plays a key
