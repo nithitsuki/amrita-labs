@@ -1,6 +1,6 @@
 import java.util.Scanner;
 
-lass my_funcs {
+class my_funcs {
     
     static boolean check_if_prime(int n)
     {
@@ -14,8 +14,8 @@ lass my_funcs {
 
 }
 
-public class prime_numbers {
-    public static void main(String[] args) {
+public class Feb10_prime_numbers {
+    public static void main(String args[]) {
         Scanner inpt = new Scanner(System.in);
 
         System.out.print("Enter a number: ");
