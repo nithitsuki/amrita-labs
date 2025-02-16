@@ -4,7 +4,7 @@ Copyright (c) 2025 [Nithilan R](https://nithitsuki.github.io/). All rights reser
 
 ## Terms and Conditions
 
-1. **Ownership**: This project, including all source code, documentation, and related materials, is the exclusive property of [Your Name].
+1. **Ownership**: This project, including all source code, documentation, and related materials, is the exclusive property of [Nithilan R](mailto:bl.sc.u4cse24031@bl.students.amrita.edu).
 
 2. **No Redistribution**: You may not distribute, modify, copy, or reproduce any part of this project without explicit written permission from the owner.
 
@@ -18,4 +18,4 @@ Copyright (c) 2025 [Nithilan R](https://nithitsuki.github.io/). All rights reser
 
 7. **License Modifications**: The owner reserves the right to update or modify this license at any time.
 
-For permissions or inquiries, please contact: [bl.sc.u4cse24031@bl.students.amrita.edu](bl.sc.u4cse24031@bl.students.amrita.edu)
+For permissions or inquiries, please contact: [bl.sc.u4cse24031@bl.students.amrita.edu](mailto:bl.sc.u4cse24031@bl.students.amrita.edu)
