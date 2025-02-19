@@ -1,4 +1,4 @@
-public class Feb_3
+public class Feb_3_primitivies_and_typecasting
 {
     public static void main(String[] args)
     {

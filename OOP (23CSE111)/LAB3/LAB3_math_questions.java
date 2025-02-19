@@ -110,54 +110,55 @@ class Question_ans
      {System.out.println("This is lower case word");}
      else if(has_lower && !has_upper)
      {System.out.println("This is lower case word");}
-    }}
+    }
+}
 
-public class LAB3 {
+public class LAB3_math_questions {
     public static void main(String[] args) {
         int a,b,c = 0;
         Scanner inpt = new Scanner(System.in);
-        // System.out.printf("==================\n");
-        // System.out.printf(Question_ans.question_1);
-        // a = Question_ans.ask_int_input(inpt);
-        // Question_ans.ans_1(a);
+        System.out.printf("==================\n");
+        System.out.printf(Question_ans.question_1);
+        a = Question_ans.ask_int_input(inpt);
+        Question_ans.ans_1(a);
 
-        // System.out.printf("==================\n");
-        // System.out.printf(Question_ans.question_2);
-        // a = Question_ans.ask_int_input(inpt);
-        // Question_ans.ans_2(a);
+        System.out.printf("==================\n");
+        System.out.printf(Question_ans.question_2);
+        a = Question_ans.ask_int_input(inpt);
+        Question_ans.ans_2(a);
 
-        // System.out.printf("==================\n");
-        // System.out.printf(Question_ans.question_3);
-        // a = Question_ans.ask_int_input(inpt);
-        // Question_ans.ans_3(a);
+        System.out.printf("==================\n");
+        System.out.printf(Question_ans.question_3);
+        a = Question_ans.ask_int_input(inpt);
+        Question_ans.ans_3(a);
 
-        // System.out.printf("==================\n");
-        // System.out.printf(Question_ans.question_4);
-        // a = Question_ans.ask_int_input(inpt);
-        // Question_ans.ans_4(a);
+        System.out.printf("==================\n");
+        System.out.printf(Question_ans.question_4);
+        a = Question_ans.ask_int_input(inpt);
+        Question_ans.ans_4(a);
 
-        // System.out.printf("==================\n");
-        // System.out.printf(Question_ans.question_5);
-        // a = Question_ans.ask_int_input(inpt);
-        // b = Question_ans.ask_int_input(inpt);
-        // c = Question_ans.ask_int_input(inpt);
-        // Question_ans.ans_5(a,b,c);
+        System.out.printf("==================\n");
+        System.out.printf(Question_ans.question_5);
+        a = Question_ans.ask_int_input(inpt);
+        b = Question_ans.ask_int_input(inpt);
+        c = Question_ans.ask_int_input(inpt);
+        Question_ans.ans_5(a,b,c);
 
-        // System.out.printf("==================\n");
-        // System.out.printf(Question_ans.question_6);
-        // a = Question_ans.ask_int_input(inpt);
-        // Question_ans.ans_6(a);
+        System.out.printf("==================\n");
+        System.out.printf(Question_ans.question_6);
+        a = Question_ans.ask_int_input(inpt);
+        Question_ans.ans_6(a);
 
-        // System.out.printf("==================\n");
-        // System.out.printf(Question_ans.question_7);
-        // System.out.printf("Enter your word: ");
-        // String s = inpt.nextLine();
-        // Question_ans.ans_7(s);
+        System.out.printf("==================\n");
+        System.out.printf(Question_ans.question_7);
+        System.out.printf("Enter your word: ");
+        String s = inpt.nextLine();
+        Question_ans.ans_7(s);
 
         System.out.printf("==================\n");
         System.out.printf(Question_ans.question_8);
         System.out.printf("Enter your word: ");
-        String s = inpt.nextLine();
+        s = inpt.nextLine();
         Question_ans.ans_8(s);
 
         // System.out.printf("==================\n");
