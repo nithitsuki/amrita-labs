@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAB5 Example</title>
+    <style>
+        body
+        {
+            padding: 30px;
+            background-color: #f4f4f9;
+        }
+        a:hover {
+            color: purple;
+            text-decoration: none;
+        }
+        input:focus {
+            border: 3px solid orange;
+            background-color: #fff8dc;
+        }
+        p:nth-child(3) {
+            color: teal;
+        }
+        button:active {
+            background-color: darkblue;
+            color: yellow;
+        }
+        input:checked {
+            outline: 3px solid crimson;
+        }
+        p:not(.highlight) {
+            color: brown;
+        }
+        h1::before {    
+            content: "🌟 ";
+        }
+        h1::after {
+            content: " ✨";
+        }
+        p::first-letter {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: crimson;
+        }
+        p::first-line {
+            font-style: italic;
+        }
+        ::selection {
+            background-color: lavender;
+            color: darkslateblue;
+        }
+    </style>
+</head>
+<body>
+    <h1>LAB5</h1>
+    <p>this is an example paragraph demonstrating custom pseudo-elements.</p>
+    <p>second paragraph - remains unchanged.</p>
+    <p class="highlight">Third paragraph - highlighted with unique styling.</p>
+    <a href="#">Hover over this link to see the effect</a>
+    
+    <br>
+    <br>
+    <br>
+    
+    <input type="text" placeholder="Click to focus">
+    <br><br>
+    <input type="checkbox"> Try checking the box
+    <br><br>
+</body>
+</html>

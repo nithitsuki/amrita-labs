@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block vs Inline Elements & CSS Inheritance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: black;
+        }
+        .block {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid gray;
+        }
+        .inline {
+            padding: 2px 5px;
+            border: 1px solid gray;
+        }
+        .parent {
+            color: blue;
+            font-weight: bold;
+        }
+        .child {
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Block vs Inline Elements & CSS Inheritance</h1>
+    
+    <h2>Block Elements</h2>
+    <p>Block elements take up the full width available and start on a new line.</p>
+    <div class="block">This is a &lt;div&gt; element (block-level).</div>
+    <p class="block">This is a &lt;p&gt; element (block-level).</p>
+    <section class="block">This is a &lt;section&gt; element (block-level).</section>
+    
+    <h2>Inline Elements</h2>
+    <p>Inline elements do not start on a new line and only take up as much width as necessary.</p>
+    <span class="inline">This is a &lt;span&gt; element (inline).</span>
+    <a href="#" class="inline">This is an &lt;a&gt; element (inline).</a>
+    <strong class="inline">This is a &lt;strong&gt; element (inline).</strong>
+    
+    <h2>Block and Inline Together</h2>
+    <p class="block">This is a block element with <span class="inline">an inline element inside</span>.</p>
+    
+    <h2>CSS Inheritance</h2>
+    <p>Inheritance allows some CSS properties (like <code>color</code> and <code>font</code>) to be passed down from parent to child elements.</p>
+    <div class="parent">This is a parent element.
+        <p class="child">This is a child element inheriting color but with italicized text.</p>
+    </div>
+</body>
+</html>
