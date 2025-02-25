@@ -1,5 +1,5 @@
 import java.util.*;
-public class Feb_5 {
+public class Feb_5_Loops_conditonals {
     public static void sum_of_digits(int n)
     {
         int sum_e = 0;
