@@ -36,7 +36,7 @@ class MYMATH{
 
 }
 
-public class LAB2 {
+public class LAB2_methods {
     public static void main(String[] args)
     {
         Scanner inpt = new Scanner(System.in);

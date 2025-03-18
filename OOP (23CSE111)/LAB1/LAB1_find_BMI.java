@@ -3,7 +3,7 @@
 
 import java.util.Scanner;
 
-public class LAB1{
+public class LAB1_find_BMI{
     public static void main(String[] args)
     {
         Scanner inpt = new Scanner(System.in);

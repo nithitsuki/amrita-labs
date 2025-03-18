@@ -1,0 +1,27 @@
+html{
+    background-color: seashell;
+}
+th, td
+{
+    padding: 10px;
+    border: 1px solid black;
+ }
+th
+{
+    background-color: orange;
+}
+td
+{
+    text-decoration: underline;
+    text-decoration-color: red;
+    text-decoration-style: wavy;
+    text-decoration-thickness: 1px;
+}
+
+input
+{width: 10rem;}
+textarea
+{
+    width: 15rem;
+    height: 10rem;
+}
