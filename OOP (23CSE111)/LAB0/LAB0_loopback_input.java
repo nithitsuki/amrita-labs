@@ -2,7 +2,7 @@
 // codename: Loopback
 import java.util.*;
 
-public class LAB0 {
+public class LAB0_loopback_input {
     public void main(String[] args) {
         Scanner inpt = new Scanner(System.in);
         System.out.print("Enter Your Name: ");
