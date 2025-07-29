@@ -16,6 +16,17 @@ void SetNewTarget(struct Human* Random_Person, struct Human* Target)
   Random_Person->wants_to_kill = Target;
 }
 
+int CountPeople(Human* Head)
+{
+  int count = 1;
+  while (Head->wants_to_kill != NULL) {
+    count++;
+    Head = Head->wants_to_kill;
+  }
+  return  count;
+}
+
+
 int main(void)
 {
   Human pranav = {"Pranav", 20, NULL};
@@ -31,6 +42,8 @@ int main(void)
     Current_Human = *(Current_Human.wants_to_kill);
   }
   printf("%s wants to kill no one \n",Current_Human.NickName);
+  
+  printf("There are %d people\n",CountPeople(&pranav));  
   
   return 0;
 }
