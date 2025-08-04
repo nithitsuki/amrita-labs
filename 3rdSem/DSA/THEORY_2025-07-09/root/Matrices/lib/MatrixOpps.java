@@ -1,4 +1,4 @@
-package lib;
+package root.Matrices.lib;
 import java.util.Scanner;;
 public class MatrixOpps {
     

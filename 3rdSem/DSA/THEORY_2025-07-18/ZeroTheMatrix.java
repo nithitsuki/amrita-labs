@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
-public class one {
+public class ZeroTheMatrix {
   public static <T extends Comparable<T>> T[][] CleanMatrix(T[][] matrix) {
     ArrayList<Integer> rows_to_clear = new ArrayList<Integer>();
     ArrayList<Integer> cols_to_clear = new ArrayList<Integer>();

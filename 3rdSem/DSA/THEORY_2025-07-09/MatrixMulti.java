@@ -1,4 +1,4 @@
-import lib.MatrixOpps;
+import root.Matrices.lib.MatrixOpps;
 
 public class MatrixMulti {
         public static void main(String[] args) {
