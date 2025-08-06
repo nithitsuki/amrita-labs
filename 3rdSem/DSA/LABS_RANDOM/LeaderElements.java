@@ -1,4 +1,4 @@
-public class five {
+public class LeaderElements {
     static void PrintLeaders(Integer[] arr)
     {
         int start_pointer = 0;
