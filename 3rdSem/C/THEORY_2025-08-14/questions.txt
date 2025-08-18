@@ -1,0 +1,5 @@
+1. FInd the mean and standard deviation of an example integer array in C
+
+2. Write a C program to read 10 integer numbers in an array and print only the even numbers.
+
+3. Write a program to read 2 integer arrays of size 5 and print the sum of corresponding elements.

@@ -21,7 +21,6 @@ public class LinkedListAssignment {
       head = head.next_node;
     }
     System.out.println(head.data + " links to nowhere");
-
   }
 
   static void InsertNodeAtSart(Node newHead, Node head) {
@@ -38,7 +37,6 @@ public class LinkedListAssignment {
   static void InsertNodeAtEnd(Node newTail, Node head) {
     newTail.next_node = null;
     Node oldTail = GetTailNode(head);
-    // System.out.println("====[DEBUG]==== oldTail Data is: "+oldTail.data);
     oldTail.next_node = newTail;
   }
 
