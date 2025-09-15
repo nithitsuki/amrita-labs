@@ -1,0 +1,15 @@
+#include <stdio.h>
+
+int main(int argc, char const *argv[])
+{
+    int count = 5;
+    for (int i = count; i > 0; i--)
+    {
+        for (int j = 0; j < count; j++)
+        {
+            if(j<i) printf("* ");
+        }
+        printf("\n");
+    }
+    return 0;
+}
