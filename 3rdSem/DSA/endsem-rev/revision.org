@@ -1,0 +1,117 @@
+#+TITLE: DSA Summary
+
+* DONE 1. Asymptotic Analysis
+** a) asymptotic notations
+*** Avg Case (\theta)
+c1*g(n) \le \theta(n) \le c2*g(n), where n > n0
+*** Best case (\Omega)
+c*g(n) \le \Omega(n) after n0
+*** Worst Case (O)
+Simmilar to abv two, just extrapolate
+** b) best, avg and worst case
+** c) properties of asymptotic notations
+** d) graph of big-oh, big-omega, big-theta notations
+
+* DONE 2. Arrays
+** a) Fixed and dynamic size arrays
+** b) 1D and 2D arrays
+** c) Operations of arrays(searching-linear and binary)
+** d) Applications
+** e) Advantages and disadvantages
+** f) Arraylist in java
+
+* DONE 3. Linked List (LL)
+** a) Comparison with array
+** b) Singly linked list (SLL)
+** c) Operations like isEmpty(), display() etc
+** d) Doubly LL
+** e) Advantages over SLL
+** f) Circular LL
+
+* DONE 4. Stack
+** a) Algorithm for push,pop operation
+** b) Top or peek operation on stack
+** c) isEmpty(),isFull() operations
+** d) advantageand disadvantageof array-based stack implementation
+** e) advantageof SLL based stack implementation
+** f) expression conversion (6 conversions)
+Infix, Prefix, PostFix convertion to each other
+*** Infix to postfix
++ add letters to output
++ kep pushing to stack until stack-top is of equal or higher precedence
+if eq or higher precedence, keep popping it
++ if ')' pop until '('
+*** postfix to Infix
++ push letters to string stack
++ if operator, push "(op2 + operator + op1)"
+  eg: ab+. op1 = b, op2 = a, pushing (a+b)
+*** Infix to prefix
+reverse infix, convert to postfix, reverse again, done 
+** g) recursion
+*** i. direct and indirect recursion
+*** ii. common application
+*** iii. problem solving using recursion
+*** iv. tower of Hanoi
+* DONE 5. Queue
+** a) basic terminologies
+** b) queue operations
+** c) queue using array
+** d) queue using LL
+** e) applications
+** f) double ended queue(deque)
+*** i. operations on deque
+*** ii. deque using DLL
+*** iii. applications of deque
+** g) circular queue
+
+* DONE 6. Priority Queues
+** a) implementation(sorted and unsorted list)
+** b) time complexity
+
+* DONE 7. Map
+** a) common methods in map
+** b) common implementation
+** c) comparison of 3 implementation
+** d) comparison of dictionary vs map
+
+* DONE 8. Tree
+** a) linked structure of BT
+** b) array based implementation of BT
+left = 2*i + 1
+right = 2*i + 2
+** c) types of BT
+** d) tree traversal algorithms
+*** i. inorder
+*** ii. postorder
+*** iii. preorder
+** e) binary search tree
+** f) avl trees
+** g) segment trees
+** h) B-tree(insertion)
+
+* DONE 9. Heap
+** a) Max and min heap
+** b) Heapify, heapsort
+** c) Heap insertion and deletion
+* 10. Skiplist
+** a) Operations, implementation
+** b) Time complexity
+** c) Advantage and disadv
+** d) Applications
+
+* 11. External sorting and searching
+* 12. Graph
+** a) Types of graphs
+** b) Degree of vertices
+** c) Subgraphs, spanning tree
+** d) Trees and forest
+** e) Graph traversal(DFS and BFS)
+** f) Path and cycle finding
+** g) Graph representation
+** h) Dijkstra's algo(single source shortest path)
+** i) Minimum spanning tree
+*** i. Prim's
+*** ii. Kruskal's
+** j) All pair shortest path
+*** i. Floyd warshall algorithm
+** k) Topological sorting(digraph)
