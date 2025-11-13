@@ -1,0 +1,574 @@
+#+title: Database Management Systems
+#+SETUPFILE: /home/praaneshnair/.config/doom/preamble.org
+
+* Introduction
+- A file system arranges files into directories in a storage device.
+- While a file system is *less complex*, *less expensive* than a database management
+  system, the issues are:
+  - data redundancy (duplicates)
+  - data inconsistency (different locations have different data)
+  - data isolation (data is accidentally confined to some regions thanks to
+    different file formats)
+  - atomicity issues (operations aren't complete)
+- A database is a collection of data. A management system is a piece of software
+  that manage data.
+
+* Levels of Abstraction
+** View/External Level
+- Users and applications can access only the data relevant to them.
+
+** Logical/Conceptual Level
+- Handles what data is stored in the database and all the relationships between
+  them.
+
+** Physical/Internal Level
+- Describes how the data is stored on the disk.
+
+* Schema
+- A *schema* is a logical structure that describes how data is stored and used in
+  a database.
+
+** What it describes
+*** Entities
+- An entity is any real world object with well defined property.
+- These are essentially tables in a database.
+  #+begin_export latex
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=8cm]{entity.png}
+    \caption{Entities are represented using Boxes}
+    \label{fig:example}
+\end{figure}
+#+end_export
+
+*** Attributes
+- Attributes are columns in a database and they include what datatype they hold.
+
+*** Relationships
+- Relationships describe how exactly two tables and their instances are related
+  to each other.
+- Relationships are represented as Rombuses with markings on and beside them.
+
+**** Cardinality
+  #+begin_export latex
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=8cm]{1to1.png}
+    \caption{One to One}
+    \label{fig:example}
+\end{figure}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=8cm]{1toM.png}
+    \caption{One to Many}
+    \label{fig:example}
+\end{figure}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=8cm]{Mto1.png}
+    \caption{Many to One}
+    \label{fig:example}
+\end{figure}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=8cm]{MtoM.png}
+    \caption{Many to Many}
+    \label{fig:example}
+\end{figure}
+ #+end_export
+
+
+**** Participation Constraints
+- These are of two types: Total Participation and Partial Participation
+
+  | Feature           | Total Participation                          | Partial Participation    |
+  |-------------------+----------------------------------------------+--------------------------|
+  | Must participate? | Yes                                          | No                       |
+  | ER Diagram symbol | Double line (`=`)                            | Single line (`—`)        |
+  | Meaning           | All entity instances are in the relationship | Some may not be involved |
+
+
+* Types of SQL Commands
+
+** DDL
+- *Data Definition Language* comprises of the languages used to create the
+  *database schema* (the structure).
+
+*** CREATE TABLE
+- Here is the basic structure of creating a table:
+  #+begin_src sql
+CREATE TABLE table_name (
+    column1 datatype [constraint],
+    column2 datatype [constraint],
+    ...
+);
+#+end_src
+- Here ~datatype~ can be:
+  | Datatype    | Meaning                                   |
+  |-------------+-------------------------------------------|
+  | ~NUMBER~      | Numeric value (integers or decimals)      |
+  | ~VARCHAR2(n)~ | Text up to n characters, in single quotes |
+  | ~CHAR(n)~     | Fixed-length string of n characters       |
+  | ~DATE~        | Date and time                             |
+  | ~CLOB~        | Large text                                |
+
+- Here, ~constraint~ can be:
+  | Constraint  | What It Does                                         |
+  |-------------+------------------------------------------------------|
+  | ~NOT NULL~    | Column **must** have a value                           |
+  |             | Eg. ~name VARCHAR2(100) NOT NULL~                      |
+  |-------------+------------------------------------------------------|
+  | ~UNIQUE~      | Value **must not repeat**                              |
+  |             | Eg. ~email VARCHAR2(100) UNIQUE~                       |
+  |-------------+------------------------------------------------------|
+  | ~PRIMARY KEY~ | Uniquely identifies a row + can't be null            |
+  |             | Eg. ~student_id NUMBER PRIMARY KEY~                    |
+  |-------------+------------------------------------------------------|
+  | ~FOREIGN KEY~ | Column that's primary key of another table           |
+  |             | Eg.                                                  |
+  |             | ~class_id NUMBER,~                                     |
+  |             | ~FOREIGN KEY (class_id) REFERENCES classes (class_id)~ |
+  |-------------+------------------------------------------------------|
+  | ~CHECK~       | Must satisfy a condition                             |
+  |             | Eg. ~age NUMBER check (age>=5)~                        |
+  |-------------+------------------------------------------------------|
+  | ~DEFAULT~     | Sets a default value                                 |
+  |             | Eg. ~country VARCHAR2(50) DEFAULT 'India'~             |
+  |-------------+------------------------------------------------------|
+- Here is a complete example:
+  #+begin_src sql
+CREATE TABLE students (
+  student_id NUMBER PRIMARY KEY,                   -- unique student number
+  name       VARCHAR2(100) NOT NULL,               -- name is required
+  age        NUMBER CHECK (age >= 5 AND age <=60), -- must be 5 or older
+  email      VARCHAR2(100) UNIQUE,                 -- no two students can share email
+  class_id   NUMBER,                               -- refers to a class
+  country    VARCHAR2(50) DEFAULT 'India',
+  FOREIGN KEY (class_id) REFERENCES classes(class_id) -- link to valid class
+);
+  #+end_src
+
+*** ALTER TABLE
+#+begin_src sql
+ALTER TABLE table_name
+ADD column_name datatype;
+
+ALTER TABLE table_name
+MODIFY column_name datatype;    -- used to change datatype/size
+
+ALTER TABLE table_name
+RENAME column_name TO new_name; -- used to rename a column
+
+ALTER TABLE table_name
+DROP COLUMN column_name;
+
+#+end_src
+
+For example:
+#+begin_src sql
+ALTER TABLE students
+ADD age NUMBER;
+
+#+end_src
+
+*** DROP TABLE
+Deletes table and its data altogether.
+#+begin_src sql
+DROP TABLE table_name;
+#+end_src
+
+*** TRUNCATE
+Deletes all rows, but keeps structure intact.
+#+begin_src sql
+TRUNCATE TABLE table_name;
+#+end_src
+
+*** RENAME
+Renames an entire table.
+#+begin_src sql
+RENAME students to imbeciles;
+#+end_src
+
+** DML
+- *Data Manipulation Language* is what we used to read/write on instances of data.
+
+*** INSERT
+#+begin_src sql
+INSERT INTO employees (emp_id, name, salary, dept_id)
+VALUES (101, 'Alice', 50000, 10);
+
+#+end_src
+
+*** UPDATE
+#+begin_src sql
+UPDATE table_name
+SET column1 = value1, column2 = value2, ...
+WHERE condition;
+
+#+end_src
+For example:
+#+begin_src sql
+UPDATE employees
+SET salary = 60000
+WHERE emp_id = 101;
+
+#+end_src
+
+*** DELETE
+#+begin_src sql
+DELETE FROM table_name
+WHERE condition;
+
+#+end_src
+For example:
+#+begin_src sql
+DELETE FROM employees
+WHERE emp_id = 101;
+#+end_src
+
+- If you don't give the ~WHERE~ clause, it deletes all the rows.
+- ~DELETE~, deletes all the rows one by one, so if you need to clear the table,
+  ~TRUNCATE~ is better because it deallocates all of that memory.
+- One thing to keep in mind is that ~TRUNCATE~ is not logged and it is
+  irreversible.
+
+*** SELECT
+**** Syntax
+#+begin_src sql
+SELECT column1, column2 as new_name, ...
+FROM table_name
+WHERE condition
+GROUP BY column_name
+ORDER BY column_name [ASC|DESC];
+
+#+end_src
+- For example, consider this table ~Employees~:
+
+  | EmpID | Name    | DeptID | Salary |   HireDate |
+  |-------+---------+--------+--------+------------|
+  |   101 | Alice   | D1     |  55000 | 2023-01-15 |
+  |   102 | Bob     | D2     |  75000 | 2023-02-20 |
+  |   103 | Charlie | D3     |  60000 | 2023-03-10 |
+  |   104 | Diana   | NULL   |  50000 | 2023-04-05 |
+  |   105 | Ethan   | D2     |  80000 | 2023-05-12 |
+  |   106 | Farah   | D5     |  45000 | 2023-06-01 |
+
+  Run the below command:
+  #+begin_src sql
+  SELECT Name as EmpName, Salary
+  FROM Employees
+  WHERE Salary > 40000
+  ORDER BY Salary DESC;
+
+  #+end_src
+  The output is:
+
+  | EmpName | Salary |
+  |---------+--------|
+  | Ethan   |  80000 |
+  | Bob     |  75000 |
+**** Regex
+- There also exists the ~LIKE~ operator for regex:
+  #+begin_src sql
+-- Find names starting with 'A'
+SELECT * FROM Employees WHERE EmpName LIKE 'A%';
+-- % is the wild-card string
+
+-- Find names with exactly 3 characters
+SELECT * FROM Employees WHERE EmpName LIKE '___';
+  #+end_src
+  
+**** Between
+#+begin_src sql
+SELECT * FROM student WHERE age BETWEEN 17 AND 23;
+#+end_src
+
+**** Adding Columns
+#+begin_src sql
+SELECT subject1_marks + subject2_marks + subject3_marks AS tot_marks FROM student;
+#+end_src
+
+**** Aggregate Functions
+#+begin_src sql
+-- Number of rows
+SELECT COUNT(*) AS "Total Employees" FROM employees;
+
+-- Sum of all elements in that row
+SELECT SUM(salary) AS "Total Salary Cost" FROM employees;
+
+-- Average of all elements in that row
+SELECT AVG(salary) AS "Average Salary" FROM employees;
+
+-- MIN and MAX
+SELECT MIN(salary) AS "Lowest Salary",
+       MAX(salary) AS "Highest Salary"
+FROM employees;
+#+end_src
+
+**** Group By
+- Say you do something like:
+  #+begin_src sql
+SELECT COUNT(*) AS "Employee Count",
+       AVG(salary) AS "Average Salary"
+FROM employees;
+  #+end_src
+  This makes a ~2x1~ table that looks like:
+
+  | Employee Count | Average Salary             |
+  |----------------+----------------------------|
+  | (no. of rows)  | (average of salary column) |
+
+- Employee Count just gives the number of rows in the entire table. Instead, if
+  you want the number of rows of each department, you do:
+
+  #+begin_src sql
+-- Group by department
+SELECT dept_id,
+       COUNT(*) AS "Employee Count",
+       AVG(salary) AS "Average Salary"
+FROM employees
+GROUP BY dept_id;
+  #+end_src
+
+  And you get:
+
+  | DEPT_ID | Employee Count | Average Salary |
+  |---------+----------------+----------------|
+  |      10 |              2 |          53500 |
+  |      20 |              3 |       78833.33 |
+
+**** Having
+#+begin_src sql
+-- WHERE filters before grouping
+SELECT product, SUM(quantity)
+FROM sales
+WHERE price > 4
+GROUP BY product;
+
+-- HAVING filters after grouping
+SELECT product, SUM(quantity)
+FROM sales
+GROUP BY product
+HAVING SUM(quantity) > 10;
+
+#+end_src
+
+*** Correlated Subqueries
+**** Where
+Find students whose age is above the average age of their class.
+#+begin_src sql
+SELECT s.name, s.age, s.class_id
+FROM students s
+WHERE s.age > (
+    SELECT AVG(s_sub.age)
+    FROM students s_sub
+    WHERE s_sub.class_id = s.class_id
+);
+
+#+end_src
+
+**** From
+Get Class wise average and then filter it
+#+begin_src sql
+SELECT * FROM (
+    SELECT class_id, AVG(age) AS avg_age
+    FROM students
+    GROUP BY class_id
+)
+WHERE avg_age > 17;
+
+#+end_src
+
+
+** DCL
+- *Data Control Language* manages rights and permissions.
+
+*** GRANT
+#+begin_src sql
+GRANT privilege
+ON object
+TO user;
+
+#+end_src
+For example:
+#+begin_src sql
+GRANT SELECT, INSERT
+ON employees
+TO hr_user;
+
+#+end_src
+
+*** REVOKE
+#+begin_src sql
+REVOKE privilege
+ON object
+TO user;
+
+#+end_src
+For example:
+#+begin_src sql
+REVOKE SELECT, INSERT
+ON employees
+TO hr_user;
+
+#+end_src
+
+* Relational Algebra
+- *Arity*: Number of columns in a row
+- Relational algebra is a *procedural query language* that uses a set of
+  operations on tables.
+
+** Types of Operators
+
+| *Unary*                    | *Binary*                   |
+|--------------------------+--------------------------|
+| Uses one operand         | Uses two operands        |
+|--------------------------+--------------------------|
+| A generic example would  | A generic example would  |
+| be ~x++~                   | be ~a+b~                   |
+|--------------------------+--------------------------|
+| An example here would be | An example here would be |
+| ~SELECT~, ~PROJECT~, ~RENAME~  | ~UNION~, ~JOIN~, ~INTERSECT~   |
+|                          |                          |
+
+
+* Joins
+- To combine two databases, you could use a normal cartesian product, but the
+  issue is that you'll get meaningless rows which are called *spurious tuples*.
+- For example, consider this table ~Employees~:
+
+  | EmpID | Name    | DeptID | Salary |   HireDate |
+  |-------+---------+--------+--------+------------|
+  |   101 | Alice   | D1     |  55000 | 2023-01-15 |
+  |   102 | Bob     | D2     |  75000 | 2023-02-20 |
+  |   103 | Charlie | D3     |  60000 | 2023-03-10 |
+  |   104 | Diana   | NULL   |  50000 | 2023-04-05 |
+  |   105 | Ethan   | D2     |  80000 | 2023-05-12 |
+  |   106 | Farah   | D5     |  45000 | 2023-06-01 |
+
+  And the table ~Departments~:
+
+  | DeptID | DeptName    | Location   |
+  |--------+-------------+------------|
+  | D1     | HR          | Building A |
+  | D2     | Engineering | Building B |
+  | D3     | Marketing   | Building C |
+  | D4     | Finance     | Building A |
+
+
+** Inner Join
+Selects only common elements in both tables.
+#+begin_src sql
+SELECT e.Name, e.DeptID, d.DeptName
+FROM Employees e INNER JOIN Departments d
+ON e.DeptID = d.DeptID;
+#+end_src
+
+Output:
+
+| EmpName | DeptID | DeptName    |
+|---------+--------+-------------|
+| Alice   | D1     | HR          |
+| Bob     | D2     | Engineering |
+| Charlie | D3     | Marketing   |
+| Ethan   | D2     | Engineering |
+
+
+** Left Join (or Left Outer Join)
+Everything from the left table, and only common elements from the right table.
+#+begin_src sql
+SELECT e.EmpName, e.DeptID, d.DeptName
+FROM Employees e LEFT JOIN Departments d
+ON e.DeptID = d.DeptID;
+#+end_src
+
+| EmpName | DeptID | DeptName                                       |
+|---------+--------+------------------------------------------------|
+| Alice   | D1     | HR                                             |
+| Bob     | D2     | Engineering                                    |
+| Charlie | D3     | Marketing                                      |
+| Diana   | NULL   | NULL        ~← Diana kept, but no dept info~     |
+| Ethan   | D2     | Engineering                                    |
+| Farah   | D5     | NULL        ~← Farah kept, but D5 doesn't exist~ |
+
+
+** Right Join (Right Outer Join)
+Everything from the right table, and only common elements from the left table.
+#+begin_src sql
+SELECT e.EmpName, e.DeptID, d.DeptName
+FROM Employees e RIGHT JOIN Departments d
+ON e.DeptID = d.DeptID;
+#+end_src
+
+| EmpName | DeptID | DeptName                                          |
+|---------+--------+---------------------------------------------------|
+| Alice   | D1     | HR                                                |
+| Bob     | D2     | Engineering                                       |
+| Ethan   | D2     | Engineering                                       |
+| Charlie | D3     | Marketing                                         |
+| NULL    | D4     | Finance     ~← Finance dept kept, but no employees~ |
+
+** Full Outer Join
+#+begin_src sql
+SELECT e.EmpName, e.DeptID, d.DeptName
+FROM Employees e FULL OUTER JOIN Departments d
+ON e.DeptID = d.DeptID;
+#+end_src
+
+| EmpName | DeptID | DeptName                                   |
+|---------+--------+--------------------------------------------|
+| Alice   | D1     | HR                                         |
+| Bob     | D2     | Engineering                                |
+| Ethan   | D2     | Engineering                                |
+| Charlie | D3     | Marketing                                  |
+| Diana   | NULL   | NULL        ~← Employee with no dept~        |
+| Farah   | D5     | NULL        ~← Employee with invalid dept~   |
+| NULL    | D4     | Finance     ~← Department with no employees~ |
+
+
+** Self Join
+- You join a table with itself, so that you can compare rows in the same table.
+  For example:
+  #+begin_src sql
+SELECT a.name AS student1, b.name AS student2, a.class_id
+FROM students a
+JOIN students b
+ON a.class_id = b.class_id
+WHERE a.student_id < b.student_id;
+
+  #+end_src
+
+* Functional Dependencies
+- Functional dependencies tell us how attributes relate to each other.
+- Consider this example:
+
+  | *City*      | *State*      |
+  |-----------+------------|
+  | Bangalore | Karnataka  |
+  | Mysore    | Karnataka  |
+  | Chennai   | Tamil Nadu |
+
+  The functional dependency here is $$City \rightarrow State$$ This is read as *City
+  determines State*.
+
+- City almost always uniquely identifies state. You can't tell the city if you
+  are given the state, but you can tell the state given the city.
+
+** Armstrong's Axioms
+*** Reflexivity
+- It's always a larger set that determines a smaller set.
+- City is a larger set than State because it has more unique elements.
+- So if $Y \subseteq X$, then $X \rightarrow Y$. This is called *reflexivity*.
+
+*** Augmentation
+- If $X \rightarrow Y$, then $XZ \rightarrow YZ$.
+
+*** Union and Decomposition
+- Union: If $X \rightarrow YZ$, then $X \rightarrow Y$ and $X \rightarrow Z$.
+- Decomposition is vice versa.
+
+*** Transitivity
+- If $X \rightarrow Y$ and $Y \rightarrow Z$, then $X \rightarrow Z$.
+
+*** Psuedotransitivity
+- If $X \rightarrow Y$ and $YA \rightarrow Z$, then $XA \rightarrow Z$.

@@ -1,0 +1,653 @@
+#+title: 23AID214 Database Management Systems
+#+author: Adithya Nair
+#+OPTIONS: toc:nil author:nil
+* Syllabus :noexport:
+** Unit 1
+Introduction: Overview of DBMS fundamentals – Overview of Relational Databases and Keys. Relational Data Model: Structure of relational databases – Database schema – Formal Relational Query Languages – Overview of Relational Algebra and Relational Operations. Database Design: Overview of the design process - The E-R Models – Constraints - Removing Redundant Attributes in Entity Sets - E-R Diagrams - Reduction to Relational Schemas - Entity Relationship Design Issues - Extended E-R Features – Alternative E-R Notations – Overview of Unified Modelling Language (UML).
+** Unit 2
+Relational Database Design: Features of Good Relational Designs - Atomic Domains and 1NF – Decomposition using Functional DepeJetBrainsMono, 3NF, BCNF and Higher Normal Forms. Functional Dependency Theory - Algorithm for Decomposition – Decomposition using multi-valued dependency: 4NF and 4NF decomposition. Database design process and its issues. SQL: review of SQL – Intermediate SQL – Advanced SQL.
+** Unit 3
+Transactions: Transaction concept – A simple transaction model - Storage structure - Transaction atomicity and durability - Transaction isolation – Serializability – Recoverable schedules, Casecade less schedules. concurrency control: Lock-based protocols – Locks, granting of locks, the two-phase locking protocol, implementation of locking, Graph-based protocols. Deadlock handling: Deadlock preventiomonokai-ristrettolock detection and recovery. Case Study: Different types of high-level databases – MongoDB, Hadoop/Hbase, Redis, IBM Cloudant, Dynamo DB, Cassandra and Couch DB etc. Tips for choosing the right database for the given problem.
+* Introduction
+** DBMS vs FPS
+ + There is a need for structure while modelling the real world. We use *entities*, a physical or abstract concept that we can use to orient our data around.
+ + A database is a store of information about a group of certain entities.
+A DBMS is a software which is used to manage databases, which allows you to add, remove, update and read data.
+
+Prior to DBMS, there was such a thing known as a File Processing System.
+
+An *instance* is an entry in the database.
+*** Why Did The World Switch From FPS to DBMS
+**** Redundancy
+Redundancy is the duplication of data to ensure that the data remains safe in case one of the copies fail. A File Processing System used copies, an RDBMS on the other hand has only one table, this meant that there's no data wastage.
+**** Consistency
+An issue with having multiple files instead of a table is sometimes the data does not match between copies or files.
+**** Atomicity
+If any operation on the DB crashes then the DB must be brought back to the previous state before the failure.
+**** Security
+Based on the user, a DB can assign permissions to the user on what parts of the entire DB that they can read. There is no ambiguity involved when making a query, and it's easier to make changes to the overall structure of the table than it is to make changes to a file.
+**** Data Independence
+1) *Physical Data Independence* - Modifications at the physical schema should make no change to the [[*Logical Level][Logical Level]].
+2) *Logical Data Independence* - Modifications to the logical schema should make no change to the [[*View Level][View Level]]
+
+** Schema
+A schema is a definition of the structure.
+
+A relation, in the DBMS context, is a table. A relationship is an association between relations.
+
+*NOTE*: A schema changes _less_ frequently than an instance.
+** Levels Of Abstraction
+There are three levels:
+|--------------------------------------------------------------|
+| View Level      -> Subset Of Logical Schema                  |
+|--------------------------------------------------------------|
+| Logical Level   -> What data is stored and it's relationship |
+|--------------------------------------------------------------|
+| Physical Level  -> How data is stored at disk level          |
+|--------------------------------------------------------------|
+*** View Level
+The schema here is that the structure 
+re but constrained by access privileges. In other words, it's a subset of the logical schema.
+*** Logical Level
+How data is organized, with the entity model and the relationship between different tables. The schema at the logical level is the table structure.
+*** Physical Level
+This concerns itself with the way data is stored, using data structures to optimize for querying. The schema at the physical level is the data structure.
+** SQL Types
+1. DDL - Data Definition Language. Defines the structure of the database. Example - =CREATE=, =ALTER=, =DROP=, =TRUNCATE=
+2. DCL - Data Control Language. Controls access permissions Example - =GRANT=, =REVOKE=
+3. DML - Data Manipulation Language. Modifies the instances of the database. Example - =INSERT=, =UPDATE=
+4. DQL - Data Query Language. Retrieves data from the database. Example - =SELECT=
+5. TCL - Transmission Control Language. Controls the state of the database management system. Example -  =COMMIT=, =ROLLBACK=
+** DB Architecture
+1. Database Users
+2. Query Processor
+t. Storage Manager
+4. Data File
+
+** Syntax
+*** Creating a Table
+#+begin_src sql
+CREATE TABLE Stud(RegNo char(10) PRIMARY KEY, name varchar(15));
+#+end_src
+*** Inserting Data
+#+begin_src sql
+INSERT INTO tablename(col1,col2...) VALUES('value1','value2')
+INSERT INTO tablename VALUES('value1','value2')
+#+end_src
+** Database Architecture
+*** DB Users
+**** Naive Users
+The end users interacting with the database using the UI
+**** Application Programmer
+The programmers writing the backend and frontend and writing queries.
+**** Sophisticated Users
+Writes specific queries that require larger levels of control over the DB
+**** Specialized Users
+Perform analyses and AI to write richer queries.
+**** Database Administrator
+Most important role in a DB application, is responsible for overall management or overall wellbeing of the application.
+The DBA should:
+1. make provisions for frequent backups.
+2. have enough free disk space.
+3. change the logical schema if necessary
+4. manage data access privileges
+*** Query Processor
++ DDL Interpreter - It performs the parsing of the command. If a DDL command is passed, its data is stored to data dictionary with metadata(data about data). The metadata includes the constraints about the data.
++ DML Compiler
+  1. Translation - Translate the query into a language that the Query Evaluation Engine understands.
+  2. Optimization - Searches the best among the possible relational algebra statements to represent the mathematical model to query the data, so that the resources aren't wasted.
++ Query Evaluation Engine - Executes the solution sent by the DML Compiler.
+*** Storage Manager
++ Buffer Manager - Helps in the data transportation between the buffer and secondary storage with the help of a log writer.
++ File Manager - Helps maintain the data in the secondary storage
++ Authorization & *Integrity Manager* - Accepts the DCL commands, and checks whether a user is authorized to access the data. It also prevents the constraints of the logical schema from being broken.
++ Transaction Manager - Upholds [[*Atomicity][Atomicity]].
+*** Disk File
+ + Data Dictionary
+ + Data File
+ + Indices
+** Keys
+1. Primary Key
+2. Secondary Key
+3. Super Key
+4. Foreign Key
+5. Candidate Key
+* E-R Diagram
+This corresponds to the design phase of making a software project. The blueprint of our software.
+1. An entity can be mapped to a table.
+2. A relationship is an association between tables.
+
+** Why Have Relationships In The First Place
+1. This prevents data repetition.
+2. If there were no relationships, data can't be connected together as is necessary to solve problems.
+** Notation
+[[xopp-pages:/home/adithya/university-notes/college-notes/figures/notation-er.xopp]]
+** Types Of Attributes
+1. Single valued &  Multivalued attribute
+2. Stored And Derived attribute
+   SvelteKit - =$state= vs =$derived=
+3. Simple and composite attribute
+** Mapping Cardinalities
+Also known as cardinality ratios, they denote how many instances map to another instances in a relationship
+*** One To One
+$Person \Leftrightarrow Passport, 1:1$
+*** One To Many
+$Department \Leftrightarrow Employees, 1:m$
+*** Many To One
+$Employees \Leftrightarrow Department, 1:1$
+*** Many To Many
+$Student \Leftrightarrow Course, 1:n, m:1 \rightarrow m:n$
+** Participation Constraints
+Taking the example of students mapped to courses.
+*** Total
+Students *must* register for at least one course
+*** Partial
+Not necessary that all courses have one student.
+**** University Management System
+[[xopp-pages:/home/adithya/university-notes/college-notes/figures/university-management-system.xopp]]
+** Case Study 1
+#+begin_verse
+A university has multiple departments each of which employs multiple staffs, the department offers courses taught by the staff. Students register for multiple courses. One staff heads the department. Draw the E-R diagram for the same.
+#+end_verse
+
+To begin solving this, we need to go about a =Noun-Phrase= Approach. We must identify all the nouns in the scenario.
+
+The approach is:
+1. Identify the entities
+2. Identify the attributes
+3. Identify the primary key
+4. Identify the relationship
+5. Refine your model with the mapping cardinalities
+6. Refine it with the participation constraints.
+
+*** Solution
+The nouns here become the /entities/:
+1. University
+2. Departments
+3. Staff
+4. Courses
+5. Students
+
+Though a university qualifies as an entity, it's a singular entity. Thus, we cannot identify it as an entity in the E-R diagram.
+
+** Extended ER Features
+*** Generalization/Specialization
+The =IS A= block is used to denote inheritance
+
+A generalization is a top-down, while a specialization is bottom-up.
+**** Disjoint/Overlapping
+A disjoint specialization/generalization are those which have zero overlap with each other.
+An overlapping set is now self explanatory.
+**** Condition Based & User Defined
+A generalization/specialization is condition based if the entity is defined terms of a set rule or condition.
+If the rule is arbitrary, it's a user defined generalization/specialization.
+*** Weak Entity
+Every weak entity has an identifying relationship with a strong entity.
+[[xopp-figure:/home/adithya/university-notes/college-notes/figures/weak-entity.xopp]]
+
+An attribute that *helps* in uniquely identifying the entities while not being unique is called a discriminator.
+*** CASE STUDY 2
+#+begin_quote
+In a university, there are multiple libraries. Each of which has many books, every book is uniquely identified within the library using =Book Number=. Each library has multiple members. A person can be a member of multiple libraries, one library can take interlibrary loan. Draw the ER diagram.
+#+end_quote
+
+[[xopp-figure:/home/adithya/university-notes/college-notes/figures/er-diagram-case-study-2.xopp]]
+*** Mapping ER To Relational Model
+**** Multivalued attribute
+When we have multivalued attribute, we must split the entity into two tables. For example, a student can have *multiple* phone numbers, the way to represent this in a relational model is as so:
+
+The main table Student() will be like so.
+|---------------------+------+--------|
+| _Registration Number_ | Name | Branch |
+|---------------------+------+--------|
+| R1                  | A    | AID    |
+| R2                  | B    | CSE    |
+| R3                  | B    | ECE    |
+|---------------------+------+--------|
+
+And, the registration number and phone number together are (PRIMARY KEY). There's a secondary table =Stud_PhoneNo()= made like so.
+
+|---------------------+--------------|
+| Registration Number | Phone Number |
+|---------------------+--------------|
+| R1                  |          100 |
+| R2                  |          101 |
+| R2                  |          102 |
+| R2                  |          103 |
+| R3                  |          104 |
+| R3                  |          105 |
+|---------------------+--------------|
+
+**** Strong Entity/Entity
+Represent the table with attributes as is
+**** Composite Attribute
+A composite attribute's components are represented as columns directly. An entity with a1, a2 and a3 where a2 can be divided into a21 and a22.
+|---+----+-----+-----|
+| E | a1 | a21 | a22 |
+|---+----+-----+-----|
+
+**** Derived Attribute
+They're not mapped at all into a table. They're computed.
+
+**** Mapping Relationships
+1. 1:1 relationship
+   The total participation is usually the one with the foreign key, otherwise it can go either way.
+2. 1:m/m:1 relationship
+   The one with the $m$ entities contains the foreign key.
+3. m:n relationship
+   There will be at minimum 3 tables, the two entity tables and one tablewith the foreign keys of both entities
+
+**** Descriptive Attribute
+They only arrive for m:n relationships, they exist in the third table formed to represent the relation in m:n.
+
+**** Weak Entity
+The mapping cardinality and participation constraints don't matter. The strong entity table is created, the weak entity table is created with the strong entity's primary key as a foreign key, and the primary key of this table is the strong entity's primary key along with the discriminator.
+
+**** Generalization/Specialization
+We don't map the generalization, we make separate tables for each new sub-entity
+**** Mapping To Relational Model
+For Case Study 1,
+1) Dept
+   | _dname_ | dloc | staffhead(staff.sid) |
+2) Staff
+   | _sid_ | sname | dept.dname |
+3) Course
+   | _ccode_ | cname | staff.sid |
+4) Stud
+   | _RegNo_ | fname | lname |
+5) Stud_Ph
+   | _RegNo_ | _PhNo_ |
+6) Stud_Course
+   | _RegNo_ | CCode | grade |
+* Relational Algebra
+|------------+-------------------|
+| Unary      | Binary            |
+|------------+-------------------|
+| Project(\pi) | Cross product (X) |
+| Select(\sigma)  | Join              |
+|            | Set diff          |
+|            | Union             |
+|            | Intersection      |
+|------------+-------------------|
+
+#+begin_src sql
+SELECT ename from Emp where sal > 50000
+#+end_src
+
+We write this as,
+
+$$\pi_{ename}(\sigma_{\text{sal>50000}}(Emp))$$
+** Unary Operators
+1. Select
+   $$\sigma_{condition}(Relation)$$
+2. Project
+   $$\Pi_{col_1,col_2,\cdots}(Relation)$$
+** Binary Operators
+*** Logical Operators
+1) \land - AND
+2) \lor - OR
+3) <> or ! or ~ - NOT
+*** The Union Compatibility Rule
+1. The _arity_ of both the relation should be the same
+2. The _domain of ith attribute_ of both the relations should be the _same_.
+** Cartesian Product/Cross Product
+When a cartesian product is applied, we'd have *spurious tuples* which are the _wrong_ instances of data.
+
+** PROBLEMS
+#+begin_quote
+Given:
+1. Emp(eno, name, city, sal, gender, dno)
+2. Dept(dno, dname)
+3. Pjt(pno, pname, loc, dno)
+4. Dependent(=dep_name=, gener, eno)
+
+1. List the details of all the employees
+2. Names of employees
+3. Details of employees who belong to bangalore
+4. Details of employees whose salary is between 50000 and 1 lakh
+5. Employees who work in HR department and make over 50000 or work in accounts department and make over 70000
+6. Names that are shared between the employees and the dependents
+#+end_quote
+1. Emp
+2. $\Pi_{name}(Emp)$
+3. $\sigma_{city = Bangalore}(Emp)$
+4. $\sigma_{salary > 50000 \land salary< 100000}(Emp)$
+5. $\sigma_{(dname = HR \land salary > 50000) \lor (dname = account \land salary > 70000)}$
+6. $\Pi_{name}(Dependent \cap Emp)$
+
+#+begin_quote
+1. Details of the project
+2. Details of the department controlling that project
+3. Details of the project controlled by or handled by CSE
+4. Names of employees along with their dep name
+5. Names of female dependents of employee named Sai Preran
+6. Names of male dependents of employees who work for ECE department
+7. Names of employees who have dependents
+8. Names of employees who don't have dependents
+#+end_quote
+
+1. Proj
+2. Project $\bowtie$ Dep
+3. $\sigma_{depname = \text{CSE}}(Project \bowtie Dep)$
+4. $\Pi_{ename,depname}(Emp \bowtie Dep)$
+5. $\sigma_{ename = \text{Sai Preran} \land gender = \text{F}}(Dependent \bowtie Emp)$
+6. $\Pi_{dependent.depname}(\sigma_{gender = \text{M} \land dep.dno = \text{ECE}}(Emp \bowtie Dep))$
+7. $\Pi_{ename}(Emp \bowtie Dep)$
+8. $\Pi_{ename}(Emp \times (\Pi_{eno}(Emp) - \Pi_{eno}(Dep))$)
+
+#+begin_quote
+Sailor(sid, sname, age)
+Boat((bid, bname, colour)
+Resv(sid, bid)
+
+1. Names of the sailors who have reserved a boat with bid B01
+2. Names of sailors who have reserved a red coloured boat
+3. Colours of the boat reserved by the sailor named ABC
+4. Names of sailors who have reserved at least one boat.
+5. Find sname who have reserved a red OR a green  boat.
+6. Find sname who have reserved a red AND a green  boat.
+7. Retrieve sid of sailors with age > 20 who have not reserved a red boat.
+#+end_quote
+
+1. $\Pi_{sname}(\sigma_{Sailor.sid = Resv.sid \land Boat.bid = Resv.bid \land Boat.bid = 'B01'}(Sailor \times Boat \times Resv))$
+** Functional Dependency And Normalization
+*** Functional Dependency
+
+When we write $A \rightarrow B$, it means that we can definitely get B from what we know of A.
+
+For example in a DB with a table Emp(Eno, Ename, city, state),
+
+$Eno \rightarrow City$
+
+These are *based on the instances of a table.*
+*** Armstrong Axioms or Inference Rules
+**** Augmentation Rule
+If $X \rightarrow Y$ then $AX \rightarrow AY$
+**** Union Rule
+If $X \rightarrow Y$ and $X \rightarrow Z$ then $X \rightarrow YZ$
+**** Decomposition Rule
+If $X \rightarrow YZ$ then $X \rightarrow Y$ and $X \rightarrow Z$
+**** Transitive Rule
+If $X \rightarrow Y$ and $Y \rightarrow Z$ then $X \rightarrow Z$
+**** Pseudotransitivity Rule
+If $X \rightarrow Y$ and $WY \rightarrow Z$ then $XW \rightarrow Z$
+**** Reflexivity Rule[[
+xopp-figure:/home/adithya/university-notes/college-notes/2025-05-19 10:00:50.xopp]]
+
+If $X \subseteq Y$ then $Y \rightarrow X$
+*** PROBLEM
+**** Closure of F
+#+begin_quote
+Given R(ABCDE),
+FDs are $A \rightarrow BC, A \rightarrow C, C \rightarrow D, CD \rightarrow E$ find $F^+$
+
+Find $F^+$ = Closure of F
+#+end_quote
+
+#+begin_quote
+R(PQSTU)
+
+F = {Q \rightarrow ST, T \rightarrow U, Q \rightarrow P, U \rightarrow S, PT \rightarrow Q}
+
+Find $F^+$
+#+end_quote
+
+1. T \rightarrow U and U \rightarrow S, we get T \rightarrow S (Transitive)
+2. Q \rightarrow P and Q \rightarrow ST, we get Q \rightarrow PST(Union Rule)
+3. Q \rightarrow ST, we get Q \rightarrow S and Q \rightarrow T
+**** Closure of an attribute
+#+begin_quote
+Given R(ABC), F = {AB \rightarrow C, C \rightarrow B}, find C^+
+#+end_quote
+Say, $\alpha = C, C^+ = C$
+
+# Consider, AB \rightarrow C,
+
+#         Check $AB \subseteq C^+$
+#         => C^+ = C
+
+# Consider $C \rightarrow B$
+#         Check $C \subseteq C^+$
+#         $C^+ = CB$
+
+# Reconsider,
+#         $AB \rightarrow C$
+#         $AB \notsubseteq C^+$
+#         $C^+ = CB$
+#+begin_quote
+Given R(ABCDEH),
+F = {A \rightarrow B,  AB \rightarrow E, BH \rightarrow C, CD \rightarrow D, D \rightarrow A}
+#+end_quote
+*** Normalization
+A set of rules we enforce on data design.
+*** 1NF - Atomic Attribute
+**** Guidelines
++ All the attributes of the table should be atomic in nature ( Single valued attiribute )
+Example - E is an entity with attributes a1, a2,a3;; a3 is a mva. Here E is not in 1NF as a3 is not atomic, therefore decompose =E= to =E and E_mva=
+
+=E(a1,a2), E_mva(a1,a3)=
+*** 2NF - Partial Dependency
++ There should not be any partial dependency between a key and a non key attribute.
+   When R(_A,B_,C,D), B -> C is a partial dependency. So it does not follow the 2nd normal form. The resultant table formed from the natural joins of the tables decomposed for holding 2NF.
+
+   The decomposition should be lossless and the dependencies are preserved(optional).
+
+#+begin_quote
+Given Relation R with set of functional dependencies F. R_1 and R_2 are the decomposed tables of R with their corresponding tables of R with their corresponding FD sets F1 & F2. The dependency preservation is achieved.
+#+end_quote
+
+#+begin_quote
+R(ABCDE)
+R1(ABC), R2(CDE)
+F = {AB -> E, A->B, C -> D, CD-> E}
+
+#+end_quote
+
+
+#+begin_quote
+Consider a customer of a bank, whose information like cno, cname, city and phone number are recorded. A customer may have more than one phone number. Is the customer table in 1NF.
+#+end_quote
+
+#+begin_quote
+No, due to ph being an mva to remedy this, we must decompose the table. C(cno, cname, city) and C_ph(Cno, phno)
+#+end_quote
+
+#+begin_quote
+R(eno, dno, ename, dname, pjt)
+#+end_quote
+
+#+begin_quote
+R1(eno, dno, pjt), R2(dno, dname), R3(eno,ename)
+#+end_quote
+
+#+begin_quote
+R(ABCD), given AB -> C, C -> A, C -> D
+D = {AB, ACD}
+#+end_quote
+
+#+begin_quote
+Solution
+R1 = AB, R2 = ACD
+
+R1 intersection R2 = A
+A^+ = A
+
+A is not a superkey of R1 or R2
+Hence decomposition is lossy
+#+end_quote
+
+#+begin_quote
+R(ABCDEF)
+D = {BE, ACDEF}
+
+F = {A -> B, C -> DE, AC -> F}
+#+end_quote
+
+#+begin_quote
+Solution
+R1 int R2
+E
+
+E^+ = E
+
+Thus E is not a superkey of R1 or R2
+Hence decomp is lossy.
+#+end_quote
+
+#+begin_quote
+R(ABCDE)
+R1(ABC), R2(ACDE)
+F = {A -> BC, CD -> E, B -> D, E ->A }
+#+end_quote
+
+#+begin_quote
+R(ABCDEG)
+F = {AB -> C, AC -> B, AD -> E, B -> D, BC -> A, E -> G}
+
+D = {ABC, ACDE, ADG}
+#+end_quote
+
+#+begin_quote
+(_A,B_)
+
+AB -> C
+AB -> D
+AB -> E
+D -> C
+D -> E
+B -> C
+
+R1 = ABD
+R2 = DE
+R3 = DCE
+
+R1 has
+AB -> D
+
+R2 has
+D -> E
+
+R3 has
+D -> C
+D -> E
+#+end_quote
+*** Canonical Cover
+#+begin_quote
+A *canonical cover is -* Given R(Relation) & F (Set of functional dependencies) to find F_c, remove extraneous attributes.
+#+end_quote
+
+#+begin_quote
+*Extraneous attributes* - Assume \alpha is extraneous in LHS. Then find (LHS - \alpha^+) under F and check if it covers given RHS, then assumption that \alpha is extraneous is true.
+#+end_quote
+
+#+begin_quote
+R(ABCDE),
+F = {A -> D, AD -> C, D -> AC, D -> E }
+
+Since we can derive everything from D alone, and remove A.
+
+Thus A is an extraneous attribute.
+#+end_quote
+
+#+begin_quote
+F = { A -> BC, B -> C, A ->B, AB -> C}
+
+Assume,
+A+ under F', A+ = (ACB)
+
+F = {A -> C, B -> C, A -> B, AB -> C}
+
+Consider AB -> C, assuming extraneous attribute = B
+
+B \in C
+
+A \subseteq A+
+
+F = {A -> C, B -> C, A -> B, A -> C}
+
+F_c = B-> C, A -> B
+#+end_quote
+
+#+begin_quote
+LHS -> RHS, \alpha
+Extraneous in LHS
+
+(LHS - \alpha)^+ under F cover original RHS
+
+extraneous in RHS
+F' = F - assumed extraneous attribute
+
+(LHS)^+ under F
+Cover assumed extraneous attribute
+#+end_quote
+
+#+begin_quote
+F = {AB -> CD, A -> E, E -> C}
+#+end_quote
+*** 3NF
+1. Should satisfy 2nd normal form.
+2. There should not be any transitive dependency between a key and a non key.
+
+LHS - Determinant,
+RHS - Dependent.
+
+#+begin_quote
+R(A,B,C,D,E,F)
+AB is primary key
+B -> C, C -> D, D-> E, AB -> F
+
+This violates 1st Normal Form,
+To fix we decompose F into F_1, F_2 and so on.
+
+R1(A,B,C,D,E)
+R2_mva(A,B,F)
+
+To 2nd normal form,
+R1(_A,B_,D,E)
+R2(B, C)
+R3(_A,B_,F)
+
+For 3rd normal form,
+R1(_A,B_,D)
+R2(_A,B,_,E)
+R3(B, C)
+R4(_A,B_,F)
+#+end_quote
+*** 2nd Definition
+#+begin_quote
+All the given FDs should satisfy any one of the following:
+
+1) \alpha -> \beta should be trivial
+2) \alpha should be a super key (FOR \alpha to be a super key, (\alpha)^+ should be R)
+3) \beta - \alpha should be contained in the key (candidate key).
+
+Note on BCNF(Boyce Codd), All FDs should satisfy either rule 1 or rule 2.
+*** 4NF
+1. Satisfy 3NF
+2. Relation cannot have multiple multivalued dependencies
+** Concurrency Control
+*** Deadlock detection using wait for graph
+**** Draw a vertex for each transaction in the schedule.
+**** An edge is added to the graph if and only if Ti is waiting for Tj
+**** If the graph at any point of time has cycle, it implies deadlock.
+* SQL Syntax
+*** UPDATE
+#+begin_src sql :noeval
+UPDATE tablename SET columnname = 'value' WHERE condition;
+#+end_src
+*** DELETE
+#+begin_src sql :noeval
+DELETE FROM tablename WHERE condition;
+#+end_src
+*** DROP
+#+begin_src sql :noeval
+DROP TABLE tablename;
+#+end_src
+*** ALTER
+#+begin_src sql :noeval
+ALTER TABLE tablename ADD columnName datatype(size)
+ALTER TABLE tablename DROP COLUMN columnName;
+# Change just the datatype.
+ALTER TABLE tablename MODIFY COLUMN columnName datatype(newSize);
+#+end_src
+
