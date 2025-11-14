@@ -1,4 +1,8 @@
-* DONE Module 1: Introduction & Architecture (Unit 1)
+#+TITLE: DBMS Syllabus Summary
+#+author: Nithilan Ramesh
+#+LATEX_HEADER: \usepackage[margin=0.5in]{geometry}
+
+* Module 1: Introduction & Architecture (Unit 1)
 The foundation. Don't just know definitions; know the "Why" and "How".
 ** DBMS vs. File Processing Systems
 - Specific drawbacks of File Systems: Data Redundancy, Inconsistency, Atomicity issues, Security problems, and Data Isolation.
@@ -14,7 +18,7 @@ The foundation. Don't just know definitions; know the "Why" and "How".
 - Storage Manager: Buffer Manager, File Manager, Authorization/Integrity Manager.
 ** Database Users
 - Naive, Application Programmers, Sophisticated (Analysts), Specialized, and the DBA (Database Administrator) functions.
-* DONE Module 2: Conceptual Modeling (ER & UML) (Unit 1)
+* Module 2: Conceptual Modeling (ER & UML) (Unit 1)
 Converting real-world requirements into diagrams.
 ** ER Components
 - Entities: Strong vs. Weak (Owner entity, Identifying relationship).
@@ -29,7 +33,7 @@ Converting real-world requirements into diagrams.
 ** UML (Unified Modeling Language)
 - Class Diagrams (most similar to ER), Use Case Diagrams, Activity Diagrams.
 - Overview of UML as a standard visual modeling language.
-* DONE Module 3: Relational Model & Algebra (Unit 1)
+* Module 3: Relational Model & Algebra (Unit 1)
 The mathematical engine behind SQL.
 ** Relational Algebra (Unary Operators)
 - \sigma (Select/Filter rows), \pi (Project/Filter columns), \rho (Rename).
@@ -42,7 +46,7 @@ The mathematical engine behind SQL.
 - Outer Joins: Left (\leftouterjoin), Right (\rightouterjoin), Full (\fullouterjoin). (Know how they handle NULLs).
 ** Mapping ER to Relational Tables
 - Rules for mapping Strong entities, Weak entities, M:N relationships, and Multivalued attributes to tables.
-* DONE Module 4: Database Design & Normalization (Unit 2)
+* Module 4: Database Design & Normalization (Unit 2)
 Structuring tables to avoid redundancy. (High Exam Weight)
 ** Functional Dependencies (FD)
 - Definition, Armstrong’s Axioms (Reflexivity, Augmentation, Transitivity), Attribute Closure (X^+).
@@ -56,7 +60,7 @@ Structuring tables to avoid redundancy. (High Exam Weight)
 ** Decomposition Algorithms
 - Lossless Join Property: Ensuring no data is lost or spurious tuples created when joining back.
 - Dependency Preservation: Ensuring all constraints (FDs) are maintained after splitting.
-* DONE Module 5: SQL (Unit 2)
+* Module 5: SQL (Unit 2)
 The practical language.
 ** DDL
 - CREATE, ALTER, DROP, TRUNCATE.
@@ -78,7 +82,7 @@ How data sits on the disk.
 - Why it is best for Range Queries.
 ** Hashing
 - Static Hashing vs. Dynamic (Extendible) Hashing.
-* DONE Module 7: Transactions (Unit 3)
+* Module 7: Transactions (Unit 3)
 Ensuring integrity.
 ** ACID Properties
 - Atomicity, Consistency, Isolation, Durability.
@@ -93,7 +97,7 @@ Ensuring integrity.
 - Recoverable Schedules: Commit ordering.
 - Cascadeless Schedules: Avoids cascading rollbacks (No dirty reads).
 - Strict Schedules: No read/write on uncommitted data.
-* DONE Module 8: Concurrency Control (Unit 3)
+* Module 8: Concurrency Control (Unit 3)
 Managing traffic.
 ** Locks
 - Binary Locks, Shared (S) vs. Exclusive (X) Locks.
