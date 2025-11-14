@@ -1,0 +1,110 @@
+* DONE Module 1: Introduction & Architecture (Unit 1)
+The foundation. Don't just know definitions; know the "Why" and "How".
+** DBMS vs. File Processing Systems
+- Specific drawbacks of File Systems: Data Redundancy, Inconsistency, Atomicity issues, Security problems, and Data Isolation.
+** Data Abstraction (3-Schema Architecture)
+- Physical Level: How data is stored (blocks).
+- Logical Level: What data is stored (tables, relationships).
+- View Level: How users interact (security/access).
+** Data Independence
+- Physical: Changing storage (e.g., HDD to SSD) without affecting the logical schema.
+- Logical: Changing table structures without breaking user views.
+** DBMS Architecture
+- Query Processor: DDL Interpreter, DML Compiler, Query Evaluation Engine.
+- Storage Manager: Buffer Manager, File Manager, Authorization/Integrity Manager.
+** Database Users
+- Naive, Application Programmers, Sophisticated (Analysts), Specialized, and the DBA (Database Administrator) functions.
+* DONE Module 2: Conceptual Modeling (ER & UML) (Unit 1)
+Converting real-world requirements into diagrams.
+** ER Components
+- Entities: Strong vs. Weak (Owner entity, Identifying relationship).
+- Attributes: Simple, Composite, Multivalued (Double ellipse), Derived (Dashed ellipse), Key attributes.
+** Relationships & Constraints
+- Cardinality: 1:1, 1:M, M:1, M:N.
+- Participation: Total (Double line) vs. Partial.
+** Extended ER Features
+- Generalization (Bottom-up) & Specialization (Top-down).
+- Constraints: Disjoint vs. Overlapping, Total vs. Partial.
+- Aggregation: Treating a relationship as an entity.
+** UML (Unified Modeling Language)
+- Class Diagrams (most similar to ER), Use Case Diagrams, Activity Diagrams.
+- Overview of UML as a standard visual modeling language.
+* DONE Module 3: Relational Model & Algebra (Unit 1)
+The mathematical engine behind SQL.
+** Relational Algebra (Unary Operators)
+- \sigma (Select/Filter rows), \pi (Project/Filter columns), \rho (Rename).
+** Relational Algebra (Binary Operators)
+- Set Operations: Union (\cup), Intersection (\cap), Set Difference (-). Note: Require Union Compatibility.
+- Cartesian Product (X): Cross product of two tables.
+- Division (\div): Used for "for all" queries (e.g., find students enrolled in all courses).
+** The Joins Family
+- Inner Joins: Theta Join, Equi Join, Natural Join (\bowtie).
+- Outer Joins: Left (\leftouterjoin), Right (\rightouterjoin), Full (\fullouterjoin). (Know how they handle NULLs).
+** Mapping ER to Relational Tables
+- Rules for mapping Strong entities, Weak entities, M:N relationships, and Multivalued attributes to tables.
+* DONE Module 4: Database Design & Normalization (Unit 2)
+Structuring tables to avoid redundancy. (High Exam Weight)
+** Functional Dependencies (FD)
+- Definition, Armstrong’s Axioms (Reflexivity, Augmentation, Transitivity), Attribute Closure (X^+).
+** Anomalies
+- Insertion, Deletion, and Update anomalies (Why we normalize).
+** Normal Forms (The Ladder)
+- 1NF: Atomic attributes (No multivalued attributes).
+- 2NF: No Partial Dependencies (Non-prime attribute depends on part of a composite key).
+- 3NF: No Transitive Dependencies (Non-prime depends on another non-prime).
+- BCNF: For every dependency X \rightarrow Y, X must be a Super Key.
+** Decomposition Algorithms
+- Lossless Join Property: Ensuring no data is lost or spurious tuples created when joining back.
+- Dependency Preservation: Ensuring all constraints (FDs) are maintained after splitting.
+* DONE Module 5: SQL (Unit 2)
+The practical language.
+** DDL
+- CREATE, ALTER, DROP, TRUNCATE.
+** DML
+- SELECT, INSERT, UPDATE, DELETE.
+** DCL/TCL
+- GRANT, REVOKE, COMMIT, ROLLBACK.
+** Advanced SQL
+- Nested Subqueries, Aggregate functions (COUNT, SUM, AVG), GROUP BY, HAVING.
+* Module 6: Storage & Indexing (Unit 3)
+How data sits on the disk.
+** File Organization
+- Sequential (Ordered), Heap (Unordered), Clustered.
+** Indexing Types
+- Primary vs. Secondary Indices.
+- Dense vs. Sparse Indices.
+** B+ Trees
+- Structure: Balanced tree, data only in leaf nodes, leaf nodes linked.
+- Why it is best for Range Queries.
+** Hashing
+- Static Hashing vs. Dynamic (Extendible) Hashing.
+* DONE Module 7: Transactions (Unit 3)
+Ensuring integrity.
+** ACID Properties
+- Atomicity, Consistency, Isolation, Durability.
+** State Transition Diagram
+- Active -> Partially Committed -> Committed (or Failed -> Aborted).
+** Schedules
+- Serial vs. Concurrent (Non-serial).
+** Serializability
+- Conflict Serializability: Precedence Graphs (Cycle = Not Serializable).
+- View Serializability: Conditions (Initial Read, Update Read, Final Write).
+** Recoverability
+- Recoverable Schedules: Commit ordering.
+- Cascadeless Schedules: Avoids cascading rollbacks (No dirty reads).
+- Strict Schedules: No read/write on uncommitted data.
+* DONE Module 8: Concurrency Control (Unit 3)
+Managing traffic.
+** Locks
+- Binary Locks, Shared (S) vs. Exclusive (X) Locks.
+** 2PL (Two-Phase Locking)
+- Growing Phase vs. Shrinking Phase.
+- Strict 2PL: Holds Exclusive locks until commit.
+- Conservative 2PL: Acquires all locks at start (Deadlock free).
+** Timestamp Ordering
+- Wait-Die: Older waits for younger (Non-preemptive).
+- Wound-Wait: Older kills younger (Preemptive).
+** Deadlocks
+- Detection: Wait-for Graph.
+- Prevention: Timestamp schemes.
+- Recovery: Victim selection, Rollback.

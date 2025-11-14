@@ -121,7 +121,7 @@ This corresponds to the design phase of making a software project. The blueprint
 1. This prevents data repetition.
 2. If there were no relationships, data can't be connected together as is necessary to solve problems.
 ** Notation
-[[xopp-pages:/home/adithya/university-notes/college-notes/figures/notation-er.xopp]]
+# [91;5u[[xopp-pages:/home/adithya/university-notes/college-notes/figures/notation-er.xopp]]
 ** Types Of Attributes
 1. Single valued &  Multivalued attribute
 2. Stored And Derived attribute
@@ -144,7 +144,7 @@ Students *must* register for at least one course
 *** Partial
 Not necessary that all courses have one student.
 **** University Management System
-[[xopp-pages:/home/adithya/university-notes/college-notes/figures/university-management-system.xopp]]
+# [[xopp-pages:/home/adithya/university-notes/college-notes/figures/university-management-system.xopp]]
 ** Case Study 1
 #+begin_verse
 A university has multiple departments each of which employs multiple staffs, the department offers courses taught by the staff. Students register for multiple courses. One staff heads the department. Draw the E-R diagram for the same.
@@ -183,7 +183,7 @@ A generalization/specialization is condition based if the entity is defined term
 If the rule is arbitrary, it's a user defined generalization/specialization.
 *** Weak Entity
 Every weak entity has an identifying relationship with a strong entity.
-[[xopp-figure:/home/adithya/university-notes/college-notes/figures/weak-entity.xopp]]
+# # [[xopp-figure:/home/adithya/university-notes/college-notes/figures/weak-entity.xopp]]
 
 An attribute that *helps* in uniquely identifying the entities while not being unique is called a discriminator.
 *** CASE STUDY 2
@@ -191,7 +191,7 @@ An attribute that *helps* in uniquely identifying the entities while not being u
 In a university, there are multiple libraries. Each of which has many books, every book is uniquely identified within the library using =Book Number=. Each library has multiple members. A person can be a member of multiple libraries, one library can take interlibrary loan. Draw the ER diagram.
 #+end_quote
 
-[[xopp-figure:/home/adithya/university-notes/college-notes/figures/er-diagram-case-study-2.xopp]]
+# [[xopp-figure:/home/adithya/university-notes/college-notes/figures/er-diagram-case-study-2.xopp]]
 *** Mapping ER To Relational Model
 **** Multivalued attribute
 When we have multivalued attribute, we must split the entity into two tables. For example, a student can have *multiple* phone numbers, the way to represent this in a relational model is as so:
@@ -372,7 +372,7 @@ If $X \rightarrow Y$ and $Y \rightarrow Z$ then $X \rightarrow Z$
 **** Pseudotransitivity Rule
 If $X \rightarrow Y$ and $WY \rightarrow Z$ then $XW \rightarrow Z$
 **** Reflexivity Rule[[
-xopp-figure:/home/adithya/university-notes/college-notes/2025-05-19 10:00:50.xopp]]
+# xopp-figure:/home/adithya/university-notes/college-notes/2025-05-19 10:00:50.xopp]]
 
 If $X \subseteq Y$ then $Y \rightarrow X$
 *** PROBLEM
