@@ -1,0 +1,723 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2025-12-03 Wed 13:11 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DSA Summary</title>
+<meta name="author" content="Nithi" />
+<meta name="generator" content="Org Mode" />
+<style type="text/css">
+  #content { max-width: 60em; margin: auto; }
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #e6e6e6;
+    border-radius: 3px;
+    background-color: #f2f2f2;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: auto;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px;
+    color: #555;
+    background-color: #f2f2f299;
+  }
+  pre.src:hover:before { display: inline; margin-top: 14px;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-hledger:before { content: 'hledger'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .equation-container {
+    display: table;
+    text-align: center;
+    width: 100%;
+  }
+  .equation {
+    vertical-align: middle;
+  }
+  .equation-label {
+    display: table-cell;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { }
+</style>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">DSA Summary</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#orga253f25">1. <span class="done DONE">DONE</span> 1. Asymptotic Analysis</a>
+<ul>
+<li><a href="#orge55ad49">1.1. a) asymptotic notations</a>
+<ul>
+<li><a href="#org1a32519">1.1.1. Avg Case (&theta;)</a></li>
+<li><a href="#org653e51b">1.1.2. Best case (&Omega;)</a></li>
+<li><a href="#org54bba63">1.1.3. Worst Case (O)</a></li>
+</ul>
+</li>
+<li><a href="#org8dcd170">1.2. b) best, avg and worst case</a></li>
+<li><a href="#orga366649">1.3. c) properties of asymptotic notations</a></li>
+<li><a href="#org233aeec">1.4. d) graph of big-oh, big-omega, big-theta notations</a></li>
+</ul>
+</li>
+<li><a href="#org7281d2e">2. <span class="done DONE">DONE</span> 2. Arrays</a>
+<ul>
+<li><a href="#orgae88f8d">2.1. a) Fixed and dynamic size arrays</a></li>
+<li><a href="#org1601e53">2.2. b) 1D and 2D arrays</a></li>
+<li><a href="#org1140155">2.3. c) Operations of arrays(searching-linear and binary)</a></li>
+<li><a href="#org047d481">2.4. d) Applications</a></li>
+<li><a href="#org83269d3">2.5. e) Advantages and disadvantages</a></li>
+<li><a href="#org4333a38">2.6. f) Arraylist in java</a></li>
+</ul>
+</li>
+<li><a href="#org69d22c1">3. <span class="done DONE">DONE</span> 3. Linked List (LL)</a>
+<ul>
+<li><a href="#org8e2d69a">3.1. a) Comparison with array</a></li>
+<li><a href="#orga934f58">3.2. b) Singly linked list (SLL)</a></li>
+<li><a href="#org21bda96">3.3. c) Operations like isEmpty(), display() etc</a></li>
+<li><a href="#org39b9b6e">3.4. d) Doubly LL</a></li>
+<li><a href="#orgee6baab">3.5. e) Advantages over SLL</a></li>
+<li><a href="#orge5131cb">3.6. f) Circular LL</a></li>
+</ul>
+</li>
+<li><a href="#org8d822c2">4. <span class="done DONE">DONE</span> 4. Stack</a>
+<ul>
+<li><a href="#org930e292">4.1. a) Algorithm for push,pop operation</a></li>
+<li><a href="#org9c54bf0">4.2. b) Top or peek operation on stack</a></li>
+<li><a href="#orgbe6e6a3">4.3. c) isEmpty(),isFull() operations</a></li>
+<li><a href="#org9b3ff22">4.4. d) advantageand disadvantageof array-based stack implementation</a></li>
+<li><a href="#orgc174e6c">4.5. e) advantageof SLL based stack implementation</a></li>
+<li><a href="#org91c678b">4.6. f) expression conversion (6 conversions)</a>
+<ul>
+<li><a href="#org310cbf4">4.6.1. Infix to postfix</a></li>
+<li><a href="#org656b38c">4.6.2. postfix to Infix</a></li>
+<li><a href="#org26174f9">4.6.3. Infix to prefix</a></li>
+</ul>
+</li>
+<li><a href="#org26bb6bf">4.7. g) recursion</a>
+<ul>
+<li><a href="#orgc49ae51">4.7.1. i. direct and indirect recursion</a></li>
+<li><a href="#org8d23cb2">4.7.2. ii. common application</a></li>
+<li><a href="#org921b537">4.7.3. iii. problem solving using recursion</a></li>
+<li><a href="#org99b68ff">4.7.4. iv. tower of Hanoi</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org37b069a">5. <span class="done DONE">DONE</span> 5. Queue</a>
+<ul>
+<li><a href="#org73ca7f4">5.1. a) basic terminologies</a></li>
+<li><a href="#orgb184238">5.2. b) queue operations</a></li>
+<li><a href="#org083b2e1">5.3. c) queue using array</a></li>
+<li><a href="#org1461da8">5.4. d) queue using LL</a></li>
+<li><a href="#org573899a">5.5. e) applications</a></li>
+<li><a href="#orgf20f7ad">5.6. f) double ended queue(deque)</a>
+<ul>
+<li><a href="#org3e458aa">5.6.1. i. operations on deque</a></li>
+<li><a href="#org19aea15">5.6.2. ii. deque using DLL</a></li>
+<li><a href="#orga8530e7">5.6.3. iii. applications of deque</a></li>
+</ul>
+</li>
+<li><a href="#org7752976">5.7. g) circular queue</a></li>
+</ul>
+</li>
+<li><a href="#org4440bdf">6. <span class="done DONE">DONE</span> 6. Priority Queues</a>
+<ul>
+<li><a href="#org5a772f8">6.1. a) implementation(sorted and unsorted list)</a></li>
+<li><a href="#orga4d4b70">6.2. b) time complexity</a></li>
+</ul>
+</li>
+<li><a href="#org9ef7fae">7. <span class="done DONE">DONE</span> 7. Map</a>
+<ul>
+<li><a href="#orgf41b4fa">7.1. a) common methods in map</a></li>
+<li><a href="#org03b98dc">7.2. b) common implementation</a></li>
+<li><a href="#orgd8460cf">7.3. c) comparison of 3 implementation</a></li>
+<li><a href="#org0cae4c6">7.4. d) comparison of dictionary vs map</a></li>
+</ul>
+</li>
+<li><a href="#org5974fc9">8. <span class="done DONE">DONE</span> 8. Tree</a>
+<ul>
+<li><a href="#org5302692">8.1. a) linked structure of BT</a></li>
+<li><a href="#org3d334c3">8.2. b) array based implementation of BT</a></li>
+<li><a href="#org1772fef">8.3. c) types of BT</a></li>
+<li><a href="#orgdbddb56">8.4. d) tree traversal algorithms</a>
+<ul>
+<li><a href="#orgbae245f">8.4.1. i. inorder</a></li>
+<li><a href="#org50794e3">8.4.2. ii. postorder</a></li>
+<li><a href="#org9d0a80a">8.4.3. iii. preorder</a></li>
+</ul>
+</li>
+<li><a href="#org0f0728b">8.5. e) binary search tree</a></li>
+<li><a href="#org6a72aa6">8.6. f) avl trees</a></li>
+<li><a href="#orgec653b6">8.7. g) segment trees</a></li>
+<li><a href="#org667ac97">8.8. h) B-tree(insertion)</a></li>
+</ul>
+</li>
+<li><a href="#org0ee3ce6">9. <span class="done DONE">DONE</span> 9. Heap</a>
+<ul>
+<li><a href="#org760425f">9.1. a) Max and min heap</a></li>
+<li><a href="#org75c4216">9.2. b) Heapify, heapsort</a></li>
+<li><a href="#orgd085987">9.3. c) Heap insertion and deletion</a></li>
+</ul>
+</li>
+<li><a href="#orged71f78">10. <span class="done DONE">DONE</span> 10. Skiplist</a>
+<ul>
+<li><a href="#orgefa8edc">10.1. a) Operations, implementation</a></li>
+<li><a href="#org9144f42">10.2. b) Time complexity</a></li>
+<li><a href="#orgc6dc0b2">10.3. c) Advantage and disadv</a></li>
+<li><a href="#org6b95457">10.4. d) Applications</a></li>
+</ul>
+</li>
+<li><a href="#orgdd7c01e">11. <span class="done DONE">DONE</span> 11. External sorting and searching</a></li>
+<li><a href="#org0d05ae5">12. <span class="done DONE">DONE</span> 12. Graph</a>
+<ul>
+<li><a href="#org9c31e68">12.1. a) Types of graphs</a></li>
+<li><a href="#org14cb6d5">12.2. b) Degree of vertices</a></li>
+<li><a href="#org0696e7c">12.3. c) Subgraphs, spanning tree</a></li>
+<li><a href="#org6594128">12.4. d) Trees and forest</a></li>
+<li><a href="#orgf01bb3d">12.5. e) Graph traversal(DFS and BFS)</a></li>
+<li><a href="#org421878d">12.6. f) Path and cycle finding</a></li>
+<li><a href="#org433aa42">12.7. g) Graph representation</a></li>
+<li><a href="#org08a3493">12.8. <span class="todo TODO">TODO</span> h) Dijkstra&rsquo;s algo(single source shortest path)</a></li>
+<li><a href="#orge37f3ab">12.9. <span class="todo TODO">TODO</span> i) Minimum spanning tree</a>
+<ul>
+<li><a href="#org35b2c0f">12.9.1. i. Prim&rsquo;s</a></li>
+<li><a href="#orgf7f33e5">12.9.2. ii. Kruskal&rsquo;s</a></li>
+</ul>
+</li>
+<li><a href="#org45e60ab">12.10. <span class="todo TODO">TODO</span> j) All pair shortest path</a>
+<ul>
+<li><a href="#org7d11e5c">12.10.1. i. Floyd warshall algorithm</a></li>
+</ul>
+</li>
+<li><a href="#org26a45a8">12.11. <span class="todo TODO">TODO</span> k) Topological sorting(digraph)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orga253f25" class="outline-2">
+<h2 id="orga253f25"><span class="section-number-2">1.</span> <span class="done DONE">DONE</span> 1. Asymptotic Analysis</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+<div id="outline-container-orge55ad49" class="outline-3">
+<h3 id="orge55ad49"><span class="section-number-3">1.1.</span> a) asymptotic notations</h3>
+<div class="outline-text-3" id="text-1-1">
+</div>
+<div id="outline-container-org1a32519" class="outline-4">
+<h4 id="org1a32519"><span class="section-number-4">1.1.1.</span> Avg Case (&theta;)</h4>
+<div class="outline-text-4" id="text-1-1-1">
+<p>
+c1*g(n) &le; &theta;(n) &le; c2*g(n), where n &gt; n0
+</p>
+</div>
+</div>
+<div id="outline-container-org653e51b" class="outline-4">
+<h4 id="org653e51b"><span class="section-number-4">1.1.2.</span> Best case (&Omega;)</h4>
+<div class="outline-text-4" id="text-1-1-2">
+<p>
+c*g(n) &le; &Omega;(n) after n0
+</p>
+</div>
+</div>
+<div id="outline-container-org54bba63" class="outline-4">
+<h4 id="org54bba63"><span class="section-number-4">1.1.3.</span> Worst Case (O)</h4>
+<div class="outline-text-4" id="text-1-1-3">
+<p>
+Simmilar to abv two, just extrapolate
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org8dcd170" class="outline-3">
+<h3 id="org8dcd170"><span class="section-number-3">1.2.</span> b) best, avg and worst case</h3>
+</div>
+<div id="outline-container-orga366649" class="outline-3">
+<h3 id="orga366649"><span class="section-number-3">1.3.</span> c) properties of asymptotic notations</h3>
+</div>
+<div id="outline-container-org233aeec" class="outline-3">
+<h3 id="org233aeec"><span class="section-number-3">1.4.</span> d) graph of big-oh, big-omega, big-theta notations</h3>
+</div>
+</div>
+<div id="outline-container-org7281d2e" class="outline-2">
+<h2 id="org7281d2e"><span class="section-number-2">2.</span> <span class="done DONE">DONE</span> 2. Arrays</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-orgae88f8d" class="outline-3">
+<h3 id="orgae88f8d"><span class="section-number-3">2.1.</span> a) Fixed and dynamic size arrays</h3>
+</div>
+<div id="outline-container-org1601e53" class="outline-3">
+<h3 id="org1601e53"><span class="section-number-3">2.2.</span> b) 1D and 2D arrays</h3>
+</div>
+<div id="outline-container-org1140155" class="outline-3">
+<h3 id="org1140155"><span class="section-number-3">2.3.</span> c) Operations of arrays(searching-linear and binary)</h3>
+</div>
+<div id="outline-container-org047d481" class="outline-3">
+<h3 id="org047d481"><span class="section-number-3">2.4.</span> d) Applications</h3>
+</div>
+<div id="outline-container-org83269d3" class="outline-3">
+<h3 id="org83269d3"><span class="section-number-3">2.5.</span> e) Advantages and disadvantages</h3>
+</div>
+<div id="outline-container-org4333a38" class="outline-3">
+<h3 id="org4333a38"><span class="section-number-3">2.6.</span> f) Arraylist in java</h3>
+</div>
+</div>
+<div id="outline-container-org69d22c1" class="outline-2">
+<h2 id="org69d22c1"><span class="section-number-2">3.</span> <span class="done DONE">DONE</span> 3. Linked List (LL)</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-org8e2d69a" class="outline-3">
+<h3 id="org8e2d69a"><span class="section-number-3">3.1.</span> a) Comparison with array</h3>
+</div>
+<div id="outline-container-orga934f58" class="outline-3">
+<h3 id="orga934f58"><span class="section-number-3">3.2.</span> b) Singly linked list (SLL)</h3>
+</div>
+<div id="outline-container-org21bda96" class="outline-3">
+<h3 id="org21bda96"><span class="section-number-3">3.3.</span> c) Operations like isEmpty(), display() etc</h3>
+</div>
+<div id="outline-container-org39b9b6e" class="outline-3">
+<h3 id="org39b9b6e"><span class="section-number-3">3.4.</span> d) Doubly LL</h3>
+</div>
+<div id="outline-container-orgee6baab" class="outline-3">
+<h3 id="orgee6baab"><span class="section-number-3">3.5.</span> e) Advantages over SLL</h3>
+</div>
+<div id="outline-container-orge5131cb" class="outline-3">
+<h3 id="orge5131cb"><span class="section-number-3">3.6.</span> f) Circular LL</h3>
+</div>
+</div>
+<div id="outline-container-org8d822c2" class="outline-2">
+<h2 id="org8d822c2"><span class="section-number-2">4.</span> <span class="done DONE">DONE</span> 4. Stack</h2>
+<div class="outline-text-2" id="text-4">
+</div>
+<div id="outline-container-org930e292" class="outline-3">
+<h3 id="org930e292"><span class="section-number-3">4.1.</span> a) Algorithm for push,pop operation</h3>
+</div>
+<div id="outline-container-org9c54bf0" class="outline-3">
+<h3 id="org9c54bf0"><span class="section-number-3">4.2.</span> b) Top or peek operation on stack</h3>
+</div>
+<div id="outline-container-orgbe6e6a3" class="outline-3">
+<h3 id="orgbe6e6a3"><span class="section-number-3">4.3.</span> c) isEmpty(),isFull() operations</h3>
+</div>
+<div id="outline-container-org9b3ff22" class="outline-3">
+<h3 id="org9b3ff22"><span class="section-number-3">4.4.</span> d) advantageand disadvantageof array-based stack implementation</h3>
+</div>
+<div id="outline-container-orgc174e6c" class="outline-3">
+<h3 id="orgc174e6c"><span class="section-number-3">4.5.</span> e) advantageof SLL based stack implementation</h3>
+</div>
+<div id="outline-container-org91c678b" class="outline-3">
+<h3 id="org91c678b"><span class="section-number-3">4.6.</span> f) expression conversion (6 conversions)</h3>
+<div class="outline-text-3" id="text-4-6">
+<p>
+Infix, Prefix, PostFix convertion to each other
+</p>
+</div>
+<div id="outline-container-org310cbf4" class="outline-4">
+<h4 id="org310cbf4"><span class="section-number-4">4.6.1.</span> Infix to postfix</h4>
+<div class="outline-text-4" id="text-4-6-1">
+<ul class="org-ul">
+<li>add letters to output</li>
+<li>kep pushing to stack until stack-top is of equal or higher precedence</li>
+</ul>
+<p>
+if eq or higher precedence, keep popping it
+</p>
+<ul class="org-ul">
+<li>if &rsquo;)&rsquo; pop until &rsquo;(&rsquo;</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org656b38c" class="outline-4">
+<h4 id="org656b38c"><span class="section-number-4">4.6.2.</span> postfix to Infix</h4>
+<div class="outline-text-4" id="text-4-6-2">
+<ul class="org-ul">
+<li>push letters to string stack</li>
+<li>if operator, push &ldquo;(op2 + operator + op1)&rdquo;
+eg: ab+. op1 = b, op2 = a, pushing (a+b)</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org26174f9" class="outline-4">
+<h4 id="org26174f9"><span class="section-number-4">4.6.3.</span> Infix to prefix</h4>
+<div class="outline-text-4" id="text-4-6-3">
+<p>
+reverse infix, convert to postfix, reverse again, done 
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org26bb6bf" class="outline-3">
+<h3 id="org26bb6bf"><span class="section-number-3">4.7.</span> g) recursion</h3>
+<div class="outline-text-3" id="text-4-7">
+</div>
+<div id="outline-container-orgc49ae51" class="outline-4">
+<h4 id="orgc49ae51"><span class="section-number-4">4.7.1.</span> i. direct and indirect recursion</h4>
+</div>
+<div id="outline-container-org8d23cb2" class="outline-4">
+<h4 id="org8d23cb2"><span class="section-number-4">4.7.2.</span> ii. common application</h4>
+</div>
+<div id="outline-container-org921b537" class="outline-4">
+<h4 id="org921b537"><span class="section-number-4">4.7.3.</span> iii. problem solving using recursion</h4>
+</div>
+<div id="outline-container-org99b68ff" class="outline-4">
+<h4 id="org99b68ff"><span class="section-number-4">4.7.4.</span> iv. tower of Hanoi</h4>
+</div>
+</div>
+</div>
+<div id="outline-container-org37b069a" class="outline-2">
+<h2 id="org37b069a"><span class="section-number-2">5.</span> <span class="done DONE">DONE</span> 5. Queue</h2>
+<div class="outline-text-2" id="text-5">
+</div>
+<div id="outline-container-org73ca7f4" class="outline-3">
+<h3 id="org73ca7f4"><span class="section-number-3">5.1.</span> a) basic terminologies</h3>
+</div>
+<div id="outline-container-orgb184238" class="outline-3">
+<h3 id="orgb184238"><span class="section-number-3">5.2.</span> b) queue operations</h3>
+</div>
+<div id="outline-container-org083b2e1" class="outline-3">
+<h3 id="org083b2e1"><span class="section-number-3">5.3.</span> c) queue using array</h3>
+</div>
+<div id="outline-container-org1461da8" class="outline-3">
+<h3 id="org1461da8"><span class="section-number-3">5.4.</span> d) queue using LL</h3>
+</div>
+<div id="outline-container-org573899a" class="outline-3">
+<h3 id="org573899a"><span class="section-number-3">5.5.</span> e) applications</h3>
+</div>
+<div id="outline-container-orgf20f7ad" class="outline-3">
+<h3 id="orgf20f7ad"><span class="section-number-3">5.6.</span> f) double ended queue(deque)</h3>
+<div class="outline-text-3" id="text-5-6">
+</div>
+<div id="outline-container-org3e458aa" class="outline-4">
+<h4 id="org3e458aa"><span class="section-number-4">5.6.1.</span> i. operations on deque</h4>
+</div>
+<div id="outline-container-org19aea15" class="outline-4">
+<h4 id="org19aea15"><span class="section-number-4">5.6.2.</span> ii. deque using DLL</h4>
+</div>
+<div id="outline-container-orga8530e7" class="outline-4">
+<h4 id="orga8530e7"><span class="section-number-4">5.6.3.</span> iii. applications of deque</h4>
+</div>
+</div>
+<div id="outline-container-org7752976" class="outline-3">
+<h3 id="org7752976"><span class="section-number-3">5.7.</span> g) circular queue</h3>
+</div>
+</div>
+<div id="outline-container-org4440bdf" class="outline-2">
+<h2 id="org4440bdf"><span class="section-number-2">6.</span> <span class="done DONE">DONE</span> 6. Priority Queues</h2>
+<div class="outline-text-2" id="text-6">
+</div>
+<div id="outline-container-org5a772f8" class="outline-3">
+<h3 id="org5a772f8"><span class="section-number-3">6.1.</span> a) implementation(sorted and unsorted list)</h3>
+</div>
+<div id="outline-container-orga4d4b70" class="outline-3">
+<h3 id="orga4d4b70"><span class="section-number-3">6.2.</span> b) time complexity</h3>
+</div>
+</div>
+<div id="outline-container-org9ef7fae" class="outline-2">
+<h2 id="org9ef7fae"><span class="section-number-2">7.</span> <span class="done DONE">DONE</span> 7. Map</h2>
+<div class="outline-text-2" id="text-7">
+</div>
+<div id="outline-container-orgf41b4fa" class="outline-3">
+<h3 id="orgf41b4fa"><span class="section-number-3">7.1.</span> a) common methods in map</h3>
+</div>
+<div id="outline-container-org03b98dc" class="outline-3">
+<h3 id="org03b98dc"><span class="section-number-3">7.2.</span> b) common implementation</h3>
+</div>
+<div id="outline-container-orgd8460cf" class="outline-3">
+<h3 id="orgd8460cf"><span class="section-number-3">7.3.</span> c) comparison of 3 implementation</h3>
+</div>
+<div id="outline-container-org0cae4c6" class="outline-3">
+<h3 id="org0cae4c6"><span class="section-number-3">7.4.</span> d) comparison of dictionary vs map</h3>
+</div>
+</div>
+<div id="outline-container-org5974fc9" class="outline-2">
+<h2 id="org5974fc9"><span class="section-number-2">8.</span> <span class="done DONE">DONE</span> 8. Tree</h2>
+<div class="outline-text-2" id="text-8">
+</div>
+<div id="outline-container-org5302692" class="outline-3">
+<h3 id="org5302692"><span class="section-number-3">8.1.</span> a) linked structure of BT</h3>
+</div>
+<div id="outline-container-org3d334c3" class="outline-3">
+<h3 id="org3d334c3"><span class="section-number-3">8.2.</span> b) array based implementation of BT</h3>
+<div class="outline-text-3" id="text-8-2">
+<p>
+left = 2*i + 1
+right = 2*i + 2
+</p>
+</div>
+</div>
+<div id="outline-container-org1772fef" class="outline-3">
+<h3 id="org1772fef"><span class="section-number-3">8.3.</span> c) types of BT</h3>
+</div>
+<div id="outline-container-orgdbddb56" class="outline-3">
+<h3 id="orgdbddb56"><span class="section-number-3">8.4.</span> d) tree traversal algorithms</h3>
+<div class="outline-text-3" id="text-8-4">
+</div>
+<div id="outline-container-orgbae245f" class="outline-4">
+<h4 id="orgbae245f"><span class="section-number-4">8.4.1.</span> i. inorder</h4>
+</div>
+<div id="outline-container-org50794e3" class="outline-4">
+<h4 id="org50794e3"><span class="section-number-4">8.4.2.</span> ii. postorder</h4>
+</div>
+<div id="outline-container-org9d0a80a" class="outline-4">
+<h4 id="org9d0a80a"><span class="section-number-4">8.4.3.</span> iii. preorder</h4>
+</div>
+</div>
+<div id="outline-container-org0f0728b" class="outline-3">
+<h3 id="org0f0728b"><span class="section-number-3">8.5.</span> e) binary search tree</h3>
+</div>
+<div id="outline-container-org6a72aa6" class="outline-3">
+<h3 id="org6a72aa6"><span class="section-number-3">8.6.</span> f) avl trees</h3>
+</div>
+<div id="outline-container-orgec653b6" class="outline-3">
+<h3 id="orgec653b6"><span class="section-number-3">8.7.</span> g) segment trees</h3>
+</div>
+<div id="outline-container-org667ac97" class="outline-3">
+<h3 id="org667ac97"><span class="section-number-3">8.8.</span> h) B-tree(insertion)</h3>
+</div>
+</div>
+<div id="outline-container-org0ee3ce6" class="outline-2">
+<h2 id="org0ee3ce6"><span class="section-number-2">9.</span> <span class="done DONE">DONE</span> 9. Heap</h2>
+<div class="outline-text-2" id="text-9">
+</div>
+<div id="outline-container-org760425f" class="outline-3">
+<h3 id="org760425f"><span class="section-number-3">9.1.</span> a) Max and min heap</h3>
+</div>
+<div id="outline-container-org75c4216" class="outline-3">
+<h3 id="org75c4216"><span class="section-number-3">9.2.</span> b) Heapify, heapsort</h3>
+</div>
+<div id="outline-container-orgd085987" class="outline-3">
+<h3 id="orgd085987"><span class="section-number-3">9.3.</span> c) Heap insertion and deletion</h3>
+</div>
+</div>
+<div id="outline-container-orged71f78" class="outline-2">
+<h2 id="orged71f78"><span class="section-number-2">10.</span> <span class="done DONE">DONE</span> 10. Skiplist</h2>
+<div class="outline-text-2" id="text-10">
+</div>
+<div id="outline-container-orgefa8edc" class="outline-3">
+<h3 id="orgefa8edc"><span class="section-number-3">10.1.</span> a) Operations, implementation</h3>
+</div>
+<div id="outline-container-org9144f42" class="outline-3">
+<h3 id="org9144f42"><span class="section-number-3">10.2.</span> b) Time complexity</h3>
+</div>
+<div id="outline-container-orgc6dc0b2" class="outline-3">
+<h3 id="orgc6dc0b2"><span class="section-number-3">10.3.</span> c) Advantage and disadv</h3>
+</div>
+<div id="outline-container-org6b95457" class="outline-3">
+<h3 id="org6b95457"><span class="section-number-3">10.4.</span> d) Applications</h3>
+</div>
+</div>
+<div id="outline-container-orgdd7c01e" class="outline-2">
+<h2 id="orgdd7c01e"><span class="section-number-2">11.</span> <span class="done DONE">DONE</span> 11. External sorting and searching</h2>
+</div>
+<div id="outline-container-org0d05ae5" class="outline-2">
+<h2 id="org0d05ae5"><span class="section-number-2">12.</span> <span class="done DONE">DONE</span> 12. Graph</h2>
+<div class="outline-text-2" id="text-12">
+</div>
+<div id="outline-container-org9c31e68" class="outline-3">
+<h3 id="org9c31e68"><span class="section-number-3">12.1.</span> a) Types of graphs</h3>
+</div>
+<div id="outline-container-org14cb6d5" class="outline-3">
+<h3 id="org14cb6d5"><span class="section-number-3">12.2.</span> b) Degree of vertices</h3>
+</div>
+<div id="outline-container-org0696e7c" class="outline-3">
+<h3 id="org0696e7c"><span class="section-number-3">12.3.</span> c) Subgraphs, spanning tree</h3>
+</div>
+<div id="outline-container-org6594128" class="outline-3">
+<h3 id="org6594128"><span class="section-number-3">12.4.</span> d) Trees and forest</h3>
+</div>
+<div id="outline-container-orgf01bb3d" class="outline-3">
+<h3 id="orgf01bb3d"><span class="section-number-3">12.5.</span> e) Graph traversal(DFS and BFS)</h3>
+</div>
+<div id="outline-container-org421878d" class="outline-3">
+<h3 id="org421878d"><span class="section-number-3">12.6.</span> f) Path and cycle finding</h3>
+</div>
+<div id="outline-container-org433aa42" class="outline-3">
+<h3 id="org433aa42"><span class="section-number-3">12.7.</span> g) Graph representation</h3>
+</div>
+<div id="outline-container-org08a3493" class="outline-3">
+<h3 id="org08a3493"><span class="section-number-3">12.8.</span> <span class="todo TODO">TODO</span> h) Dijkstra&rsquo;s algo(single source shortest path)</h3>
+</div>
+<div id="outline-container-orge37f3ab" class="outline-3">
+<h3 id="orge37f3ab"><span class="section-number-3">12.9.</span> <span class="todo TODO">TODO</span> i) Minimum spanning tree</h3>
+<div class="outline-text-3" id="text-12-9">
+</div>
+<div id="outline-container-org35b2c0f" class="outline-4">
+<h4 id="org35b2c0f"><span class="section-number-4">12.9.1.</span> i. Prim&rsquo;s</h4>
+</div>
+<div id="outline-container-orgf7f33e5" class="outline-4">
+<h4 id="orgf7f33e5"><span class="section-number-4">12.9.2.</span> ii. Kruskal&rsquo;s</h4>
+</div>
+</div>
+<div id="outline-container-org45e60ab" class="outline-3">
+<h3 id="org45e60ab"><span class="section-number-3">12.10.</span> <span class="todo TODO">TODO</span> j) All pair shortest path</h3>
+<div class="outline-text-3" id="text-12-10">
+</div>
+<div id="outline-container-org7d11e5c" class="outline-4">
+<h4 id="org7d11e5c"><span class="section-number-4">12.10.1.</span> i. Floyd warshall algorithm</h4>
+</div>
+</div>
+<div id="outline-container-org26a45a8" class="outline-3">
+<h3 id="org26a45a8"><span class="section-number-3">12.11.</span> <span class="todo TODO">TODO</span> k) Topological sorting(digraph)</h3>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Nithi</p>
+<p class="date">Created: 2025-12-03 Wed 13:11</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,236 @@
+% Created 2025-12-03 Wed 13:11
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\author{Nithi}
+\date{\today}
+\title{DSA Summary}
+\hypersetup{
+ pdfauthor={Nithi},
+ pdftitle={DSA Summary},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 30.2 (Org mode 9.7.34)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{{\bfseries\sffamily DONE} 1. Asymptotic Analysis}
+\label{sec:org5f424f6}
+\subsection{a) asymptotic notations}
+\label{sec:orgb07da24}
+\subsubsection{Avg Case (\(\theta\))}
+\label{sec:org815a9d2}
+c1*g(n) \(\le\) \(\theta\)(n) \(\le\) c2*g(n), where n > n0
+\subsubsection{Best case (\(\Omega\))}
+\label{sec:orgff34de2}
+c*g(n) \(\le\) \(\Omega\)(n) after n0
+\subsubsection{Worst Case (O)}
+\label{sec:org0ab05db}
+Simmilar to abv two, just extrapolate
+\subsection{b) best, avg and worst case}
+\label{sec:org415546f}
+\subsection{c) properties of asymptotic notations}
+\label{sec:org037c582}
+\subsection{d) graph of big-oh, big-omega, big-theta notations}
+\label{sec:org28083ed}
+\section{{\bfseries\sffamily DONE} 2. Arrays}
+\label{sec:org5e0c366}
+\subsection{a) Fixed and dynamic size arrays}
+\label{sec:org60874b2}
+\subsection{b) 1D and 2D arrays}
+\label{sec:orgb29ece1}
+\subsection{c) Operations of arrays(searching-linear and binary)}
+\label{sec:org5a5fbc2}
+\subsection{d) Applications}
+\label{sec:org08b0e54}
+\subsection{e) Advantages and disadvantages}
+\label{sec:org6fb524c}
+\subsection{f) Arraylist in java}
+\label{sec:orgd2b03be}
+\section{{\bfseries\sffamily DONE} 3. Linked List (LL)}
+\label{sec:org49854c8}
+\subsection{a) Comparison with array}
+\label{sec:org6293313}
+\subsection{b) Singly linked list (SLL)}
+\label{sec:org35aa88d}
+\subsection{c) Operations like isEmpty(), display() etc}
+\label{sec:org9c432b7}
+\subsection{d) Doubly LL}
+\label{sec:orgb760235}
+\subsection{e) Advantages over SLL}
+\label{sec:org37e4a92}
+\subsection{f) Circular LL}
+\label{sec:org03fdf2c}
+\section{{\bfseries\sffamily DONE} 4. Stack}
+\label{sec:orgb437be6}
+\subsection{a) Algorithm for push,pop operation}
+\label{sec:org96470e5}
+\subsection{b) Top or peek operation on stack}
+\label{sec:org955562e}
+\subsection{c) isEmpty(),isFull() operations}
+\label{sec:orgca2ea51}
+\subsection{d) advantageand disadvantageof array-based stack implementation}
+\label{sec:org7fc4bac}
+\subsection{e) advantageof SLL based stack implementation}
+\label{sec:org9ed0433}
+\subsection{f) expression conversion (6 conversions)}
+\label{sec:orga4503ed}
+Infix, Prefix, PostFix convertion to each other
+\subsubsection{Infix to postfix}
+\label{sec:org33d2ea2}
+\begin{itemize}
+\item add letters to output
+\item kep pushing to stack until stack-top is of equal or higher precedence
+\end{itemize}
+if eq or higher precedence, keep popping it
+\begin{itemize}
+\item if ')' pop until '('
+\end{itemize}
+\subsubsection{postfix to Infix}
+\label{sec:orga49ace4}
+\begin{itemize}
+\item push letters to string stack
+\item if operator, push ``(op2 + operator + op1)''
+eg: ab+. op1 = b, op2 = a, pushing (a+b)
+\end{itemize}
+\subsubsection{Infix to prefix}
+\label{sec:orgf6fac7e}
+reverse infix, convert to postfix, reverse again, done 
+\subsection{g) recursion}
+\label{sec:orga8aca64}
+\subsubsection{i. direct and indirect recursion}
+\label{sec:orge9d83aa}
+\subsubsection{ii. common application}
+\label{sec:org9c105aa}
+\subsubsection{iii. problem solving using recursion}
+\label{sec:org05756c9}
+\subsubsection{iv. tower of Hanoi}
+\label{sec:org167cbbe}
+\section{{\bfseries\sffamily DONE} 5. Queue}
+\label{sec:org84ffe24}
+\subsection{a) basic terminologies}
+\label{sec:org276b7d8}
+\subsection{b) queue operations}
+\label{sec:orgf627a69}
+\subsection{c) queue using array}
+\label{sec:org682e4d3}
+\subsection{d) queue using LL}
+\label{sec:orgb5f5a46}
+\subsection{e) applications}
+\label{sec:org8c2aa9f}
+\subsection{f) double ended queue(deque)}
+\label{sec:org44dbd5d}
+\subsubsection{i. operations on deque}
+\label{sec:org4a333da}
+\subsubsection{ii. deque using DLL}
+\label{sec:orge3e10a2}
+\subsubsection{iii. applications of deque}
+\label{sec:org1133269}
+\subsection{g) circular queue}
+\label{sec:org78c1d64}
+\section{{\bfseries\sffamily DONE} 6. Priority Queues}
+\label{sec:org6128428}
+\subsection{a) implementation(sorted and unsorted list)}
+\label{sec:org958d48f}
+\subsection{b) time complexity}
+\label{sec:org7341404}
+\section{{\bfseries\sffamily DONE} 7. Map}
+\label{sec:orgfb2262b}
+\subsection{a) common methods in map}
+\label{sec:orgeabae41}
+\subsection{b) common implementation}
+\label{sec:org4b1d404}
+\subsection{c) comparison of 3 implementation}
+\label{sec:orgc701ec1}
+\subsection{d) comparison of dictionary vs map}
+\label{sec:org8eed953}
+\section{{\bfseries\sffamily DONE} 8. Tree}
+\label{sec:org7a3c11e}
+\subsection{a) linked structure of BT}
+\label{sec:org2290981}
+\subsection{b) array based implementation of BT}
+\label{sec:org5c02922}
+left = 2*i + 1
+right = 2*i + 2
+\subsection{c) types of BT}
+\label{sec:org80052b9}
+\subsection{d) tree traversal algorithms}
+\label{sec:org94458cd}
+\subsubsection{i. inorder}
+\label{sec:orgcaa021f}
+\subsubsection{ii. postorder}
+\label{sec:org6b0a594}
+\subsubsection{iii. preorder}
+\label{sec:orgc25f1f8}
+\subsection{e) binary search tree}
+\label{sec:org68f6937}
+\subsection{f) avl trees}
+\label{sec:org7cd5299}
+\subsection{g) segment trees}
+\label{sec:orgfd2998e}
+\subsection{h) B-tree(insertion)}
+\label{sec:orgeed1d08}
+\section{{\bfseries\sffamily DONE} 9. Heap}
+\label{sec:orge31fd4e}
+\subsection{a) Max and min heap}
+\label{sec:org1b37569}
+\subsection{b) Heapify, heapsort}
+\label{sec:org618c93e}
+\subsection{c) Heap insertion and deletion}
+\label{sec:org781abc0}
+\section{{\bfseries\sffamily DONE} 10. Skiplist}
+\label{sec:orgad5c5d3}
+\subsection{a) Operations, implementation}
+\label{sec:orgd4fa227}
+\subsection{b) Time complexity}
+\label{sec:org7d76234}
+\subsection{c) Advantage and disadv}
+\label{sec:org0f62530}
+\subsection{d) Applications}
+\label{sec:orgeb05356}
+\section{{\bfseries\sffamily DONE} 11. External sorting and searching}
+\label{sec:org689276d}
+\section{{\bfseries\sffamily DONE} 12. Graph}
+\label{sec:org25901ef}
+\subsection{a) Types of graphs}
+\label{sec:orgaec347a}
+\subsection{b) Degree of vertices}
+\label{sec:org21588a0}
+\subsection{c) Subgraphs, spanning tree}
+\label{sec:orgdde8898}
+\subsection{d) Trees and forest}
+\label{sec:orgea40cef}
+\subsection{e) Graph traversal(DFS and BFS)}
+\label{sec:orgdce3366}
+\subsection{f) Path and cycle finding}
+\label{sec:org4bfde85}
+\subsection{g) Graph representation}
+\label{sec:org3d69989}
+\subsection{{\bfseries\sffamily TODO} h) Dijkstra's algo(single source shortest path)}
+\label{sec:orgc5727e7}
+\subsection{{\bfseries\sffamily TODO} i) Minimum spanning tree}
+\label{sec:org472f62d}
+\subsubsection{i. Prim's}
+\label{sec:org7333618}
+\subsubsection{ii. Kruskal's}
+\label{sec:orgc55d399}
+\subsection{{\bfseries\sffamily TODO} j) All pair shortest path}
+\label{sec:orgc1c90e8}
+\subsubsection{i. Floyd warshall algorithm}
+\label{sec:org5bfad50}
+\subsection{{\bfseries\sffamily TODO} k) Topological sorting(digraph)}
+\label{sec:orgf4f9c82}
+\end{document}

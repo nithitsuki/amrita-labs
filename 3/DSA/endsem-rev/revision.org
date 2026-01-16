@@ -93,14 +93,14 @@ right = 2*i + 2
 ** a) Max and min heap
 ** b) Heapify, heapsort
 ** c) Heap insertion and deletion
-* 10. Skiplist
+* DONE 10. Skiplist
 ** a) Operations, implementation
 ** b) Time complexity
 ** c) Advantage and disadv
 ** d) Applications
 
-* 11. External sorting and searching
-* 12. Graph
+* DONE 11. External sorting and searching
+* DONE 12. Graph
 ** a) Types of graphs
 ** b) Degree of vertices
 ** c) Subgraphs, spanning tree
@@ -108,10 +108,10 @@ right = 2*i + 2
 ** e) Graph traversal(DFS and BFS)
 ** f) Path and cycle finding
 ** g) Graph representation
-** h) Dijkstra's algo(single source shortest path)
-** i) Minimum spanning tree
+** TODO h) Dijkstra's algo(single source shortest path)
+** TODO i) Minimum spanning tree
 *** i. Prim's
 *** ii. Kruskal's
-** j) All pair shortest path
+** TODO j) All pair shortest path
 *** i. Floyd warshall algorithm
-** k) Topological sorting(digraph)
+** TODO k) Topological sorting(digraph)
