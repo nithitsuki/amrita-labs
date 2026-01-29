@@ -1,0 +1,13 @@
+23CSE211 - DESIGN AND ANALYSIS OF ALGORITHMS
+
+Lab Assignment 1
+
+1. Find the sum of first N natural numbers using Iterative and Recursive algorithms. Find the time taken to execute the same by varying ‘N’s value and plot it using python’s plot function.
+
+2. Perform linear and binary searches for an array of 10000 elements. Use random function in Python to generate the integer array elements in the range 1 to 1000. The search key is an input given by the user. Plot the time taken by the algorithm for 5 different searches when executing the two algorithms.
+
+3. Write a recursive function to convert the entered string of digits into the integer it represents. For example, 13531 represents the integer 13,531. Calculate the time taken to execute this program.
+
+4. Write a short recursive Python function that takes a character string s and outputs its reverse. For example, the reverse of pots&pans would be snap&stop.
+
+5. Write a short recursive Python function that determines if a string s is a palindrome. For example, racecar and gohangasalamiimalasagnahog are palindromes. 
