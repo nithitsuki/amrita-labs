@@ -1,5 +1,6 @@
 import time
 import math
+import heapq
 import random
 import matplotlib.pyplot as plt
 
@@ -29,7 +30,7 @@ times = dict()
 
 for i in range(100):
     arr.append(random.randint(1, 100))
-
+    
 print(arr)
 
 def tester(name: str, func, arr: list) -> None:
@@ -121,19 +122,19 @@ for sort_type in sorts.keys():
     tester(sort_type,sorts[sort_type],arr.copy())
 
 tups = [
-    (1 ,4 ),
-    (3 ,5 ),
-    (0 ,6 ),
-    (5 ,7 ),
     (3 ,8 ),
     (5 ,9 ),
     (6 ,10), 
     (8 ,11), 
-    (8 ,12), 
+    (8 ,12),
+    (1 ,4 ),
+    (3 ,5 ),
+    (0 ,6 ),
+    (5 ,7 ),
     (2 ,13), 
     (12,14)
 ]
-
+tups = sorted(tups, key=lambda x: x[1])
 lptr = tups[0]
 rptr = tups[1]
 count = 1
@@ -157,3 +158,22 @@ while(rptr_idx < (len(tups))):
 
 print(count)
 print(results)
+
+
+print("== TOP 5 nums ==")
+min_heap = arr[:5]
+heapq.heapify(min_heap)
+for num in arr:
+    if(num > arr[0]):
+        heapq.heappushpop(min_heap,num)
+print("top 5 nums: " + str(sorted(min_heap)))
+
+# rank inversions:
+smol_arr = arr[:5]
+ans = list()
+for i in range(len(smol_arr)-1):
+    for j in range(i,len(smol_arr)):
+        if(smol_arr[i] > smol_arr[j]):
+            ans.append((smol_arr[i], smol_arr[j]))
+print("smol_arr " + str(smol_arr))
+print("ans " + str(ans))
