@@ -1,0 +1,7 @@
+This is the syllabus for my upcoming midsem exam:
+
+Fundamental Probability: Measures of probability, addition/multiplication theorems, conditional probability, and Bayes Theorem.
+1D Random Variables: Discrete and continuous random variables, Probability Mass Function (PMF), Probability Density Function (PDF), and Cumulative Distribution Function (CDF).
+Expectation & Moments: Mathematical expectation, variance, standard deviation, and Moment Generating Functions (MGF).
+Standard Distributions (Unit 2): Geometric, Binomial, Poisson, Uniform, Exponential, and Normal distributions. You are expected to know the MGF, mean, and variance for these.
+2D Random Variables (Multi-variable probability): Joint PMF (JPMF), Joint PDF (JPDF), marginal probability, conditional probability, and stochastic independence.
