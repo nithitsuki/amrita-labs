@@ -28,17 +28,17 @@
 - [ ] PYQ Questions: Page 2: Q7, Page 3: Q6(a)
 
 * DONE 2. 1D Random Variables
-** Discrete RVs (PMF)
+** DONE Discrete RVs (PMF)
 - [ ] Concepts: Verifying sums to 1, finding interval probabilities.
 - [ ] Assignment Questions: Q27, Q30, Q31
 - [ ] PYQ Questions: Page 4: Q8(c)
 
-** Continuous RVs (PDF)
+** DONE Continuous RVs (PDF)
 - [ ] Concepts: Verifying integral to 1, solving for constants.
 - [ ] Assignment Questions: Q32, Q38, Q39
 - [ ] PYQ Questions: Page 2: Q8(a), Page 3: Q5
 
-** Cumulative Distribution Function (CDF)
+** DONE Cumulative Distribution Function (CDF)
 - [ ] Concepts: Constructing from PMF/PDF, calculating point/interval
   probabilities.
 - [ ] Assignment Questions: Q28, Q40
@@ -57,12 +57,12 @@
 - [ ] Assignment Questions: Q35, Q101
 - [ ] PYQ Questions: Page 3: Q6(b)
 
-** Moment Generating Functions (MGF)
+** HOLD Moment Generating Functions (MGF)
 - [ ] Concepts: Deriving mean and variance from the MGF.
 - [ ] Assignment Questions: Q41, Q71, Q98
 - [ ] PYQ Questions: Page 2: Q9(b)
   
-** Chebyshev's Inequality
+** DONE Chebyshev's Inequality
 - [ ] Concepts: Finding probability bounds without exact distributions.
 - [ ] Assignment Questions: Q98, Q102
 - [ ] PYQ Questions: N/A
@@ -70,40 +70,69 @@
 * 4. Standard Distributions
 For each of Geometric, Binomial, Poisson, Uniform, Exponential, Normal:
 know PMF/PDF, MGF, mean, variance
-
 ** Geometric Distribution
 - [ ] Concepts: Probability of first success, memoryless property.
+    - PMF: $P(X = k) = (1-p)^{k-1}p$, $k = 1, 2, 3, \ldots$
+    - CDF: $F(k) = 1 - (1-p)^k$
+    - Mean: $E[X] = \frac{1}{p}$
+    - Variance: $\operatorname{Var}(X) = \frac{1-p}{p^2}$
+    - Memoryless property: $P(X > s + t \mid X > s) = P(X > t)$
 - [ ] Assignment Questions: N/A
 - [ ] PYQ Questions: Page 2: Q9(b)
 
-** Binomial Distribution
-- [ ] Concepts: Fixed trials, exact/at least/at most constraints.
+** DONE Binomial Distribution
+- [ ] Concepts: Fixed number of trials, exact/at least/at most successes.
+    - PMF: $P(X = k) = {n \choose k} p^k (1-p)^{n-k}$, $k = 0, 1, \ldots, n$
+    - CDF: $F(k) = \sum_{i=0}^k {n \choose i} p^i (1-p)^{n-i}$
+    - Mean: $E[X] = np$
+    - Variance: $\operatorname{Var}(X) = np(1-p)$
+    - MGF: $M_X(t) = [1-p + p e^t]^n$
 - [ ] Assignment Questions: Q42, Q46, Q50
 - [ ] PYQ Questions: Page 2: Q9(a), Page 4: Q7(a)
 
-** Poisson Distribution
-- [ ] Concepts: Continuous interval events, Binomial approximation.
+** DONE Poisson Distribution
+- [ ] Concepts: Events over a continuous interval, Binomial approximation when $n$ large and $p$ small.
+    - PMF: $P(X = k) = \frac{\lambda^k e^{-\lambda}}{k!}$, $k = 0, 1, 2, \ldots$
+    - CDF: $F(k) = \sum_{i=0}^k \frac{\lambda^i e^{-\lambda}}{i!}$
+    - Mean: $E[X] = \lambda$
+    - Variance: $\operatorname{Var}(X) = \lambda$
+    - MGF: $M_X(t) = \exp[\lambda(e^t - 1)]$
 - [ ] Assignment Questions: Q49, Q51, Q59
 - [ ] PYQ Questions: Page 4: Q7(b)
 
-** Uniform Distribution
-- [ ] Concepts: Constant probability over an interval.
+** DONE Uniform Distribution
+- [ ] Concepts: Constant probability over a finite interval.
+    - PDF (continuous): $f(x) = \frac{1}{b-a}$, $a \leq x \leq b$
+    - CDF: $F(x) = \frac{x - a}{b - a}$ for $a \leq x \leq b$
+    - Mean: $E[X] = \frac{a+b}{2}$
+    - Variance: $\operatorname{Var}(X) = \frac{(b-a)^2}{12}$
+    - MGF: $M_X(t) = \frac{e^{tb} - e^{ta}}{t(b-a)}$
 - [ ] Assignment Questions: Q64, Q65, Q67
 - [ ] PYQ Questions: Page 3: Q3
 
-** Exponential Distribution
-- [ ] Concepts: Time until failure/event, continuous memoryless
-  property.
+** DONE Exponential Distribution
+- [ ] Concepts: Time until first event, continuous memoryless property.
+    - PDF: $f(x) = \lambda e^{-\lambda x},\ x \geq 0$
+    - CDF: $F(x) = 1 - e^{-\lambda x}$
+    - Mean: $E[X] = \frac{1}{\lambda}$
+    - Variance: $\operatorname{Var}(X) = \frac{1}{\lambda^2}$
+    - MGF: $M_X(t) = \frac{\lambda}{\lambda - t}$ for $t < \lambda$
+    - Memoryless property: $P(X > s + t \mid X > s) = P(X > t)$
 - [ ] Assignment Questions: Q72, Q74, Q75
 - [ ] PYQ Questions: Page 3: Q4
-
 ** Normal Distribution
+- PDF: $f(x) = \frac{1}{\sqrt{2\pi \sigma^2}} \exp\left(-\frac{(x - \mu)^2}{2\sigma^2}\right),\quad x \in \mathbb{R}$
+- CDF:$F(x) = \int_{-\infty}^x f(t)\,dt$
+- Mean:$E[X] = \mu$
+- Variance:$\operatorname{Var}(X) = \sigma^2$
+- Standardization:$Z = \frac{X - \mu}{\sigma} \sim N(0, 1)$
+- MGF:$M_X(t) = \exp\left(\mu t + \frac{1}{2} \sigma^2 t^2\right)$
 - [ ] Concepts: Standardizing to Z, using normal tables for cutoffs.
 - [ ] Assignment Questions: Q78, Q79, Q83
 - [ ] PYQ Questions: Page 4: Q8(a)
 
 * 5. 2D Random Variables
-** Joint PMF (Discrete)
+** DONE Joint PMF (Discrete)
 - [ ] Concepts: Verifying sums, reading bivariate probability tables.
 - [ ] Assignment Questions: Q84, Q86, Q91
 - [ ] PYQ Questions: Page 4: Q9
@@ -113,7 +142,7 @@ know PMF/PDF, MGF, mean, variance
 - [ ] Assignment Questions: Q89, Q94, Q97
 - [ ] PYQ Questions: N/A
 
-** Marginal Probability
+** DONE Marginal Probability
 - [ ] Concepts: Summing rows/columns or integrating out the opposing
   variable.
 - [ ] Assignment Questions: Q84, Q86
@@ -124,7 +153,7 @@ know PMF/PDF, MGF, mean, variance
 - [ ] Assignment Questions: Q84, Q94
 - [ ] PYQ Questions: N/A
 
-** Stochastic Independence
+** DONE Stochastic Independence
 - [ ] Concepts: Proving probability distributions are independent.
 - [ ] Assignment Questions: Q85, Q86
 - [ ] PYQ Questions: Page 4: Q9(ii)
