@@ -1,0 +1,837 @@
+* Chapter 1: Introduction to Operating Systems
+** 1. Operating System Fundamentals
+- *Definition:* An operating system (OS) is a program acting as an
+  intermediary between a computer user and the hardware.
+- *Goals:* The OS aims to execute user programs, make user problems
+  easier to solve, make the system convenient to use, and utilize
+  hardware efficiently.
+- *Resource Allocation:* The OS functions as a resource allocator and
+  control program, managing the execution of user programs and hardware
+  utilization.
+- *Kernel vs. System Programs:* There is no universally accepted
+  definition of an OS, but the kernel is strictly defined as "the one
+  program running at all times on the computer". Everything else is
+  either a system program (shipped with the OS but not part of the
+  kernel) or an application program.
+- *Middleware:* Modern general-purpose and mobile OSes include
+  middleware, which consists of software frameworks providing
+  application developers with extra services like databases, multimedia,
+  and graphics.
+
+** 2. Computer System Structure
+A computer system consists of four primary components:
+
+- *Hardware:* Provides basic computing resources, including the CPU,
+  memory, and I/O devices.
+- *Operating System:* Controls and coordinates the hardware among
+  applications and users.
+- *Application Programs:* Define how system resources solve user
+  computing problems (e.g., compilers, web browsers, database systems).
+- *Users:* Can be people, machines, or other computers.
+
+** 4. System Initialization
+- *Bootstrap Program:* Firmware stored in ROM or EPROM that is loaded at
+  power-up or reboot.
+- *Function:* It initializes all system aspects, loads the OS kernel,
+  and begins execution.
+
+** 5. Storage Structure
+- *Main Memory:* The only large, volatile storage medium the CPU can
+  access directly, typically implemented as Dynamic Random-access Memory
+  (DRAM).
+- *Secondary Storage:* A nonvolatile extension of main memory, providing
+  large storage capacity.
+- *Hard Disk Drives (HDD):* Rigid platters with magnetic recording
+  material, divided logically into tracks and subdivided into sectors.
+- *Non-volatile memory (NVM):* Faster than HDDs and becoming more
+  popular as capacity increases.
+- *Hierarchy:* Storage is organized by speed, cost, and volatility.
+- *Caching:* Information is copied temporarily from slower storage to
+  faster storage (the cache) for immediate access. Cache management
+  involves determining cache size and replacement policies. Main memory
+  functions as a cache for secondary storage.
+
+** 6. Multiprogramming and Multitasking
+- *Multiprogramming (Batch Systems):* Organizes jobs so the CPU always
+  has code to execute, maximizing utilization. A subset of total jobs is
+  maintained in memory, and the OS switches to another job if the
+  current one must wait for I/O.
+- *Multitasking (Timesharing):* An extension of multiprogramming where
+  the CPU switches jobs rapidly, enabling interactive computing with
+  response times typically \(< 1\) second.
+- *Swapping and Virtual Memory:* Swapping moves processes in and out of
+  memory if they don't fit entirely, while virtual memory permits the
+  execution of processes that are not completely loaded into memory.
+
+** 7. Dual-Mode Operation and Protection
+- *Modes:* Hardware provides a mode bit to distinguish between user mode
+  and kernel mode, allowing the OS to protect system components.
+- *Transitions:* System calls change the mode from user to kernel;
+  returning from the call resets it back to user mode.
+- *Privileged Instructions:* Specific instructions are designated as
+  privileged and can only be executed when in kernel mode.
+- *Timer:* A hardware timer decrements a physical clock counter and
+  generates an interrupt when it reaches zero, preventing infinite loops
+  or resource hogging. Setting the counter is a privileged instruction.
+
+** 8. System Management Functions
+- *Process Management:* A process is an active entity (a program in
+  execution) requiring CPU, memory, I/O, and files. Activities include
+  process creation/deletion, suspension/resumption, synchronization,
+  communication, and deadlock handling.
+- *Memory Management:* The OS tracks memory usage, dictates which
+  processes move in/out, and allocates/deallocates space.
+- *File-System Management:* The OS abstracts physical media properties
+  to logical units called files, organizing them into directories,
+  establishing access controls, and mapping them to storage.
+- *Mass-Storage Management:* Handles data that exceeds main memory.
+  Activities include mounting/unmounting, free-space management, storage
+  allocation, disk scheduling, and partitioning.
+- *I/O Subsystem:* Hides hardware peculiarities using buffering,
+  caching, spooling, and standardized device-driver interfaces.
+
+** 9. Security, Protection, and Virtualization
+- *Protection vs. Security:* Protection controls process/user access to
+  OS resources, whereas security defends the system against internal and
+  external attacks.
+- *Identity:* Access control is managed via User IDs and Group IDs
+  associated with files and processes, with privilege escalation
+  allowing expanded rights.
+- *Virtualization:* Allows OSes to run applications within other
+  natively compiled OSes. The Virtual Machine Manager (VMM) provides
+  these services and can run natively as the host. Emulation is used
+  when the source CPU architecture differs from the target.
+
+** 10. Computer Architecture and Environments
+- *Multiprocessor Systems:* Also known as parallel or tightly-coupled
+  systems. They offer increased throughput, economy of scale, and
+  graceful degradation/fault tolerance.
+- *SMP vs. AMP:* Symmetric Multiprocessing allows all processors to
+  perform all tasks, while Asymmetric Multiprocessing assigns specific
+  tasks to specific processors.
+- *Clustered Systems:* Multiple independent systems working together,
+  often sharing a storage-area network (SAN) for high availability.
+  Distributed Lock Managers (DLM) prevent conflicting operations.
+- *Computing Environments:*
+  - *Mobile:* iOS and Android devices featuring extra OS functions like
+    GPS and gyroscopes.
+  - *Client-Server:* Compute-servers respond to processing requests,
+    while file-servers provide storage interfaces.
+  - *Peer-to-Peer (P2P):* Nodes act as both clients and servers without
+    centralized distinction, using lookup services or discovery
+    protocols.
+  - *Cloud Computing:* Delivers computing, storage, and SaaS/PaaS/IaaS
+    via the internet, utilizing virtualization heavily.
+  - *Real-Time Embedded Systems:* Must adhere to well-defined fixed time
+    constraints to operate correctly.
+
+** 11. Open Source & Kernel Data Structures
+- *Open Source:* Systems like GNU/Linux and BSD UNIX distribute source
+  code, circumventing proprietary models and allowing students to study
+  systems from the inside out.
+- *Kernel Data Structures:* Include singly, doubly, and circular linked
+  lists, bitmaps, hash maps, and binary search trees. A standard binary
+  search tree performs at \(O(n)\), while a balanced binary search tree
+  operates at \(O(\log n)\).
+
+--------------
+
+* Chapter 2: Operating-System Services
+** 1. Operating System Services
+Operating systems provide an environment and services for both programs
+and users.
+
+- *User-Helpful Services:*
+  - *User Interface (UI):* Includes Command-Line (CLI), Graphical User
+    Interface (GUI), touch-screen, and batch interfaces.
+  - *Program Execution:* The ability to load a program into memory, run
+    it, and end execution normally or abnormally.
+  - *I/O Operations:* Managing required file or device I/O for running
+    programs.
+  - *File-System Manipulation:* Reading, writing, creating, deleting,
+    searching, and managing permissions for files and directories.
+  - *Communications:* Exchanging information between processes on the
+    same system or over a network via shared memory or message passing.
+  - *Error Detection:* Monitoring hardware (CPU, memory, I/O) and
+    software for errors and taking appropriate action. Debugging
+    facilities enhance system utilization.
+- *System-Efficiency Services:*
+  - *Resource Allocation:* Distributing CPU cycles, main memory, file
+    storage, and I/O devices among concurrent users and jobs.
+  - *Logging:* Tracking which users consume specific amounts and types
+    of resources.
+  - *Protection and Security:* Controlling access to system resources
+    and defending external I/O devices against invalid access.
+
+** 2. User and Operating-System Interface
+- *Command Line Interpreter (CLI):* Allows direct command entry. It
+  fetches commands from the user and executes them, sometimes via
+  built-in commands or by executing named programs. CLIs can be
+  implemented in the kernel or by system programs known as shells.
+- *Graphical User Interface (GUI):* A desktop metaphor utilizing a
+  mouse, keyboard, and monitor, where icons represent files and
+  programs. Invented at Xerox PARC. Examples include Windows, Mac OS X
+  "Aqua", and Linux CDE/KDE/GNOME.
+- *Touchscreen Interfaces:* Rely on gestures, virtual keyboards, and
+  voice commands rather than a mouse.
+
+** 3. System Calls
+System calls provide a programming interface to OS services, typically
+written in C or C++.
+
+- *Application Programming Interface (API):* Programs access system
+  calls via high-level APIs like Win32 (Windows), POSIX (UNIX, Linux,
+  Mac OS X), and the Java API (JVM).
+- *Implementation:* The system-call interface maintains an indexed table
+  of numbers corresponding to system calls. It invokes the call in the
+  kernel and returns the status, hiding the internal OS details from the
+  programmer via a run-time support library.
+- *Parameter Passing Methods:*
+  1. Registers (the simplest method).
+  2. Block or table in memory, with the address passed in a register
+     (used by Linux and Solaris).
+  3. Pushed onto the stack by the program and popped off by the OS.
+- *Note:* Block and stack methods do not limit the parameter count or
+  length.
+- *Types of System Calls:* Process control, file management, device
+  management, information maintenance, communications, and protection.
+
+** 4. System Services and Application Programs
+- *System Services (System Programs):* Provide a convenient environment
+  for program execution and development, often acting as complex
+  interfaces to system calls. Categories include file manipulation,
+  status information, file modification, programming-language support,
+  program loading/execution, communications, and background services.
+- *Background Services:* Daemons, subsystems, or services that launch at
+  boot and run in a user context rather than kernel context.
+- *Application Programs:* Programs run by users that do not pertain to
+  system operation and are not considered part of the OS.
+
+** 5. Linkers, Loaders, and OS Specificity
+- *Compilation Flow:* Source code is compiled into relocatable object
+  files. A *linker* combines these files and libraries into a single
+  binary executable. A *loader* brings the binary from secondary storage
+  into memory for execution.
+- *Relocation:* Assigns final memory addresses to program components and
+  adjusts code/data to match.
+- *Dynamically Linked Libraries (DLLs):* Modern systems load shared
+  libraries as needed rather than linking them into executables.
+- *OS Specificity:* Applications are usually OS-specific due to unique
+  system calls and file formats.
+- *Application Binary Interface (ABI):* The architecture equivalent of
+  an API. It defines how binary components interface for a specific OS
+  and CPU.
+
+** 6. Design and Implementation
+- *Goals:* User goals (convenience, speed, safety) versus system goals
+  (maintainability, flexibility, efficiency).
+- *Policy vs. Mechanism:* An important principle is separating policy
+  ("what needs to be done") from mechanism ("how to do something") to
+  ensure maximum flexibility.
+- *Languages:* Implementations usually mix languages: lowest levels in
+  assembly, main body in C, and system programs in C, C++, or scripting
+  languages. High-level languages are easier to port but slower.
+
+** 7. Operating System Structure
+- *Monolithic:* The original UNIX structure combined all functions (file
+  system, scheduling, memory) below the system-call interface and above
+  hardware into one large kernel.
+  - *Note:* Linux utilizes a monolithic structure combined with modular
+    design.
+- *Layered:* The OS is divided into levels where Layer 0 is hardware and
+  Layer N is the user interface. Each layer only uses functions from
+  lower-level layers.
+- *Microkernel:* Moves as much functionality as possible from the kernel
+  into user space (e.g., Mach). Communication occurs via message
+  passing.
+  - *Benefits:* Easier to extend/port, more reliable, and secure.
+  - *Detriments:* Performance overhead due to user-space to kernel-space
+    communication.
+- *Modular:* Modern OSes use loadable kernel modules (LKMs) where core
+  components are separate but loadable on demand within the kernel,
+  offering more flexibility than rigid layers.
+- *Hybrid Systems:* Combine multiple structures.
+  - *Windows:* Monolithic plus microkernel subsystems.
+  - *Mac OS X (macOS):* Layered hybrid containing Aqua UI, a Mach
+    microkernel, BSD Unix parts, and LKMs (kernel extensions).
+  - *iOS:* Based on Mac OS X but utilizes an ARM CPU and adds the Cocoa
+    Touch API.
+  - *Android:* Open source, based on a modified Linux kernel, uses the
+    Dalvik virtual machine, and apps are developed in Java.
+
+** 8. Building, Booting, and Debugging
+- *System Boot:* Execution starts at a fixed memory location when
+  powered on. A bootstrap loader (BIOS or UEFI) located in ROM/EEPROM
+  locates, loads, and starts the kernel. Boot loaders like GRUB allow
+  the user to select specific kernels or boot options.
+- *Debugging Tools:*
+  - OSes generate log files, process core dump files (application
+    failures), and crash dump files (kernel failures).
+  - *Profiling:* Periodically samples the instruction pointer to
+    identify statistical performance trends.
+  - *Tracing:* Collects data for specific events. Tools include =strace=
+    (system calls), =gdb= (source-level debugger), =perf= (Linux
+    performance), =tcpdump= (network packets), and BCC (BPF Compiler
+    Collection for Linux tracing).
+
+--------------
+
+* Chapter 3: Processes
+** 1. Process Concept
+- *Definition:* A process is a program in execution, and its execution
+  must progress in a sequential fashion. A program is a passive entity
+  stored on disk (an executable file), whereas a process is an active
+  entity.
+- *Execution limitation:* There is no parallel execution of instructions
+  within a single process.
+- *Multiple Instances:* One program can become several processes, such
+  as multiple users executing the same program simultaneously.
+- *Process Components in Memory:*
+  - *Text Section:* The program code.
+  - *Current Activity:* Represented by the program counter and processor
+    registers.
+  - *Stack:* Contains temporary data such as function parameters, return
+    addresses, and local variables.
+  - *Data Section:* Contains global variables.
+  - *Heap:* Memory dynamically allocated during run time.
+
+** 2. Process State and Representation
+- *States:* As a process executes, it transitions through distinct
+  states:
+  - *New:* The process is being created.
+  - *Ready:* Waiting to be assigned to a processor.
+  - *Running:* Instructions are being executed.
+  - *Waiting:* Waiting for some event to occur, such as I/O completion.
+  - *Terminated:* Finished execution.
+- *Process Control Block (PCB):* Also called a task control block, this
+  structure stores process-specific information. It includes:
+  - Process state and program counter.
+  - CPU registers and scheduling information (priorities, queue
+    pointers).
+  - Memory-management information, accounting information (CPU time
+    used), and I/O status information (allocated devices, open files).
+  - *Linux specific:* Represented by the C structure =task_struct=,
+    storing process identifier (=pid=), state, scheduling info, and
+    pointers to parents/children.
+
+** 3. Process Scheduling and Context Switching
+- *Goal:* The process scheduler aims to maximize CPU use and quickly
+  switch processes onto the CPU core.
+- *Scheduling Queues:*
+  - *Ready Queue:* Processes residing in main memory, ready and waiting
+    to execute.
+  - *Wait Queues:* Processes waiting for an event, such as I/O.
+- *Context Switch:* When the CPU switches to another process, the OS
+  must save the state of the old process into its PCB and load the saved
+  state for the new process.
+- *Overhead:* Context-switch time is pure overhead; the system does no
+  useful work while switching. The duration is heavily dependent on
+  hardware support, such as multiple sets of registers per CPU.
+
+** 4. Operations on Processes
+- *Process Creation:*
+  - A parent process creates child processes, forming a tree of
+    processes identified by a process identifier (pid).
+  - *Resource Sharing:* Parents and children can share all, a subset, or
+    no resources.
+  - *Execution:* They can execute concurrently, or the parent can wait
+    for children to terminate.
+  - *UNIX Systems:* Use the =fork()= system call to create a process,
+    followed by =exec()= to replace the process' memory space with a new
+    program, while the parent calls =wait()=. Windows uses
+    =CreateProcess()=.
+- *Process Termination:*
+  - Processes finish via the =exit()= system call, and resources are
+    deallocated.
+  - Parents can terminate children using =abort()= if resources are
+    exceeded, the task is no longer required, or the parent is exiting.
+  - *Cascading Termination:* Some OSes terminate all children and
+    grandchildren if the parent terminates.
+  - *Zombies vs. Orphans:* A zombie is a terminated process whose parent
+    did not invoke =wait()=, whereas an orphan is a process whose parent
+    terminated without invoking =wait()=.
+
+** 5. Mobile & Multiprocess Architectures
+- *Mobile Multitasking:* Early iOS allowed one foreground process and
+  heavily limited background processes. Android allows background
+  processes to use a "service" with no UI to run continuously.
+- *Android Termination Hierarchy:* To reclaim memory, Android terminates
+  processes from least to most important: Empty, Background, Service,
+  Visible, and finally Foreground.
+- *Chrome Browser:* Utilizes a multiprocess architecture consisting of a
+  Browser process (UI, I/O), a Renderer process (sandboxed for each
+  website), and Plug-in processes.
+
+** 6. Interprocess Communication (IPC)
+- *Purpose:* Independent processes do not affect each other, but
+  cooperating processes need IPC to share information, speed up
+  computation, achieve modularity, and provide convenience.
+- *IPC Model 1: Shared Memory:*
+  - An area of memory is shared among processes; communication is
+    controlled by the user processes, not the OS.
+  - Requires synchronization to avoid issues like race conditions (e.g.,
+    when counter increments/decrements interleave improperly).
+  - *POSIX implementation:* Uses =shm_open()= to create/open segments
+    and =mmap()= to memory-map file pointers to the object.
+- *IPC Model 2: Message Passing:*
+  - Processes communicate without shared variables using =send(message)=
+    and =receive(message)= primitives.
+  - *Direct Communication:* Processes explicitly name each other (e.g.,
+    =send(P, message)=). Exactly one link is automatically established
+    between one pair.
+  - *Indirect Communication:* Messages are sent to and received from
+    mailboxes (ports) with unique IDs. Links can be associated with many
+    processes.
+  - *Synchronization:* Blocking is synchronous (sender/receiver wait
+    until action completes). Non-blocking is asynchronous. A
+    "rendezvous" occurs if both are blocking.
+  - *Buffering Capacities:* Zero capacity (sender waits), Bounded
+    capacity (sender waits if full), Unbounded capacity (sender never
+    waits).
+  - *Mach implementation:* Completely message-based, using =mach_msg()=
+    with Kernel and Notify ports.
+  - *Windows implementation:* Advanced Local Procedure Call (LPC) uses
+    ports between processes on the same system.
+
+** 7. Pipes
+- *Ordinary Pipes:* Unidirectional conduits requiring a parent-child
+  relationship. The producer writes to one end, and the consumer reads
+  from the other (called anonymous pipes in Windows).
+- *Named Pipes:* More powerful, bidirectional communication that
+  requires no parent-child relationship and can be used by several
+  processes.
+
+** 8. Communications in Client-Server Systems
+- *Sockets:* An endpoint for communication represented by the
+  concatenation of an IP address and a port (e.g., 161.25.19.8:1625).
+  Java supports TCP (connection-oriented), UDP (connectionless), and
+  Multicast sockets.
+- *Remote Procedure Calls (RPC):*
+  - Abstracts procedure calls between processes on networked systems.
+  - Uses *stubs*: Client-side stubs locate the server and marshall
+    parameters; server-side stubs unpack them and execute the procedure.
+  - Data is represented via External Data Representation (XDL) format to
+    account for architecture differences like endianness.
+  - The OS provides a rendezvous/matchmaker service to connect the
+    client and server.
+
+* Chapter 4: Threads & Concurrency
+** Overview and Motivation
+- Most modern applications are multithreaded.
+- Threads execute within the application.
+- A single application can implement multiple tasks using separate
+  threads.
+- Common thread tasks include updating the display, fetching data, spell
+  checking, and answering network requests.
+- Process creation is a heavy-weight operation, whereas thread creation
+  is light-weight.
+- Implementing threads can simplify code and increase execution
+  efficiency.
+- Operating system kernels are generally multithreaded.
+
+** Benefits of Multithreading
+- *Responsiveness*: Multithreading allows continued execution even if a
+  part of the process is blocked, which is critical for user interfaces.
+- *Resource Sharing*: Threads share the resources of the parent process,
+  which is easier to manage than shared memory or message passing.
+- *Economy*: Thread creation is cheaper than process creation.
+- *Economy (Context Switching)*: Thread switching inherently incurs
+  lower overhead than process context switching.
+- *Scalability*: A multithreaded process can take full advantage of
+  multicore architectures.
+
+** Multicore Programming
+- Multicore or multiprocessor systems introduce specific programming
+  challenges.
+- These challenges include dividing activities, achieving balance, data
+  splitting, managing data dependency, and testing and debugging.
+- *Parallelism*: Implies a system can perform more than one task
+  simultaneously.
+- *Concurrency*: Supports more than one task making progress, typically
+  provided by a scheduler on a single processor or core.
+
+*** Types of Parallelism
+- *Data parallelism*: Distributes subsets of the same data across
+  multiple processing cores and performs the same operation on each
+  core.
+- *Task parallelism*: Distributes different threads across processing
+  cores, where each thread performs a unique operation.
+
+*** Amdahl's Law
+- Amdahl's Law identifies the potential performance gains from adding
+  additional cores to an application containing both serial and parallel
+  components.
+- The formula for speedup is
+  \(speedup \leq \frac{1}{S + \frac{(1-S)}{N}}\), where \(S\) is the
+  serial portion and \(N\) represents the processing cores.
+- If an application is 75% parallel and 25% serial, moving from 1 to 2
+  cores results in a speedup of 1.6 times.
+- As the number of processing cores (\(N\)) approaches infinity, the
+  theoretical speedup approaches \(1 / S\).
+- The serial portion of an application dictates a disproportionate
+  effect on the performance gained by adding additional cores.
+
+** User Threads and Kernel Threads
+- *User threads*: Thread management is performed by a user-level threads
+  library.
+- The three primary thread libraries are POSIX Pthreads, Windows
+  threads, and Java threads.
+- *Kernel threads*: Threads directly supported by the Kernel.
+- Virtually all general-purpose operating systems utilize kernel
+  threads, including Windows, Linux, Mac OS X, iOS, and Android.
+
+** Multithreading Models
+- *Many-to-One*: Maps many user-level threads to a single kernel thread.
+  - If one thread blocks, it causes all threads to block.
+  - Multiple threads cannot run in parallel on a multicore system
+    because only one thread can be in the kernel at a time.
+  - Examples include Solaris Green Threads and GNU Portable Threads.
+- *One-to-One*: Maps each user-level thread directly to a kernel thread.
+  - Creating a user-level thread inherently creates a kernel thread.
+  - It provides more concurrency than the many-to-one model.
+  - The total number of threads per process is sometimes restricted due
+    to overhead constraints.
+  - Examples include Windows and Linux.
+- *Many-to-Many*: Allows many user-level threads to map to many kernel
+  threads.
+  - This allows the operating system to create a sufficient number of
+    kernel threads.
+  - Windows implements this using the ThreadFiber package.
+- *Two-level Model*: Operates similarly to the Many-to-Many model but
+  includes the capacity to bind a user thread to a specific kernel
+  thread.
+
+** Thread Libraries
+- Thread libraries provide the programmer with an API required for
+  creating and managing threads.
+- Thread libraries are implemented either entirely in user space or as a
+  kernel-level library supported by the operating system.
+
+*** Pthreads
+- Pthreads can be provided either as a user-level or kernel-level
+  library.
+- It represents a POSIX standard (IEEE 1003.1c) API for thread creation
+  and synchronization.
+- Pthreads is a specification outlining the behavior of the thread
+  library, rather than a direct implementation.
+- It is highly common in UNIX operating systems such as Linux and Mac OS
+  X.
+
+*** Windows Threads
+- Multithreaded C programming in Windows uses the Windows API.
+
+*** Java Threads
+- Java threads are directly managed by the Java Virtual Machine (JVM).
+- They are typically implemented using the underlying threading model
+  provided by the host operating system.
+- Java threads are created by extending the =Thread= class or by
+  implementing the =Runnable= interface.
+- Implementing the =Runnable= interface is the standard practice.
+
+** Implicit Threading
+Implicit threading shifts the creation and management of threads from
+programmers to compilers and run-time libraries.
+
+*** Thread Pools
+- Thread pools create a specific number of threads within a pool where
+  they wait for assigned work.
+- It is usually slightly faster to service a request using an existing
+  thread from a pool than to create a completely new thread.
+- Thread pools allow the number of application threads to be bound
+  strictly to the size of the pool.
+- This structure separates the task to be performed from the mechanics
+  of task creation, allowing distinct strategies for execution.
+- In Java, thread pools are created using factory methods in the
+  Executors class: =newSingleThreadExecutor()=,
+  =newFixedThreadPool(int size)=, and =newCachedThreadPool()=.
+
+*** Fork-Join Parallelism
+- In Fork-Join parallelism, multiple threads (tasks) are forked and
+  subsequently joined.
+- In Java, =ForkJoinTask= acts as an abstract base class.
+- =RecursiveTask= and =RecursiveAction= classes extend =ForkJoinTask=.
+- =RecursiveTask= returns a result via the return value from its
+  =compute()= method.
+- =RecursiveAction= executes a task but does not return a result.
+
+*** OpenMP
+- OpenMP is a set of compiler directives and an API tailored for C, C++,
+  and FORTRAN.
+- It provides robust support for parallel programming specifically in
+  shared-memory environments.
+- The directive =#pragma omp parallel= identifies blocks of code that
+  can execute in parallel, creating as many threads as there are
+  hardware cores.
+
+*** Grand Central Dispatch (GCD)
+- GCD is an Apple technology built for macOS and iOS operating systems.
+- It manages most of the granular details of threading and allows the
+  identification of parallel sections using blocks enclosed in =^{ }=.
+- Blocks are placed in dispatch queues and assigned to an available
+  thread in the thread pool.
+- *Serial queues*: Blocks are removed in FIFO order; the queue is
+  per-process and designated as the main queue.
+- *Concurrent queues*: Blocks are removed in FIFO order, but several
+  blocks may be removed and executed simultaneously.
+- Queues are divided by quality of service (QOS) classes:
+  =QOS_CLASS_USER_INTERACTIVE=, =QOS_CLASS_USER_INITIATED=,
+  =QOS_CLASS_USER_UTILITY=, and =QOS_CLASS_USER_BACKGROUND=.
+
+*** Intel Threading Building Blocks (TBB)
+- TBB is a template library engineered for designing parallel C++
+  programs.
+
+** Threading Issues
+*** Fork() and Exec() Semantics
+- A critical design question is whether =fork()= duplicates only the
+  calling thread or all existing threads within the process.
+- Some UNIX variants solve this by having two distinct versions of
+  =fork()=.
+- Calling =exec()= replaces the currently running process, which
+  immediately includes terminating all its threads.
+
+*** Signal Handling
+- Signals notify a UNIX process that a specific event has successfully
+  occurred.
+- A signal is handled by either a default handler (run by the kernel) or
+  a user-defined signal handler that explicitly overrides the default.
+- In a multithreaded architecture, a signal can be delivered to the
+  specific thread it applies to, every thread in the process, a select
+  group of threads, or a specific assigned thread meant to receive all
+  signals.
+
+*** Thread Cancellation
+- Thread cancellation targets and terminates a thread before it has
+  inherently finished execution.
+- *Asynchronous cancellation*: Instantly terminates the target thread
+  without waiting.
+- *Deferred cancellation*: Allows the target thread to periodically
+  check its status to determine if it should be cancelled.
+- Deferred is the default cancellation type.
+- In deferred mode, actual cancellation strictly occurs only when a
+  thread hits a defined cancellation point, such as
+  =pthread_testcancel()=.
+- Once the cancellation point is reached, the cleanup handler is
+  systematically invoked.
+- In Java, deferred cancellation utilizes the =interrupt()= method to
+  securely set the interrupted status of a specific thread.
+
+*** Thread-Local Storage (TLS)
+- TLS allows every thread to securely maintain its own dedicated copy of
+  data.
+- TLS acts similarly to static data but is entirely unique to each
+  individual thread.
+- It is critical when using an environment where thread creation is
+  opaque (like thread pools) and is different from local variables
+  because TLS is visible seamlessly across multiple function
+  invocations.
+
+*** Scheduler Activations
+- The Many-to-Many and Two-level models necessitate structured
+  communication to maintain the proper allocation of kernel threads
+  mapped to the application.
+- They achieve this by using an intermediate data structure designated
+  as a lightweight process (LWP) between user and kernel threads.
+- An LWP essentially acts as a virtual processor to schedule user
+  threads, and each LWP is directly attached to a kernel thread.
+- Scheduler activations generate upcalls, providing a communication
+  mechanism from the kernel directly to the upcall handler situated in
+  the thread library.
+- This upcall communication directly empowers an application to maintain
+  the technically correct number of kernel threads.
+
+** Operating System Examples
+*** Windows Threads
+- Windows utilizes the Windows API and relies strictly on a one-to-one,
+  kernel-level mapping model.
+- The context of a Windows thread includes a thread ID, a register set
+  representing the processor state, separate user and kernel stacks, and
+  a private data storage area built for run-time libraries and DLLs.
+- Data structures include:
+  - *ETHREAD* (executive thread block): Operates in kernel space and
+    includes a pointer to the parent process and a pointer to the
+    KTHREAD.
+  - *KTHREAD* (kernel thread block): Operates in kernel space and
+    maintains scheduling and synchronization info, the kernel-mode
+    stack, and a pointer pointing to the TEB.
+  - *TEB* (thread environment block): Exists in user space, mapping the
+    thread id, user-mode stack, and thread-local storage.
+
+*** Linux Threads
+- Linux formally refers to execution flows as tasks instead of threads.
+- Tasks are spawned using the =clone()= system call.
+- The =clone()= operation explicitly permits a child task to seamlessly
+  share the exact address space of its parent task.
+- A data structure =struct task_struct= maps and points to relevant
+  process data structures.
+- Specific flags passed to =clone()= accurately control sharing
+  behavior:
+  - =CLONE_FS= shares file-system information
+  - =CLONE_VM= shares identical memory space
+  - =CLONE_SIGHAND= shares active signal handlers
+  - =CLONE_FILES= shares the active set of open files
+
+* Chapter 5: CPU Scheduling
+** 1. Basic Concepts
+- *CPU--I/O Burst Cycle*: Process execution alternates between CPU
+  execution (CPU burst) and I/O wait (I/O burst).
+- *Burst Distribution*: Systems typically exhibit a large number of
+  short CPU bursts and a small number of longer bursts.
+- *Goal*: Multiprogramming aims to obtain maximum CPU utilization.
+
+** 2. CPU Scheduler and Dispatcher
+- *CPU Scheduler*: Selects a process from the ready queue and allocates
+  a CPU core to it.
+- *Scheduling Decisions*: Decisions occur when a process switches:
+  1. From running to waiting state.
+  2. From running to ready state.
+  3. From waiting to ready state.
+  4. Terminates.
+- *Preemptive vs. Nonpreemptive*:
+  - *Nonpreemptive*: Scheduling takes place only under circumstances 1
+    and 4. The process holds the CPU until it terminates or enters a
+    waiting state.
+  - *Preemptive*: Scheduling can occur under all four circumstances.
+    Virtually all modern operating systems (Windows, MacOS, Linux, UNIX)
+    use preemptive scheduling.
+  - /Issue/: Preemptive scheduling can cause race conditions when
+    processes share data.
+- *Dispatcher*: The module that gives control of the CPU to the process
+  selected by the scheduler.
+  - Functions include: switching context, switching to user mode, and
+    jumping to the restart location.
+  - *Dispatch Latency*: The time required to stop one process and start
+    another.
+
+** 3. Scheduling Criteria
+- *CPU Utilization*: Keep the CPU as busy as possible (Maximize).
+- *Throughput*: Number of processes that complete execution per time
+  unit (Maximize).
+- *Turnaround Time*: Total time to execute a particular process
+  (Minimize).
+- *Waiting Time*: Total time a process spends waiting in the ready queue
+  (Minimize).
+- *Response Time*: Time from request submission to the first response
+  produced (Minimize).
+
+** 4. Scheduling Algorithms
+- *First-Come, First-Served (FCFS)*:
+  - Executes processes in their arrival order.
+  - Can lead to the *Convoy Effect*: Short processes get stuck waiting
+    behind a long process (e.g., one CPU-bound and many I/O-bound
+    processes).
+- *Shortest-Job-First (SJF)*:
+  - Schedules the process with the shortest next CPU burst time.
+  - It is optimal for providing the minimum average waiting time.
+  - /Preemptive version/: Shortest-Remaining-Time-First.
+  - /Prediction/: Because exact burst length is unknown, it is estimated
+    using exponential averaging of previous bursts.
+  - /Formula/: \(\tau_{n+1} = \alpha t_n + (1 - \alpha)\tau_n\) (where
+    \(\alpha\) is commonly set to \(1/2\)).
+- *Round Robin (RR)*:
+  - Assigns a time quantum (\(q\)), typically 10-100 milliseconds.
+  - Processes execute for at most \(q\) units before being preempted and
+    moved to the end of the ready queue.
+  - If \(q\) is large, it functions like FIFO; if \(q\) is small,
+    context switch overhead becomes too high.
+- *Priority Scheduling*:
+  - Allocates the CPU to the process with the highest priority (smallest
+    integer = highest priority).
+  - Can be preemptive or nonpreemptive.
+  - /Problem/: *Starvation*, where low-priority processes never execute.
+  - /Solution/: *Aging*, which progressively increases a process's
+    priority over time.
+- *Multilevel Queue*:
+  - Maintains separate queues based on priority or process type (e.g.,
+    real-time vs. batch).
+  - Schedules processes strictly from the highest-priority queue.
+- *Multilevel Feedback Queue*:
+  - Allows processes to move between various queues based on execution
+    behavior.
+  - Configured by rules specifying the number of queues, scheduling
+    algorithms per queue, and conditions for upgrading or demoting
+    processes.
+  - Can implement aging.
+
+** 5. Thread Scheduling
+- *Scope*: Threads, not processes, are scheduled when supported.
+- *Process-Contention Scope (PCS)*: Thread library schedules user-level
+  threads onto Local Weight Processes (LWPs); competition is within the
+  process.
+- *System-Contention Scope (SCS)*: Kernel schedules threads directly
+  onto CPUs; competition is across all threads in the system. Linux and
+  macOS only allow =PTHREAD_SCOPE_SYSTEM=.
+
+** 6. Multi-Processor Scheduling
+- *Symmetric Multiprocessing (SMP)*: Each processor is self-scheduling,
+  either using a common ready queue or private per-core run queues.
+- *Multicore Processors*: Feature multiple cores on a single physical
+  chip, consuming less power.
+- *Hardware Multithreading*: Utilizing memory stalls to switch to
+  another hardware thread.
+  - Requires two scheduling levels: OS to logical CPU, and core to
+    hardware thread.
+- *Load Balancing (for SMP)*:
+  - *Push Migration*: Periodic task pushes work from overloaded CPUs to
+    others.
+  - *Pull Migration*: Idle processors pull tasks from busy CPUs.
+- *Processor Affinity*:
+  - Preference for a thread to run on a processor to maintain cache
+    contents.
+  - *Soft Affinity*: OS attempts to keep a thread on the same CPU, but
+    provides no guarantees.
+  - *Hard Affinity*: Process explicitly specifies a set of processors it
+    may run on.
+
+** 7. Real-Time CPU Scheduling
+- *Event Latency*: Time elapsed from when an event occurs until it is
+  serviced. Includes Interrupt Latency and Dispatch Latency.
+- *Hard vs. Soft*: Soft real-time prioritizes critical tasks without
+  strict time guarantees; Hard real-time guarantees a task is serviced
+  by its deadline.
+- *Periodic Tasks*: Require CPU at constant intervals characterized by
+  processing time (\(t\)), deadline (\(d\)), and period (\(p\)), where
+  \(0 \le t \le d \le p\).
+- *Rate Monotonic Scheduling*: Priority is the inverse of the period
+  (shorter period = higher priority).
+- *Earliest Deadline First (EDF)*: Dynamic priority assigned according
+  to deadlines (earlier deadline = higher priority).
+- *Proportional Share*: Allocates \(T\) total shares; applications
+  receive \(N\) shares guaranteeing \(N / T\) of total processor time.
+- *POSIX API*: Defines =SCHED_FIFO= (first-in-first-out with no time
+  slicing for equal priorities) and =SCHED_RR= (time slicing for equal
+  priorities).
+
+** 8. Operating System Examples
+- *Linux*:
+  - /Versions 2.6.23+/: Uses the *Completely Fair Scheduler (CFS)*.
+  - CFS assigns a proportion of CPU time based on nice values (-20 to
+    +19).
+  - Tracks =vruntime= (virtual run time) and schedules the task with the
+    lowest =vruntime=.
+  - Real-time tasks map to global priorities 0 to 99; normal tasks map
+    to 100 to 139.
+- *Windows*:
+  - Priority-based preemptive scheduling utilizing a 32-level scheme.
+  - Variable class priorities (1-15) and Real-time priorities (16-31);
+    priority 0 is memory management.
+  - Base priorities are dynamically adjusted (boosted for waits, lowered
+    when quantums expire).
+  - User-Mode Scheduling (UMS) added in Windows 7.
+- *Solaris*:
+  - Six priority classes: Time sharing, Interactive, Real time, System,
+    Fair Share, Fixed priority.
+  - Converts class-specific priorities into a per-thread global
+    priority. The highest priority runs next.
+
+** 9. Algorithm Evaluation
+- *Deterministic Modeling*: Analytic evaluation that uses predetermined
+  workloads to define algorithm performance. Fast but inflexible.
+- *Queueing Models*: Probabilistic representation utilizing arrival and
+  service rates.
+  - *Little's Formula*: \(n = \lambda \times W\) (queue length equals
+    arrival rate multiplied by average waiting time).
+- *Simulations*: More accurate models driven by random number generators
+  or empirical trace tapes (recordings of real system events).
+- *Implementation*: Coding and testing in actual environments yields
+  highest accuracy but carries high cost and risk.
