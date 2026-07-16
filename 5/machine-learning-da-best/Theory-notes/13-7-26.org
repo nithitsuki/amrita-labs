@@ -1,0 +1,31 @@
+let f(x) = y
+you know x (inpt), and y(output)
+goal is to use ML to find f(x)
+* Stages of making ML model
++ Training: finding f
++ Validation: making sure it foes in the right direction
++ Testing: quality check
+** Example
+classify students into dayscholar or hosteler
+let data points = \(\left[\begin{smallmatrix} x_0 \\ x_1 \end{smallmatrix}\right]\) where $x_0$ is wakeup time, $x_1$ is commute distance
+* Data Types
+** Numerical
+*** Ratio
+*** Interval
++ like IDs, phone number
+** Categorical
+*** Nominal
+*** Ordinal
++ Grades
++ Tax brackets
+* Encoding
+mapping data types to numerical value
+** Label Encoding
+maps scalar$\to$scalar
+** One-Hot
+convert feature to pseudo-features
+instead of 7 days of the week
+use 3 questions like:
++ is it within first half of week (Mon-Wed or Thu to Sun)
++ is it within first half the previous qn(Mon/Tue or Thu/Fri)
++ is it within first half the previous qn(Mon or Thu)

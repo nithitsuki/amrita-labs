@@ -1,0 +1,21 @@
+* DSL (digital subscriber line)
++ data over DSL phone line goes to internet
++ voce over DSL phone line goes to telephone-net
+* Packet switching
+** store and forward mechanisms
+* QN
+A wants to transmit 10kb packet. The transmission rate is 100Mbps. calculate 1 hop transmission delay = $L/R$ = 1*1024/100*1024*1024 = 1/100*1024 = 1/10240
+If there are 3 hops, 3*1/10240
+#+begin_src python
+x = 3/10240
+return x
+#+end_src
+#+RESULTS:
+: 0.00029296875
+
+Transmission rate = framerate X bits_per_slot
+
+QN:
+Transmission rate is 1Gbps, each user has 100Mbps and is active 0.1 of the tim
+
+therefore 10 users at 100% use (1Gbps/100Mbps), 100 users at 10% use for packet switching

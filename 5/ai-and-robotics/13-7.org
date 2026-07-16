@@ -1,0 +1,9 @@
+* First class
+read history slides
+* Second class
+comonents of robot:
++ PU
++ Sensors and Actuators
++ Controllers
++ UI
++ Manipulator Linkage

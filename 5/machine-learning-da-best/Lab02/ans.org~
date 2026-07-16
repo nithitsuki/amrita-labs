@@ -1,0 +1,228 @@
+* Lab 02 - Linear Algebra for Machine Learning
+
+** A1: Purchase Data Analysis
+
+*** Load Data and Create Matrices X and y
+
+#+begin_src python :session lab02 :results value :exports both
+import numpy as np
+import pandas as pd
+
+df = pd.read_excel('Lab Session Data.xlsx', sheet_name='Purchase data')
+df = df[['Candies (#)', 'Mangoes (Kg)', 'Milk Packets (#)', 'Payment (Rs)']]
+
+X = df[['Candies (#)', 'Mangoes (Kg)', 'Milk Packets (#)']].values
+y = df[['Payment (Rs)']].values
+
+df.to_string()
+#+end_src
+
+*** Dimensionality of the Vector Space
+
+#+begin_src python :session lab02 :results value :exports both
+f"Dimension = {X.shape[1]} (3 features: Candies, Mangoes, Milk Packets)"
+#+end_src
+
+*** Number of Vectors
+
+#+begin_src python :session lab02 :results value :exports both
+f"Number of vectors = {X.shape[0]}"
+#+end_src
+
+*** Rank of Matrix A (Feature Matrix)
+
+#+begin_src python :session lab02 :results value :exports both
+rank = np.linalg.matrix_rank(X)
+f"Rank of feature matrix X = {rank} (all 3 columns are linearly independent)"
+#+end_src
+
+*** Cost of Each Product Using Pseudo-Inverse
+
+#+begin_src python :session lab02 :results value :exports both
+X_pinv = np.linalg.pinv(X)
+cost = X_pinv @ y
+
+candy = cost[0,0]
+mango = cost[1,0]
+milk  = cost[2,0]
+
+y_pred = X @ cost
+err = np.sum((y_pred.flatten() - y.flatten())**2)
+
+f"""Cost of Candy = Rs {candy:.2f}/piece
+Cost of Mango = Rs {mango:.2f}/Kg
+Cost of Milk  = Rs {milk:.2f}/packet
+
+Predicted: {y_pred.flatten()}
+Actual:    {y.flatten()}
+Sum of squared errors = {err}"""
+#+end_src
+
+** A2: Customer Classification (RICH / POOR)
+
+*** Label Customers
+
+#+begin_src python :session lab02 :results value :exports both
+df2 = pd.read_excel('Lab Session Data.xlsx', sheet_name='Purchase data')
+df2 = df2[['Customer', 'Candies (#)', 'Mangoes (Kg)', 'Milk Packets (#)', 'Payment (Rs)']]
+df2['Class'] = np.where(df2['Payment (Rs)'] > 200, 'RICH', 'POOR')
+df2.to_string(index=False)
+#+end_src
+
+*** Build Classifier (Logistic Regression)
+
+#+begin_src python :session lab02 :results value :exports both
+from sklearn.linear_model import LogisticRegression
+
+X2 = df2[['Candies (#)', 'Mangoes (Kg)', 'Milk Packets (#)']].values
+y2 = (df2['Payment (Rs)'] > 200).astype(int).values
+
+clf = LogisticRegression()
+clf.fit(X2, y2)
+
+preds = clf.predict(X2)
+acc = np.mean(preds == y2)
+scores = clf.decision_function(X2)
+
+out = [f"Coef: {clf.coef_}, Intercept: {clf.intercept_[0]:.4f}"]
+out.append(f"Predictions: {preds}")
+out.append(f"Actual:      {y2}")
+out.append(f"Accuracy: {acc:.0%}")
+out.append("")
+out.append("Decision function:")
+for i, s in enumerate(scores):
+    out.append(f"  {df2['Customer'].iloc[i]:5s}  {s:+.4f}  ->  {df2['Class'].iloc[i]}")
+"\n".join(out)
+#+end_src
+
+** A3: IRCTC Stock Price Analysis
+
+*** Load Data
+
+#+begin_src python :session lab02 :results value :exports both
+irctc = pd.read_excel('Lab Session Data.xlsx', sheet_name='IRCTC Stock Price')
+price = irctc['Price'].values
+chg = irctc['Chg%'].values
+days = irctc['Day'].values
+months = irctc['Month'].values
+
+f"Total records: {len(price)}, Price range: {price.min():.2f} - {price.max():.2f}, Mean: {price.mean():.2f}"
+#+end_src
+
+*** Mean and Variance (numpy)
+
+#+begin_src python :session lab02 :results value :exports both
+mu_np = np.mean(price)
+var_np = np.var(price)
+f"NumPy Mean: {mu_np:.4f}, NumPy Variance: {var_np:.4f}"
+#+end_src
+
+*** Custom Mean and Variance Functions
+
+#+begin_src python :session lab02 :results value :exports both
+def my_mean(x):
+    return np.sum(x) / len(x)
+
+def my_var(x):
+    mu = my_mean(x)
+    return np.sum((x - mu)**2) / len(x)
+
+mu_c = my_mean(price)
+var_c = my_var(price)
+
+f"Custom Mean: {mu_c:.4f}, Custom Variance: {var_c:.4f}\nDiff mean: {abs(mu_np-mu_c):.2e}, Diff var: {abs(var_np-var_c):.2e}"
+#+end_src
+
+*** Compare Execution Time (10 runs each)
+
+#+begin_src python :session lab02 :results value :exports both
+import time
+
+n_runs = 10
+t_np = []
+for _ in range(n_runs):
+    t0 = time.perf_counter()
+    np.mean(price); np.var(price)
+    t1 = time.perf_counter()
+    t_np.append(t1 - t0)
+
+t_custom = []
+for _ in range(n_runs):
+    t0 = time.perf_counter()
+    my_mean(price); my_var(price)
+    t1 = time.perf_counter()
+    t_custom.append(t1 - t0)
+
+avg_np = np.mean(t_np) * 1e6
+avg_cu = np.mean(t_custom) * 1e6
+
+f"NumPy avg: {avg_np:.2f} us, Custom avg: {avg_cu:.2f} us, Ratio: {avg_cu/avg_np:.1f}x"
+#+end_src
+
+*** Wednesday Sample Mean vs Population Mean
+
+#+begin_src python :session lab02 :results value :exports both
+wed_mask = days == 'Wed'
+wed_price = price[wed_mask]
+wed_mean = np.mean(wed_price)
+
+f"Pop mean: {mu_np:.4f}, Wed mean: {wed_mean:.4f} (n={len(wed_price)}), Diff: {wed_mean-mu_np:.4f}\n=> Wednesday mean is slightly lower than population mean."
+#+end_src
+
+*** April Sample Mean vs Population Mean
+
+#+begin_src python :session lab02 :results value :exports both
+apr_mask = months == 'Apr'
+apr_price = price[apr_mask]
+apr_mean = np.mean(apr_price)
+
+f"Pop mean: {mu_np:.4f}, Apr mean: {apr_mean:.4f} (n={len(apr_price)}), Diff: {apr_mean-mu_np:.4f}\n=> April mean is notably higher than population mean."
+#+end_src
+
+*** Probability of Loss (from Chg%)
+
+#+begin_src python :session lab02 :results value :exports both
+loss_cnt = np.sum(chg < 0)
+p_loss = loss_cnt / len(chg)
+f"Loss days: {loss_cnt}/{len(chg)}, P(Loss) = {p_loss:.4f} ({p_loss*100:.2f}%)"
+#+end_src
+
+*** Probability of Profit on Wednesday
+
+#+begin_src python :session lab02 :results value :exports both
+wed_chg = chg[days == 'Wed']
+profit_cnt = np.sum(wed_chg >= 0)
+p_wed_profit = profit_cnt / len(wed_chg)
+f"Wed profit: {profit_cnt}/{len(wed_chg)}, P(Profit on Wed) = {p_wed_profit:.4f} ({p_wed_profit*100:.2f}%)"
+#+end_src
+
+*** Conditional Probability: P(Profit | Wednesday)
+
+#+begin_src python :session lab02 :results value :exports both
+profit_mask = chg >= 0
+profit_and_wed = np.sum(profit_mask & (days == 'Wed'))
+p_cond = profit_and_wed / np.sum(days == 'Wed')
+f"P(Profit | Wed) = {p_cond:.4f} ({p_cond*100:.2f}%)"
+#+end_src
+
+*** Scatter Plot: Chg% vs Day of Week
+
+#+begin_src python :session lab02 :results value :exports both
+import matplotlib.pyplot as plt
+
+day_order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+day_num = [day_order.index(d) for d in days]
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.scatter(day_num, chg, alpha=0.6, c='steelblue', edgecolors='k', linewidths=0.5)
+ax.axhline(0, color='red', linestyle='--', linewidth=0.8, label='Zero')
+ax.set_xticks(range(5))
+ax.set_xticklabels(day_order)
+ax.set_xlabel('Day of Week')
+ax.set_ylabel('Chg%')
+ax.set_title('Chg% vs Day of Week')
+ax.legend()
+plt.tight_layout()
+plt.savefig('irctc_chg_vs_day.png', dpi=150)
+"Saved irctc_chg_vs_day.png"
+#+end_src

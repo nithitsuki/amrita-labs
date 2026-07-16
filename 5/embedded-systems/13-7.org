@@ -1,0 +1,5 @@
+main constraints in embedded systems:
+1. cost
+2. size
+3. power consumption
+4. performance
