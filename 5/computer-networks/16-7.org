@@ -1,0 +1,65 @@
+* CN qn
+Send 640k bit file over TDM links (24 slots/frame, 1.536 mbps per link) with 500ms setup time
+Per circuit rate = 1546 / 24 = 64Kbps
+Transmission time = 640kbit / 64kbps = 10s
+Total time = 10 + 0.5 = 10.5s
+
+* Network structure
+** connect to each other
+O($N^2$), bad
+** network of networks
+global network providers like google akami and microsoft are tier 1 isps
+they provide services to lower tier isps
+
+* Network performance
+delays
+** Transmission delay
+d=L/R, packet-lentgth/transmission-rate
+** Queuing delay
+** nodal processing delay
+typically in microseconds, contains error checking
+** propogation delay
+
+12*10 = 120s (2min)
+100km/100kmph = 1hr
+62min between two booths, 124 for two
+
+1min delay
+travel time = 100/1kmph = 6min
+therefore 7 mins to go
+
+10th car gets serviced 10m
+but at 7th min first car reaches second booth
+
+* "REAL" network delays
+Traceroute used to measure delay
+RTT (round trip time) is shown
+** Throughput
+rate at which bits are sent from sender/receiver
+Rs = rate of server to router link
+Rc = router to client link
+for shared core, its speed matters not Rs or Rc
++ for network-network throughput, queuing delay is ignored
+** Line of Defense
++ authentication
++ confidential
++ integrity checks
++ access restrictions
+* Protocols, Layers, Service models
+** 5 layers
+1. Application
+2. Transport
+3. Network
+4. Link
+5. Physical
+
+   wraps in
+   message->segment->
+* Server-Client protocol
+Sockets are used to communicate between servers and clients
++ IP addr and port number
+** How to choose transport service
+*** data integrity
+*** Timing (latency)
+*** throughput
+*** security

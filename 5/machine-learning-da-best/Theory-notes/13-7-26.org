@@ -29,3 +29,20 @@ use 3 questions like:
 + is it within first half of week (Mon-Wed or Thu to Sun)
 + is it within first half the previous qn(Mon/Tue or Thu/Fri)
 + is it within first half the previous qn(Mon or Thu)
+* Distance vs Angle similarity
++ where magnitude matters mainly, use distance similarity
+  eg: charge/discharge cycle prediction
++ where direction of data matters more, use cosine or angle similarity
+  eg: recommendation systems
+* K-mean clustering
+mean = avg(data)
+1. Take k-random centroids
+2. calculate dist(pj,pi)
+   where j = 1-no.datapoints
+   i = 1-no.centroids = k
+3. find the nearest centtroid for pj based on dist()
+4. assign the point p2 to cluster cp with min dist
+5. repeat all steps for new centroids
+** 2 disadvantages
+exceptions get lost
+clustering might not be accurate

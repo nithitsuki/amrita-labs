@@ -1,0 +1,15 @@
+
+#+begin_src python :results value :exports both
+return 6
+#+end_src
+
+#+RESULTS:
+: 6
+
+#+RESULTS:
+#+begin_src python :session my_sesh :results value :exports both
+7
+#+end_src
+
+#+RESULTS:
+: 7
