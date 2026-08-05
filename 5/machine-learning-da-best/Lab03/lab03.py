@@ -106,6 +106,76 @@ def a6(x, y, ps):
         print(p, round(mine, 6), round(lib, 6), abs(mine - lib))
 
 
+def dot(a, b):
+    s = 0
+    for i in range(len(a)):
+        s += a[i] * b[i]
+    return s
+
+
+def euc_len(a):
+    s = 0
+    for v in a:
+        s += v * v
+    return s ** 0.5
+
+
+def a7():
+    print("\nA7. dot and euclidean length")
+    a = np.array([1, 2, 3])
+    b = np.array([4, 5, 6])
+    print("dot:", dot(a, b), "numpy:", np.dot(a, b))
+    print("len a:", euc_len(a), "numpy:", np.linalg.norm(a))
+    print("len b:", euc_len(b), "numpy:", np.linalg.norm(b))
+
+def mean(s):
+    s = [v for v in s if v == v]
+    return sum(s)/len(s)
+
+def variance(s):
+    mu = mean(s)
+    res = 0
+    for v in s:
+        res += (v-mu)**2
+    return (res/len(s))
+
+def std_dev(s):
+    return variance(s)**0.5
+
+
+def a8():
+    print("\nA7. custom dot, variance, and std.deviation")
+    a = mean(df["Income"])
+    print(f"avg income: {a}")
+
+
+def a9():
+    print("\nA9. mine vs numpy on a few cols")
+    cols = ["MntWines", "Recency", "MntMeatProducts"]
+    x = df[cols].to_numpy()
+    mm = [mean(x[:, i]) for i in range(x.shape[1])]
+    ss = [std_dev(x[:, i]) for i in range(x.shape[1])]
+    nm = x.mean(axis=0)
+    ns = x.std(axis=0)
+    for i, c in enumerate(cols):
+        print(c, "mean", round(mm[i], 2), "vs", round(nm[i], 2), "| std", round(ss[i], 2), "vs", round(ns[i], 2))
+
+
+def a10():
+    print("\nA10. histogram of MntWines")
+    f = df["MntWines"].to_numpy()
+    cnt, bins = np.histogram(f, bins=10)
+    for i in range(len(cnt)):
+        print("%d-%d: %d" % (bins[i], bins[i + 1], cnt[i]))
+    plt.hist(f, bins=10, edgecolor="black")
+    plt.xlabel("MntWines")
+    plt.ylabel("count")
+    plt.grid()
+    plt.savefig("hist_mntwines.png")
+    print("mean:", round(mean(f), 2), "var:", round(variance(f), 2))
+
+#def a11():
+   
 if __name__ == "__main__":
     a1()
     a2()
@@ -113,3 +183,7 @@ if __name__ == "__main__":
     a4()
     x, y, ps, ds = a5(enc)
     a6(x, y, ps)
+    a7()
+    a8()
+    a9()
+    a10()
