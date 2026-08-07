@@ -174,8 +174,44 @@ def a10():
     plt.savefig("hist_mntwines.png")
     print("mean:", round(mean(f), 2), "var:", round(variance(f), 2))
 
-#def a11():
-   
+def a11(k, points):
+    centroids = []
+    for i in range(k):
+        centroids.append(list(points[i]))
+    # loop
+    centroids_changed = True
+    while centroids_changed:
+        # step 1: assign every point to its nearest centroid
+        clusters = []
+        for _ in range(k):
+            clusters.append([])
+        for p in points:
+            dists = []
+            for c in centroids:
+                diffs = []
+                for a, b in zip(p, c):
+                    diffs.append(a - b)
+                dists.append(euc_len(diffs))
+            nearest = dists.index(min(dists))
+            clusters[nearest].append(p)
+
+        # step 2: recompute each centroid as the mean of its cluster
+        new_centroids = []
+        for cluster in clusters:
+            n = len(cluster)
+            avg = []
+            for i in range(len(cluster[0])):
+                total = 0
+                for v in cluster:
+                    total += v[i]
+                avg.append(total / n)
+            new_centroids.append(avg)
+        centroids_changed = centroids != new_centroids
+        centroids = new_centroids
+    # final
+    print("Centroids: ", centroids)
+
+
 if __name__ == "__main__":
     a1()
     a2()
@@ -187,3 +223,5 @@ if __name__ == "__main__":
     a8()
     a9()
     a10()
+    points = [[0,1],[1,1],[2,2],[3,3],[-1,1],[0,-1],[-1,-1]]
+    a11(3,points)
