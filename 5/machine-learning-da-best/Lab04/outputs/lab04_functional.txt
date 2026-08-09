@@ -1,0 +1,106 @@
+/home/nithilan/Projects/amrita-labs/5/machine-learning-da-best/Lab04/lab04.py:92: UserWarning: Parsing dates in %d-%m-%Y format when dayfirst=False (the default) was specified. Pass `dayfirst=True` or specify a format to silence this warning.
+  d["Year_Customer"] = [pd.to_datetime(t).year for t in d["Dt_Customer"]]
+(2240, 29)
+
+A1. feature types
+ID int64 2240 num
+Year_Birth int64 59 num
+Education str 5 cat
+Marital_Status str 8 cat
+Income float64 1974 num
+Kidhome int64 3 cat
+Teenhome int64 3 cat
+Dt_Customer object 663 num
+Recency int64 100 num
+MntWines int64 776 num
+MntFruits int64 158 num
+MntMeatProducts int64 558 num
+MntFishProducts int64 182 num
+MntSweetProducts int64 177 num
+MntGoldProds int64 213 num
+NumDealsPurchases int64 15 cat
+NumWebPurchases int64 15 cat
+NumCatalogPurchases int64 14 cat
+NumStorePurchases int64 14 cat
+NumWebVisitsMonth int64 16 cat
+AcceptedCmp3 int64 2 cat
+AcceptedCmp4 int64 2 cat
+AcceptedCmp5 int64 2 cat
+AcceptedCmp1 int64 2 cat
+AcceptedCmp2 int64 2 cat
+Complain int64 2 cat
+Z_CostContact int64 1 cat
+Z_Revenue int64 1 cat
+Response int64 2 cat
+
+A2. encoding
+{'Graduation': 0, 'PhD': 1, 'Master': 2, 'Basic': 3, '2n Cycle': 4}
+[0, 0, 0, 0, 1]
+['Marital_Status_Single', 'Marital_Status_Together', 'Marital_Status_Married', 'Marital_Status_Divorced', 'Marital_Status_Widow', 'Marital_Status_Alone', 'Marital_Status_Absurd', 'Marital_Status_YOLO']
+   Marital_Status_Single  ...  Marital_Status_YOLO
+0                      1  ...                    0
+1                      1  ...                    0
+2                      0  ...                    0
+3                      0  ...                    0
+4                      0  ...                    0
+
+[5 rows x 8 columns]
+
+A3. encoded dataset
+before: 29 after: 35
+
+A4. custom minkowski
+7.0 5.0 4.497941445275415
+
+A5. p from 1 to 10
+1 13433.0
+2 11825.0044
+3 11794.9758
+4 11794.0362
+5 11794.0015
+6 11794.0001
+7 11794.0
+8 11794.0
+9 11794.0
+10 11794.0
+saved plot
+
+A6. mine vs scipy
+1 13433.0 13433.0 0.0
+2 11825.004397 11825.004397 0.0
+3 11794.975787 11794.975787 0.0
+4 11794.036214 11794.036214 0.0
+5 11794.001454 11794.001454 0.0
+6 11794.000061 11794.000061 0.0
+7 11794.000003 11794.000003 0.0
+8 11794.0 11794.0 0.0
+9 11794.0 11794.0 0.0
+10 11794.0 11794.0 0.0
+
+A7. dot and euclidean length
+dot: 32.0 numpy: 32
+len a: 3.7416573867739413 numpy: 3.7416573867739413
+len b: 8.774964387392123 numpy: 8.774964387392123
+
+A8. custom mean, variance, and std.deviation
+avg income: 52247.25135379061
+
+A9. mine vs numpy on a few cols
+MntWines mean 303.94 vs 303.94 | std 336.52 vs 336.52
+Recency mean 49.11 vs 49.11 | std 28.96 vs 28.96
+MntMeatProducts mean 166.95 vs 166.95 | std 225.66 vs 225.66
+
+A10. histogram of MntWines
+0-149: 1045
+149-298: 325
+298-447: 232
+447-597: 210
+597-746: 142
+746-895: 99
+895-1045: 98
+1045-1194: 45
+1194-1343: 31
+1343-1493: 13
+mean: 303.94 var: 113247.23
+Centroids:  [[-0.6666666666666666, -0.3333333333333333], [0.5, 1.0], [2.5, 2.5]]
+Iterations:  3
