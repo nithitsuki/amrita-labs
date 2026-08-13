@@ -1,0 +1,462 @@
+* Introduction to Machine Learning
+** Difference between Algorithms and ML Algorithms
+- *Algorithms:* Input is given and output is computed directly.
+- *ML Algorithms:* Input and output data are analysed to come up with a logical expression. With any input the output is obtained.
+- *Algorithm eg:* $f(x) = 3x + 5$, Temp in F = 9/5(Temp in C + 32)
+- *ML Algorithm eg:* $1 \to 5$, $2 \to 9$, $3 \to 14$ (pattern learned from data)
+
+** Types of ML Algorithms
+- *Supervised:* Classification, Regression.
+  Model trained using labeled training data. Both input and correct output given; algo learns relationship.
+- *Unsupervised:* Clustering.
+  Model trained using unlabeled data. Algo identifies hidden patterns/structures without correct output.
+
+** Classification vs Regression vs Clustering
+- *Classification:* Outputs belong to predefined categories/buckets.
+  - *Disadvantage:* Can't create new category for outputs not in predefined set.
+  - *Examples:* Finding suitable jobs based on requirements, grades from marks.
+- *Regression:* Continuous output with no predefined set of values.
+- *Clustering:* Finding coherent links in data and forming clusters.
+
+** Vectors and Scalar
+- *Vector:* Has magnitude and direction (eg: velocity).
+- *Scalar:* Has only magnitude (eg: speed).
+
+** 3 Phases During Training of an Algorithm
+1. *Training:* Finding $x \to y$. Finding best possible $f(x) = y$.
+2. *Validation:* Find direction of training (correctness). Decrease of error. Generalization.
+3. *Testing:* Upon completion of training, checking fitment (how well it fits the algorithm).
+
+** Vector Space
+- *Example:* Classify if student is hostler or day scholar.
+  - Features: length of little finger, # pairs of shoes, travel time, sleeping time, commute mode.
+  - Dimension = 5, input is 5-vector: $(1, 2, 3, 4, 5)$.
+  - Output is scalar (hostler or day scholar).
+  - $x \to y$.
+
+* Measurable Values and Data Types
+** Overview
+- Observable values we face while working with data.
+- *Quantitative / Numerical:* Interval, Ratio.
+- *Qualitative / Categorical:* Nominal, Ordinal.
+
+** Nominal Data
+- Observable data which can't be measured, values have equal value/parent.
+- *Examples:* Phone number, Roll number.
+- One value is 1 and all others are 0.
+
+** Ordinal Data
+- There is an order to the data.
+- *Examples:* Grading S, A, B. Customer Satisfaction Survey (Happy, Good, Bad).
+- Operators: $=, \neq, >, <$.
+
+** Interval Data
+- Operators: $+, -, =, \neq, <, >$.
+- No standard ground 0.
+- *Example:* Pass mark for a subject may not be same for all subjects.
+
+** Ratio Data
+- Operators: $+, -, =, \neq, <, >, \times, \div$.
+- Baseline is uniform and universal.
+
+* Encoding
+- $x \to y$. Feature vector $\to$ label.
+- Process of converting categorical data to scalar data mapping.
+- *Feature vector:* $X = [\dots]$, $50 \times 5$. *Label:* $y$.
+- $m \times n$, $\text{rank}(O) = \min(m, n)$.
+- Classification model maps feature vector to label: $OC = L$, so $C = O^{-1} L$.
+
+** Label Encoding
+- Scalar to scalar mapping, typically used for ordinal features.
+
+** One-Hot Encoding
+- Conversion into pseudo scalar-vector mapping, typically used for nominal data.
+- *Example:* Instead of 7 days of week, use 3 binary questions:
+  1. Is it within first half of week (Mon-Wed or Thu-Sun)?
+  2. Is it within first half of previous question (Mon/Tue or Thu/Fri)?
+  3. Is it within first half of previous question (Mon or Thu)?
+
+* Distance and Similarities
+** Distance Metrics
+*** Manhattan / Cityblock / Taxi Cab
+- $\text{Manhattan} = |P_x| + |P_y|$
+- $\text{dist}(P_1, P_2) = \sum_{i=1}^{n} |P_1(i) - P_2(i)|$
+
+*** Euclidean Distance
+- $\text{mag}(v) = \sqrt{v_x^2 + v_y^2}$
+- $\sqrt{\sum_{i=1}^{n} (P_1(i) - P_2(i))^2}$
+
+*** Minkowski Distance
+- $(\sum_{i=1}^{n} (|P_1(i) - P_2(i)|)^p)^{1/p}$
+
+** Similarities
+- *Binary vector:* Simple Matching Coefficient (SMC), Jaccard Coefficient (JC).
+- *Real Vector:* Cosine Similarity.
+
+*** SMC (Simple Matching Coefficient)
+- $0$ = didn't match, $1$ = did match.
+- $SMC = \frac{P_{00} + P_{11}}{P_{00} + P_{11} + P_{10} + P_{01}}$
+- *Disadvantage:* On large datasets with few matching items, answer is mostly 1.
+- *Real life:* Student Attendance, Employee access Permissions, Device Status Monitoring.
+
+*** JC (Jaccard Coefficient)
+- $JC = \frac{P_{11}}{P_{11} + P_{10} + P_{01}}$
+- *Real life:* Medical diagnosis, Market Basket Analysis, Movie Recommendation, Document Similarity (Search engines, Plagiarism detection).
+
+*** Cosine Similarity
+- $\text{Cosine Similarity}(A, B) = \frac{A \cdot B}{|A| |B|}$
+- Measures coherence between vectors (highly coherent vs least coherent).
+
+** When to Use What
+- *Similarity:* How similar are two objects?
+- *Distance:* How far apart are two objects? Magnitude matters for similarity.
+- Where magnitude matters mainly, use distance (eg: charge/discharge cycle prediction).
+- Where direction of data matters more, use cosine (eg: recommendation systems).
+
+* K-means Clustering
+- Mean: $\mu = \frac{1}{N} \sum_{i=1}^{N} X_i$
+- Distance based algorithm - how close data points are in vector space.
+- Number of groups is $K$, each group represented by its mean value (K-means clusters).
+- Each vector gets grouped to nearest mean value.
+
+** Steps
+1. Take $K$-random centroids / mean points.
+2. Calculate distance $(P \to C)$ where $P = 1$ to no. of data points, $C = 1$ to no. of centroids $K$.
+3. Find nearest centroid for $P$ based on distance (centroid represents a cluster).
+4. Assign point $P$ to cluster $C$ with min dist.
+5. Repeat for all points.
+6. Calculate new centroids.
+7. Repeat steps 2 to 6.
+8. Continue till no shift in centroid (convergence criteria / cluster memberships do not change).
+
+** Disadvantages
+1. When a point is equi-distance to two or more clusters (can't be assigned).
+2. Choosing the right $K$ value.
+3. Outliers can influence how clusters are formed.
+4. A zero member cluster can be formed.
+5. Only numerical data can be used.
+
+** Solutions / Notes
+1. If data points are equi-distant, it is bad practice to use k-means.
+2. The outlier can become a one member cluster.
+3. If cluster is very far from any data point, centroid stays in original place.
+4. When two features have large distance, it influences calculation (disadvantage).
+
+** How to Select the K Value
+- *Within Cluster Sum of Squares (WCSS):*
+  $WCSS = \sum_{i=1}^{K} \sum_{j=1}^{N_i} (P_{ij} - \bar{C_i})^2$
+- Optimal number of clusters = elbow point.
+- WCSS becomes close to 0 when no. of clusters = no. of data points.
+
+** Good Cluster Formation
+1. High intra-cluster similarity.
+2. Compactness.
+3. Well separated clusters.
+4. Well separated classes.
+5. Meaningful grouping.
+6. Centroid of different clusters should be far apart.
+
+** Example Calculation: Data $1, 2, 4, 5$
+- $K=1$: $\mu = \frac{1+2+4+5}{4} = 3$.
+  $WCSS = (1-3)^2 + (2-3)^2 + (4-3)^2 + (5-3)^2 = 4+1+1+4 = 10$.
+- $K=2$: Clusters $\{1,2\}$ and $\{4,5\}$.
+  $C_1 = 1.5$, $C_2 = 4.5$.
+  $WCSS = 0.5 + 0.5 = 1$.
+
+** K-medoid Clustering
+- Centroids are replaced with nearest actual data points known as medoids.
+
+* Normalization
+** Min-Max
+- Shifts the minimum to 0.
+- $X'(i) = \frac{X(i) - \min(X)}{\max(X) - \min(X)} \times (\max(X') - \min(X')) + \min(X')$
+- Spread of original dataset $\to$ Spread of modified normalized dataset.
+- *Sensitive to outliers.*
+- Use when data is uniformly distributed.
+
+** Z-Score
+- Shifts the mean to the origin.
+- $X'(i) = \frac{X(i) - \mu}{\sigma}$
+- Where $\mu$ = mean, $\sigma$ = standard deviation.
+- Compressing or expanding the spread.
+- *Not disturbed by outliers.*
+- Use when data is normally distributed.
+
+** Notes
+- Clusters would be disturbed during normalization.
+
+* Silhouette Coefficient
+- $a(i)$ = avg distance of $i^{\text{th}}$ point in Cluster $A$ (intra-cluster).
+- $b(i)$ = avg distance of $i^{\text{th}}$ point to all points in Cluster $B$, where $B$ is closest cluster to $A$ (nearest-cluster).
+- $S(i) = \frac{b(i) - a(i)}{\max(a(i), b(i))}$
+
+** When $b(i) < a(i)$
+- Occurs when a data point is closer to a neighbouring cluster than to its assigned cluster.
+- Indicates the point has been assigned to the *wrong cluster*.
+
+** Example
+- $C_A \to 90, 91, 89, 92$.
+- $C_B \to 60, 61, 59, 62$.
+- If student with 61 marks is placed in $C_A$: distance within $C_A$ would be large, distance with $C_B$ would be small.
+- So $b < a$.
+- *Conclusion:* If any point gets assigned to wrong cluster, then $b < a$.
+
+* Classification Performance Evaluation
+- After training, a classification model must be evaluated to check how well it predicts.
+- Evaluation compares the *predicted label* of each sample with its *actual class label*.
+
+** Observed Vector, Class Label and Predicted Label
+- *Observed Vector:* The feature vector (input) of one sample, e.g. a student's features.
+- *Class Label ($y$):* The correct / true class the sample actually belongs to (given in labeled training/test data).
+- *Predicted Label ($\hat{y}$):* The class output by the model for that observed vector.
+- The model maps observed vector $\to$ predicted label: $\hat{y} = f(x)$.
+- Evaluation table comparing actual vs predicted for each observed vector:
+
+| Observed Vector | Class Label (actual $y$) | Predicted Label ($\hat{y}$) | Correct? |
+|-----------------|--------------------------|------------------------------|----------|
+| $x_1$           | Positive                 | Positive                     | Yes      |
+| $x_2$           | Negative                 | Positive                     | No       |
+| $x_3$           | Negative                 | Negative                     | Yes      |
+| $x_4$           | Positive                 | Negative                     | No       |
+
+- Correct predictions get counted; wrong predictions get classified as false positives or false negatives.
+
+** Confusion Matrix
+- A $2 \times 2$ table summarizing how many samples fell in each combination of actual vs predicted class.
+- Rows = actual class, Columns = predicted class.
+
+|                    | Predicted Positive | Predicted Negative |
+|--------------------|--------------------|--------------------|
+| *Actual Positive*  | True Positive (TP) | False Negative (FN)|
+| *Actual Negative*  | False Positive (FP)| True Negative (TN) |
+
+- *True Positive (TP):* Actual positive, predicted positive (correct hit).
+- *True Negative (TN):* Actual negative, predicted negative (correct rejection).
+- *False Positive (FP):* Actual negative, predicted positive (Type I error / false alarm).
+- *False Negative (FN):* Actual positive, predicted negative (Type II error / miss).
+- Diagonal entries (TP, TN) are correct predictions; off-diagonal entries (FP, FN) are errors.
+
+*** Multi-Class Confusion Matrix (Chilli / Potato / Tomato Example)
+- The 2x2 matrix extends to an NxN matrix for N classes. Rows = actual class, columns = predicted class.
+- Example: a model classifies vegetables into Chilli, Potato or Tomato. 30 test samples: 10 actual chillis, 10 actual potatoes, 10 actual tomatoes.
+- Predictions: 8 chillis correct, 1 chilli predicted as potato, 1 chilli predicted as tomato; 2 potatoes predicted as chilli, 7 potatoes correct, 1 potato predicted as tomato; 0 tomatoes predicted as chilli, 1 tomato predicted as potato, 9 tomatoes correct.
+
+| Actual \ Predicted | Chilli | Potato | Tomato |
+|---------------------|--------|--------|--------|
+| Chilli              | 8      | 1      | 1      |
+| Potato              | 2      | 7      | 1      |
+| Tomato              | 0      | 1      | 9      |
+
+- *Diagonal = correct predictions:* 8 + 7 + 9 = 24. $\text{Accuracy} = \frac{24}{30} = 0.8$
+- *Off-diagonal = misclassifications:* e.g. the 2 in row Potato / column Chilli means 2 actual potatoes were predicted as chillis.
+- *Per-class metrics (one-vs-rest):* treat each class as positive, all others as negative.
+  - *Chilli:* Precision = 8/(8+2+0) = 0.8, Recall = 8/(8+1+1) = 0.8.
+  - *Potato:* Precision = 7/(7+1+1) ≈ 0.778, Recall = 7/(7+2+1) = 0.7.
+  - *Tomato:* Precision = 9/(9+1+0) ≈ 0.818, Recall = 9/(9+0+1) = 0.9.
+- F1 is computed per class the same way as in the binary case; macro-average F1 = mean of per-class F1 values.
+
+** Performance Metrics in terms of the Confusion Matrix
+- All metrics are computed from TP, TN, FP, FN.
+
+*** Accuracy
+- $\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}$
+- Fraction of total predictions that are correct.
+- *Disadvantage:* Misleading on imbalanced data (if 95% are negative, always predicting negative gives 95% accuracy).
+
+*** Precision
+- $\text{Precision} = \frac{TP}{TP + FP}$
+- Of all samples *predicted* positive, fraction that are actually positive.
+- Focuses on false positives (how many positive predictions were wrong).
+- Used where false positives are costly (e.g. spam filter marking good mail as spam).
+
+*** Recall / Sensitivity / True Positive Rate
+- $\text{Recall} = \frac{TP}{TP + FN}$
+- Of all samples that are *actually* positive, fraction that were correctly predicted positive.
+- Focuses on false negatives (how many positive samples were missed).
+- Used where missing positives is costly (e.g. disease detection).
+
+*** F-Score / F1-Score
+- $F_1 = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$
+- Harmonic mean of precision and recall, balances both.
+- $F_1$ is high only when both precision and recall are high.
+- If precision or recall is 0, $F_1 = 0$.
+
+*** $F_\beta$ Score (Generalized F-Score)
+- General form of the F-score with a parameter $\beta$ controlling the weight of recall relative to precision.
+- $F_\beta = (1 + \beta^2) \times \frac{\text{Precision} \times \text{Recall}}{(\beta^2 \times \text{Precision}) + \text{Recall}}$
+- $\beta = 1$: Equal weight to precision and recall $\Rightarrow$ same as $F_1$.
+- $\beta < 1$: Precision is weighted more than recall (e.g. $F_{0.5}$, precision weighed 2 times more).
+- $\beta > 1$: Recall is weighted more than precision (e.g. $F_2$, recall weighed 2 times more).
+- When $\beta^2 \times \text{Precision} = \text{Recall}$, the formula reduces to $F_1$.
+- *Use cases:*
+  - $F_2$ score when false negatives are costlier (e.g. disease detection, missing a positive case).
+  - $F_{0.5}$ score when false positives are costlier (e.g. spam filter flagging good mail).
+
+** Example Calculation
+- Suppose test results give: $TP = 40$, $TN = 30$, $FP = 10$, $FN = 20$.
+- $\text{Accuracy} = \frac{40 + 30}{40 + 30 + 10 + 20} = \frac{70}{100} = 0.7$
+- $\text{Precision} = \frac{40}{40 + 10} = \frac{40}{50} = 0.8$
+- $\text{Recall} = \frac{40}{40 + 20} = \frac{40}{60} \approx 0.667$
+- $F_1 = 2 \times \frac{0.8 \times 0.667}{0.8 + 0.667} = 2 \times \frac{0.533}{1.467} \approx 0.727$
+** Assignment
+Find a situation where Type-I error (False Positives) has more consequences than Type-II error
+
+* Model Generalization
+- *Generalization:* how well a trained model performs on new, unseen data (not just the data it was trained on).
+- A model generalizes well when the pattern learned from training data holds for unseen data.
+- Related to the Validation phase (see *3 Phases During Training of an Algorithm*).
+
+** Underfitting (High Bias)
+- Model is too simple to capture the pattern in the data (e.g. a straight line fit to non-linear data).
+- Both training error and test error are high.
+- Causes: too few features, model too simple, training stopped too early.
+- Fixes: add more features, use a more complex model, train longer.
+
+** Optimal Fit (Good Generalization)
+- Model captures the true underlying pattern without memorizing noise.
+- Both training error and test error are low. This is the goal of training.
+
+** Overfitting (High Variance)
+- Model is too complex and memorizes the training data, including noise and outliers.
+- Training error is very low (near zero) but test error is high.
+- Causes: too many features/parameters, too little training data, training too long.
+- Fixes: more training data, regularization, simpler model (fewer features), early stopping, cross-validation.
+
+** Bias-Variance Trade-off
+- *Bias:* error due to simplifying assumptions in the model (model cannot represent the true pattern) -> underfitting.
+- *Variance:* error due to sensitivity to small fluctuations in the training data -> overfitting.
+- Total error = Bias^2 + Variance + irreducible error.
+- As model complexity increases: bias decreases, variance increases. The optimal fit is the sweet spot between the two.
+
+** Diagnosing Generalization Problems
+- Compare training error with validation/test error:
+  - Both high -> underfitting.
+  - Training low, test high -> overfitting.
+  - Both low -> good generalization.
+- Learning curves (error vs training iterations or training set size) help spot these cases.
+
+** Summary
+| Model        | Training Error | Test Error | Problem       | Fix                                    |
+|--------------|----------------|------------|---------------|----------------------------------------|
+| Underfitting | High           | High       | High bias     | More features, more complex model      |
+| Optimal fit  | Low            | Low        | None          | -                                      |
+| Overfitting  | Very low       | High       | High variance | More data, regularization, early stop  |
+
+* Missing Data and Remedial Strategies
+- Real-world datasets often contain missing values (blank cells / NaN) due to sensor failures, unanswered survey questions, human error, etc.
+- Most ML algorithms cannot process missing values directly, so the data must be cleaned before training.
+
+** Types of Missing Data
+*** MCAR (Missing Completely At Random)
+- The absence of a value is unrelated to any other value (observed or missing).
+- Example: a sensor randomly fails to record one reading.
+- Missing rows behave like a random sample of the full dataset, so any remedial strategy works well.
+
+*** MAR (Missing At Random)
+- The absence depends on *observed* values, not on the missing value itself.
+- Example: junior employees are more likely to skip the salary question (designation is observed, salary is missing).
+
+*** MNAR (Missing Not At Random)
+- The absence depends on the missing value itself.
+- Example: very tall people do not report their height.
+- Hardest to handle, because the very fact that the value is missing carries information.
+
+** Remedial Strategies
+*** 1. Deletion
+- *Listwise Deletion:* drop the entire row if any feature value is missing.
+  - Simple, but loses data; bad when many rows have missing values.
+- *Pairwise Deletion:* use only the available values for each computation (distance, correlation).
+  - Keeps more data, but each computation uses a different sample size.
+- *Column Deletion:* drop a feature when most of its values are missing.
+  - Reasonable when more than 60-70% of the column is missing.
+
+*** 2. Imputation (Filling the Missing Values)
+- *Mean Imputation:* replace missing values with the column mean $\mu = \frac{1}{N}\sum_{i=1}^{N} X_i$.
+- *Median Imputation:* replace with the middle value of the sorted column.
+- *Mode Imputation:* replace with the most frequent value; used for categorical data.
+- Choice of central tendency:
+  - Mean $\to$ numeric data that is roughly symmetric / normally distributed.
+  - Median $\to$ numeric data with outliers (median is robust).
+  - Mode $\to$ categorical data.
+- *KNN Imputation:* replace the missing value with the mean / median / mode of its $K$ nearest neighbours (see K-means for distance).
+- *Regression Imputation:* build a model on the complete rows and predict the missing value from the other features.
+
+*** 3. Other Strategies
+- *Multiple Imputation:* fill the dataset several times with different estimates, analyse each version and combine the results.
+- *Forward / Backward Fill:* carry the last known value forward (or the next value backward); used for time series.
+
+** Summary
+| Strategy            | When to use                              | Drawback                            |
+|---------------------|------------------------------------------|-------------------------------------|
+| Listwise deletion   | Very few missing rows                    | Loses data                          |
+| Mean / Median / Mode| Small fraction missing, simple baseline  | Reduces variance, introduces bias   |
+| KNN / Regression    | Feature is related to other features     | Computationally costly on large data|
+| Drop the column     | Column mostly missing                    | Feature information is lost         |
+| Multiple imputation | Missing values with uncertainty          | Complex to implement and interpret  |
+
+- Imputation reduces variance: filled values are artificial and cluster around the centre of the data.
+- MNAR cannot be fixed by simple imputation - the missingness itself must be modelled.
+
+* Regression Models
+- Recap: in regression the output is *continuous* (no predefined set of values), unlike classification.
+- Goal: learn $f$ such that $y = f(x)$ predicts a continuous output from the features.
+- Examples: predicting price, temperature, height.
+
+** Linear Regression
+- Simplest regression model; assumes the relationship between the feature $x$ and the output $y$ is a straight line.
+- Simple linear regression (single feature):
+  $\hat{y} = b_0 + b_1 x$
+  - $x$: input feature (independent variable).
+  - $y$: actual output (dependent variable).
+  - $\hat{y}$: predicted output.
+  - $b_0$: intercept - value of $\hat{y}$ when $x = 0$.
+  - $b_1$: slope - change in $\hat{y}$ per unit change in $x$.
+
+*** Least Squares Method
+- We need the line that fits the data best.
+- *Residual:* $e_i = y_i - \hat{y}_i$, the difference between actual and predicted output.
+- Best line minimizes the sum of squared errors (SSE):
+  $SSE = \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 = \sum_{i=1}^{n} (y_i - (b_0 + b_1 x_i))^2$
+- Differentiating SSE w.r.t. $b_0$ and $b_1$ and setting to 0 gives:
+  $b_1 = \frac{\sum_{i=1}^{n} (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^{n} (x_i - \bar{x})^2}$
+  $b_0 = \bar{y} - b_1 \bar{x}$
+- Where $\bar{x}$ and $\bar{y}$ are the means of the feature and the output.
+- The regression line always passes through the mean point $(\bar{x}, \bar{y})$.
+
+*** Example: Guessing Height from Finger Length
+- Goal: predict a person's height $y$ (cm) from the length of their index finger $x$ (cm).
+- Data collected from 5 people:
+
+| Finger length $x$ (cm) | Height $y$ (cm) |
+|------------------------|-----------------|
+| 6.5                    | 162             |
+| 7.0                    | 168             |
+| 7.5                    | 171             |
+| 8.0                    | 177             |
+| 8.5                    | 182             |
+
+- Step 1 - Means:
+  $\bar{x} = \frac{6.5 + 7.0 + 7.5 + 8.0 + 8.5}{5} = 7.5$, $\bar{y} = \frac{162 + 168 + 171 + 177 + 182}{5} = 172$
+- Step 2 - Sums needed: $\sum x_i y_i = 6474.5$, $\sum x_i^2 = 283.75$
+- Step 3 - Slope:
+  $b_1 = \frac{6474.5 - 5(7.5)(172)}{283.75 - 5(7.5)^2} = \frac{6474.5 - 6450}{283.75 - 281.25} = \frac{24.5}{2.5} = 9.8$
+- Step 4 - Intercept: $b_0 = 172 - 9.8(7.5) = 98.5$
+- Step 5 - Model: $\hat{y} = 98.5 + 9.8x$
+- *Interpretation:* each extra 1 cm of finger length adds 9.8 cm of height on average.
+- Predictions and residuals:
+
+| Finger length $x$ | Predicted $\hat{y} = 98.5 + 9.8x$ | Actual $y$ | Residual $y - \hat{y}$ |
+|-------------------|-----------------------------------|------------|------------------------|
+| 6.5               | 162.2                             | 162        | -0.2                   |
+| 7.0               | 167.1                             | 168        | +0.9                   |
+| 7.5               | 172.0                             | 171        | -1.0                   |
+| 8.0               | 176.9                             | 177        | +0.1                   |
+| 8.5               | 181.8                             | 182        | +0.2                   |
+
+- Residuals cancel out (sum = 0) because the least squares line is centered at $(\bar{x}, \bar{y})$.
+- *Using the model:* a person with finger length 8.2 cm is predicted to be $98.5 + 9.8(8.2) = 178.9$ cm tall.
+- The fit is based on only 5 samples; in practice hundreds of samples are used.
+
+** Multiple Linear Regression (Preview)
+- When there is more than one feature, the model extends to:
+  $\hat{y} = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_n x_n$
