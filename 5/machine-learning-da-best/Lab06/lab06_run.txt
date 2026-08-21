@@ -1,0 +1,75 @@
+(2240, 29)
+
+A1. encoding and imputation
+/home/nithilan/Projects/amrita-labs/5/machine-learning-da-best/Lab06/../Lab05/lab5.py:34: UserWarning: Parsing dates in %d-%m-%Y format when dayfirst=False (the default) was specified. Pass `dayfirst=True` or specify a format to silence this warning.
+  encoded["Year_Customer"] = [pd.to_datetime(t).year for t in encoded["Dt_Customer"]]
+raw columns: 29 encoded columns: 35
+all numeric after encoding: True
+missing before imputation: 24
+strategy=mean   missing after: 0
+strategy=median missing after: 0
+strategy=mode   missing after: 0
+
+A2. distance, sorting, neighbors, voting
+euclidean       : 5.0
+manhattan       : 7.0
+minkowski p = 3 : 4.4979
+sort_algo=insertion -> [(0.9, 4), (1.2, 1), (1.2, 3), (2.7, 2), (3.5, 0)]
+sort_algo=merge     -> [(0.9, 4), (1.2, 1), (1.2, 3), (2.7, 2), (3.5, 0)]
+sort_algo=quick     -> [(0.9, 4), (1.2, 1), (1.2, 3), (2.7, 2), (3.5, 0)]
+sort_algo=heap      -> [(0.9, 4), (1.2, 1), (1.2, 3), (2.7, 2), (3.5, 0)]
+neighbors k=2 with ties: [0, 1, 2, 3]
+majority vote  : A
+weighted vote  : A
+/home/nithilan/Projects/amrita-labs/5/machine-learning-da-best/Lab06/../Lab05/lab5.py:34: UserWarning: Parsing dates in %d-%m-%Y format when dayfirst=False (the default) was specified. Pass `dayfirst=True` or specify a format to silence this warning.
+  encoded["Year_Customer"] = [pd.to_datetime(t).year for t in encoded["Dt_Customer"]]
+
+A3. train-test split (sklearn)
+train: (1568, 34) test: (672, 34)
+train class counts: (array([0, 1]), array([1329,  239]))
+test class counts : (array([0, 1]), array([577,  95]))
+
+A4. sklearn kNN k=3
+fitted on 1568 patterns
+
+A5. test accuracy
+score: 0.8348
+
+A6. predict behavior
+first 10 predictions: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+first 10 actuals    : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+matches: 561 of 672
+predicted class counts: (array([0, 1]), array([614,  58]))
+
+A7. own Fit/Predict/Score
+first 10 predictions: [np.int64(0), np.int64(0), np.int64(0), np.int64(0), np.int64(0), np.int64(0), np.int64(0), np.int64(0), np.int64(0), np.int64(0)]
+score: 0.8348
+
+A8. mine vs sklearn over k
+k= 1 mine=0.7961 sklearn=0.7961
+k= 3 mine=0.8348 sklearn=0.8348
+k= 5 mine=0.8393 sklearn=0.8393
+k= 7 mine=0.8571 sklearn=0.8557
+k= 9 mine=0.8586 sklearn=0.8586
+k=11 mine=0.8586 sklearn=0.8586
+k=13 mine=0.8586 sklearn=0.8586
+k=15 mine=0.8586 sklearn=0.8586
+saved knn_compare.png
+
+A9. weighted kNN vs A8
+k= 1 mine=0.7961 sklearn=0.7961
+k= 3 mine=0.8363 sklearn=0.8363
+k= 5 mine=0.8393 sklearn=0.8408
+k= 7 mine=0.8512 sklearn=0.8512
+k= 9 mine=0.8571 sklearn=0.8601
+k=11 mine=0.8586 sklearn=0.8586
+k=13 mine=0.8601 sklearn=0.8601
+k=15 mine=0.8616 sklearn=0.8616
+saved knn_weighted_compare.png
+
+A10. performance comparison of 3 k-NN versions
+mine     acc=0.8348 prec=0.3621 rec=0.2211 f1=0.2745 time=30.3267s
+sklearn  acc=0.8348 prec=0.3621 rec=0.2211 f1=0.2745 time=0.0543s
+genai    acc=0.8348 prec=0.3621 rec=0.2211 f1=0.2745 time=0.4680s
+saved benchmark_lab06_results.csv
+saved benchmark_lab06.png
