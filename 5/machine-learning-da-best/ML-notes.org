@@ -443,9 +443,14 @@ Find a situation where Type-I error (False Positives) has more consequences than
 - Step 4 - Intercept: $b_0 = 172 - 9.8(7.5) = 98.5$
 - Step 5 - Model: $\hat{y} = 98.5 + 9.8x$
 - *Interpretation:* each extra 1 cm of finger length adds 9.8 cm of height on average.
+- The picture below shows the 5 data points, the fitted line, the mean point and the residuals:
+
+  #+CAPTION: Linear regression fit of height on finger length (data, fitted line, residuals).
+  #+ATTR_ORG: :width 520
+  [[./linear_regression_example.png]]
 - Predictions and residuals:
 
-| Finger length $x$ | Predicted $\hat{y} = 98.5 + 9.8x$ | Actual $y$ | Residual $y - \hat{y}$ |
+| Finger length $x$  | Predicted $\hat{y} = 98.5 + 9.8x$ | Actual $y$ | Residual $y - \hat{y}$ |
 |-------------------|-----------------------------------|------------|------------------------|
 | 6.5               | 162.2                             | 162        | -0.2                   |
 | 7.0               | 167.1                             | 168        | +0.9                   |
@@ -460,3 +465,195 @@ Find a situation where Type-I error (False Positives) has more consequences than
 ** Multiple Linear Regression (Preview)
 - When there is more than one feature, the model extends to:
   $\hat{y} = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_n x_n$
+
+  assignment: is linear regression a linear function
+
+** R$^2$ Score (Coefficient of Determination)
+- measures how well the regression line fits the data: the proportion of variance in $y$ explained by the model
+- residual (error) sum of squares: $SSE = \sum (y_i - \hat{y}_i)^2$
+- total sum of squares: $SST = \sum (y_i - \bar{y})^2$ (variance of $y$ around its mean)
+- regression sum of squares: $SSR = \sum (\hat{y}_i - \bar{y})^2$, and $SST = SSE + SSR$
+- $R^2 = 1 - \frac{SSE}{SST} = \frac{SSR}{SST}$
+- range: $0 \leq R^2 \leq 1$ for simple linear regression
+  - $R^2 = 1$: perfect fit (all points on the line, $SSE = 0$)
+  - $R^2 = 0$: model is no better than predicting the mean $\bar{y}$ for every point
+  - $R^2$ can be negative when the model is worse than predicting the mean (e.g. a model fitted on one dataset evaluated on new data, or a line forced through the origin on data that does not pass through it)
+- interpretation: $R^2 = 0.9$ means 90% of the variation in $y$ is explained by $x$
+- for simple linear regression, $R^2 = r^2$: the square of the sample correlation coefficient
+- caveat: adding more predictors never decreases $R^2$ (it stays the same if the predictor is useless), so for multiple regression use adjusted $R^2$ instead
+- worked example (finger-length data, residuals -0.2, +0.9, -1.0, +0.1, +0.2):
+  - $SSE = (-0.2)^2 + (0.9)^2 + (-1.0)^2 + (0.1)^2 + (0.2)^2 = 0.04 + 0.81 + 1.00 + 0.01 + 0.04 = 1.90$
+  - $SST = (162-172)^2 + (168-172)^2 + (171-172)^2 + (177-172)^2 + (182-172)^2 = 100 + 16 + 1 + 25 + 100 = 242$
+  - $R^2 = 1 - \frac{1.90}{242} \approx 0.992$: about 99.2% of the variation in height is explained by finger length
+
+* Decision Trees and Ensemble Methods
+- Decision trees split the data recursively into smaller groups. Ensembles combine many trees into one stronger model.
+
+** Entropy
+- *Entropy:* measure of impurity / disorder in a set of data. Higher entropy means the classes are more mixed.
+- For a set $S$ with $c$ classes, where $p_i$ is the fraction of class $i$:
+  $H(S) = -\sum_{i=1}^{c} p_i \log_2 p_i$
+- The base of the log is 2, so entropy is measured in bits.
+- *Entropy = 0:* all samples belong to one class (pure set).
+- *Entropy = 1:* binary set with both classes equally mixed (maximum impurity).
+- Range: $0 \leq H(S) \leq \log_2 c$.
+
+*** Example: Marbles
+- Bag with 4 red and 4 blue marbles:
+  $H = -\left(\frac{4}{8} \log_2 \frac{4}{8} + \frac{4}{8} \log_2 \frac{4}{8}\right) = -(0.5 \times (-1) + 0.5 \times (-1)) = 1$
+- Bag with 8 red marbles:
+  $H = -(1 \times \log_2 1) = 0$ (pure set, no disorder).
+- Bag with 6 red and 2 blue marbles:
+  $H = -\left(\frac{6}{8} \log_2 \frac{6}{8} + \frac{2}{8} \log_2 \frac{2}{8}\right) = -(0.75 \times (-0.415) + 0.25 \times (-2)) \approx 0.811$
+
+** Information Gain
+- *Information Gain (IG):* the reduction in entropy after splitting on a feature. The feature with the highest IG is chosen for the split.
+- Split set $S$ on feature $A$ into subsets $S_v$:
+  $IG(S, A) = H(S) - \sum_{v \in \text{values}(A)} \frac{|S_v|}{|S|} H(S_v)$
+- The weighted average of the child entropies is subtracted from the parent entropy.
+
+*** Example: Pass / Fail
+- 8 students, 4 pass and 4 fail. Parent entropy:
+  $H(S) = -\left(\frac{4}{8} \log_2 \frac{4}{8} + \frac{4}{8} \log_2 \frac{4}{8}\right) = 1$
+- Split on Attendance:
+  - High: 3 pass, 1 fail $\to H = -\left(\frac{3}{4} \log_2 \frac{3}{4} + \frac{1}{4} \log_2 \frac{1}{4}\right) \approx 0.811$
+  - Low: 1 pass, 3 fail $\to H \approx 0.811$
+  - $IG = 1 - \left(\frac{4}{8} \times 0.811 + \frac{4}{8} \times 0.811\right) = 1 - 0.811 = 0.189$
+- Split on Study hours:
+  - High: 4 pass, 0 fail $\to H = 0$
+  - Low: 0 pass, 4 fail $\to H = 0$
+  - $IG = 1 - 0 = 1$
+- Study hours gives the higher IG (1 > 0.189), so it becomes the root split.
+
+** Gini Index
+- Alternative impurity measure, also used for choosing splits.
+- $\text{Gini}(S) = 1 - \sum_{i=1}^{c} p_i^2$
+- Gini = 0 for a pure set; it is maximum when all classes are equally mixed.
+- *Example:* 4 pass, 4 fail: $\text{Gini} = 1 - (0.5^2 + 0.5^2) = 0.5$
+- For the Study-hours split above, both children are pure, so Gini = 0.
+- *Entropy vs Gini:*
+
+| Property               | Entropy                         | Gini                        |
+|------------------------|---------------------------------|-----------------------------|
+| Formula                | $-\sum p_i \log_2 p_i$          | $1 - \sum p_i^2$            |
+| Range                  | $0$ to $\log_2 c$               | $0$ to $\frac{c-1}{c}$      |
+| Computation            | Logarithm (slower)              | Squaring (faster)           |
+| Max impurity (binary)  | 1                               | 0.5                         |
+| Split choice           | Maximize entropy reduction      | Minimize Gini impurity      |
+
+- Both usually select the same split. Gini is cheaper to compute and is the default in CART and most libraries.
+
+** Decision Tree
+- *Decision tree:* a model that splits the feature space into regions with a series of if-else questions.
+- *Structure:*
+  - *Root node:* the first feature used for the split.
+  - *Internal node:* a feature test (e.g. Study hours = High?).
+  - *Branch:* one outcome of a test.
+  - *Leaf node:* final prediction (class or value).
+- Prediction: start at the root, answer each question, follow the branch until a leaf.
+- *Building steps:*
+  1. Start with all training samples at the root.
+  2. Compute the entropy (or Gini) of the current set.
+  3. For each feature, compute the weighted child impurity and the IG.
+  4. Split on the feature with the highest IG (or lowest Gini).
+  5. Repeat recursively for each child node.
+  6. Stop when a stopping rule is reached (pure node, no features left, pruning rule).
+- *Advantages:* easy to interpret, handles categorical and numerical data, no feature scaling needed.
+- *Disadvantages:* deep trees overfit easily (they memorize noise); small changes in the data can produce very different trees (high variance); greedy split selection is not globally optimal.
+
+** Pruning
+- *Pruning:* removing branches that add little predictive power, to reduce overfitting.
+- *Pre-pruning (early stopping):* stop building the tree before it gets too deep.
+  - Stopping rules: maximum depth, minimum samples per leaf, minimum samples per split, minimum IG threshold.
+  - Advantage: cheaper to build. Disadvantage: hard to pick the right stopping point in advance.
+- *Post-pruning (backward pruning):* build the full tree, then replace weak branches with leaves.
+  - Cost-complexity pruning: remove a subtree when the small increase in error is worth the large decrease in tree size.
+  - Advantage: the whole tree is seen before deciding. Disadvantage: more computation.
+- *Comparison:*
+
+|            | Pre-pruning                          | Post-pruning                        |
+|------------|--------------------------------------|-------------------------------------|
+| When       | During building (early stop)         | After building (trim branches)      |
+| Computation| Cheaper                              | Costlier (full tree first)          |
+| Risk       | Stops too early (underfitting)       | Needs a validation set to decide    |
+| Result     | Smaller tree                         | Usually better accuracy             |
+
+- Check pruning decisions on a validation set. Do not prune using only the training error.
+
+** Ensemble Methods
+- *Ensemble:* combine many weak models into one strong model.
+- *Weak learner:* a model slightly better than random guessing (e.g. a shallow tree).
+- Ensembles work because different models make different errors, and combining them cancels the errors.
+- Two main families:
+  - *Bagging:* train models in parallel, reduce variance (fixes overfitting).
+  - *Boosting:* train models in sequence, reduce bias (fixes underfitting).
+
+*** Bagging (Bootstrap Aggregating)
+- *Steps:*
+  1. Create $m$ bootstrap samples. Each sample picks $n$ instances *with replacement* from the training set, so some instances repeat and some are missing.
+  2. Train a model (e.g. a deep tree) on each bootstrap sample, independently and in parallel.
+  3. Combine the predictions: majority vote for classification, average for regression.
+- Why bootstrap? Each model sees a slightly different dataset, so the models stay diverse.
+- Bagging reduces *variance*: averaging many high-variance models gives a stable model (see bias-variance trade-off in *Model Generalization*).
+- *Example:* with 10 training students, one bootstrap sample could be 1, 3, 3, 5, 7, 7, 7, 8, 9, 10. Some students repeat, one is missing. Five such samples give five trees, and the final answer is the majority vote.
+
+*** Random Forest
+- *Random Forest:* bagging applied to decision trees, with one extra trick.
+- At each split, only a random subset of the features is considered (e.g. $\sqrt{p}$ for classification, $p/3$ for regression, where $p$ = number of features).
+- Why? With plain bagging, every tree still splits on the strongest feature most of the time, so the trees stay correlated. Forcing a random feature subset decorrelates the trees and lowers variance further.
+- *Out-of-bag (OOB) estimate:* a bootstrap sample keeps about 63% of the instances. The remaining 37% (out-of-bag) can be scored by that tree for free, which gives a validation estimate without a separate validation set.
+- *Feature importance:* the average impurity reduction contributed by each feature across all trees.
+- *Advantages:* very accurate, robust to noise, no pruning needed (trees can grow fully), easy to parallelize.
+- *Disadvantage:* loses single-tree interpretability, and prediction is slower than one tree.
+
+*** Boosting
+- Models are trained *sequentially*. Each new model focuses on the mistakes of the previous ones.
+- Later models get more weight on the hard (misclassified) samples.
+- Boosting reduces *bias*: a sequence of weak learners converges to a strong learner.
+- Boosting is sensitive to noisy data and outliers, because they get focused on repeatedly.
+
+**** AdaBoost (Adaptive Boosting)
+- *Steps:*
+  1. Start with equal weights on all samples: $w_i = 1/n$.
+  2. Train a weak learner (e.g. a decision stump) on the weighted data.
+  3. Compute its weighted error $\epsilon = \frac{\text{sum of weights of misclassified}}{\text{total weight}}$.
+  4. Give the model a say in the vote: $\alpha = \frac{1}{2} \ln\left(\frac{1 - \epsilon}{\epsilon}\right)$. A better model gets a larger $\alpha$.
+  5. Update the sample weights: multiply by $e^{\alpha}$ if the sample was misclassified, by $e^{-\alpha}$ if correct, then normalize.
+  6. Repeat for $m$ rounds.
+  7. Final prediction: weighted vote of all models, each weighted by its $\alpha$.
+- *Example:* if a stump has $\epsilon = 0.2$, then $\alpha = \frac{1}{2} \ln(0.8/0.2) = \frac{1}{2} \ln 4 \approx 0.693$.
+
+**** Gradient Boosting
+- Instead of re-weighting samples, each new model is trained on the *residuals* of the current combined model.
+- *Residual:* $r_i = y_i - \hat{y}_i$. For classification, use the negative gradient of the loss (pseudo-residuals).
+- *Steps (regression):*
+  1. Start with a constant prediction, the mean of $y$: $\hat{y}_i^{(0)} = \bar{y}$.
+  2. Compute the residuals $r_i = y_i - \hat{y}_i^{(m-1)}$.
+  3. Fit a decision tree to predict the residuals.
+  4. Update with a learning rate: $\hat{y}_i^{(m)} = \hat{y}_i^{(m-1)} + \eta \times \text{tree}(x_i)$.
+  5. Repeat for $M$ trees.
+- *Learning rate / shrinkage* $\eta$ (e.g. 0.1): shrinks each tree's contribution. A small $\eta$ with more trees usually generalizes better.
+
+*** Worked Example: Gradient Boosting (Regression)
+- Data: $(x, y) = (1, 10), (2, 12), (3, 14)$.
+- Step 1: initial prediction $\bar{y} = 12$ for all points.
+- Step 2: residuals $10 - 12 = -2$, $12 - 12 = 0$, $14 - 12 = +2$.
+- Step 3: tree 1 fits the residuals: it predicts $-2, 0, +2$.
+- Step 4 with $\eta = 0.1$:
+  $\hat{y} = 12 + 0.1 \times (-2) = 11.8$; $\hat{y} = 12 + 0.1 \times 0 = 12$; $\hat{y} = 12 + 0.1 \times 2 = 12.2$
+- Step 5: new residuals $-1.8, 0, +1.8$. Tree 2 fits these, and so on.
+- After enough rounds, the residuals approach 0 and the model captures the trend, while $\eta$ stops it from memorizing noise.
+
+** Bagging vs Boosting (Summary)
+
+|                  | Bagging                     | Boosting                    |
+|------------------|-----------------------------|-----------------------------|
+| Training         | Parallel / independent      | Sequential / dependent      |
+| Goal             | Reduce variance             | Reduce bias                 |
+| Data per model   | Bootstrap samples           | Weighted / residual data    |
+| Model weight     | Equal (vote / average)      | Weighted by performance     |
+| Best for         | High-variance models (deep trees) | Weak learners (stumps, shallow trees) |
+| Overfitting risk | Low                         | Higher (focuses on noise)   |
+| Examples         | Random Forest               | AdaBoost, Gradient Boosting |
+
+- Gradient boosting is the current workhorse. XGBoost, LightGBM and CatBoost are optimized implementations used in competitions (Kaggle) and industry.
