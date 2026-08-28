@@ -1,0 +1,475 @@
+#+TITLE: CN notes (consolidated)
+
+* DSL (digital subscriber line)
++ data over DSL phone line goes to internet
++ voice over DSL phone line goes to telephone-net
++ DSL uses frequency-division multiplexing (FDM) on the local loop:
+  - voice band: 0-4 kHz
+  - upstream band: 4-50 kHz
+  - downstream band: 50 kHz-1 MHz
++ ADSL (asymmetric DSL): downstream rate is much higher than upstream rate
++ DSLAM (DSL Access Multiplexer) sits at the phone company central office (CO) and separates voice/data
++ a splitter at the home separates the voice and data signals
+
+* Packet switching
+** store and forward mechanisms
++ a store-and-forward switch must receive the entire packet before forwarding the first bit
++ for a path of N links each with rate R, the store-and-forward delay is N * L/R
++ circuit switching reserves dedicated bandwidth per call; packet switching shares links statistically
+** QN: transmission delay
+A wants to transmit a 10 kb packet. The transmission rate is 100 Mbps. Calculate the 1 hop transmission delay.
+1 hop transmission delay = L/R = (10*1024) / (100*2^20) = 10240 / 104857600 = 1/10240 s
+If there are 3 hops, 3 * 1/10240
+#+begin_src python
+x = 3/10240
+return x
+#+end_src
+#+RESULTS:
+: 0.00029296875
+
+** QN: circuit vs packet switching
+Transmission rate is 1 Gbps, each user has 100 Mbps and is active 0.1 of the time.
++ circuit switching: 1 Gbps / 100 Mbps = 10 users at 100% use (each gets a dedicated 100 Mbps circuit)
++ packet switching: ~100 users at 10% use can share the link; on average 100 * 0.1 = 10 are active at once, so the aggregate demand fits
++ when more than 10 users are active simultaneously, queuing occurs (probability is small)
+
+* Circuit switching / TDM
++ transmission rate = frame rate X bits per slot
+** QN: TDM
+Send a 640 kbit file over TDM links (24 slots/frame, 1.536 Mbps per link) with 500 ms setup time.
+Per circuit rate = 1536 / 24 = 64 kbps
+Transmission time = 640 kbit / 64 kbps = 10 s
+Total time = 10 + 0.5 = 10.5 s
+
+* Network structure
+** connect to each other
+O(N^2), bad
+** network of networks
++ global network providers like Google, Akamai and Microsoft are tier-1 ISPs
++ they provide services to lower tier isps
++ hierarchy: access ISPs -> regional ISPs -> tier-1 ISPs
++ IXPs (Internet exchange points): points where ISPs interconnect and exchange traffic
++ content provider networks (e.g. Google) connect directly to lower-tier ISPs, bypassing tier-1
+
+* Network performance
+delays
+** nodal delay
+total nodal delay = processing delay + queuing delay + transmission delay + propagation delay
+** Transmission delay
+d = L/R, packet-length/transmission-rate
+** Queuing delay
++ depends on the traffic intensity = La/R
+  - a = average packet arrival rate
+  - L = packet length (bits)
+  - R = link bandwidth (bps)
++ La/R ~ 0: average queuing delay is small
++ La/R -> 1: average queuing delay grows large
++ La/R > 1: arrival rate exceeds service rate, delay grows without bound (infinite)
++ design goal: keep La/R <= 1
+** Nodal processing delay
+typically in microseconds, contains error checking
+** Propagation delay
++ time for a bit to travel the physical link = distance / propagation speed
+** Caravan (toll booth) analogy
++ car ~ bit, caravan ~ packet, toll service ~ link transmission, toll booth ~ router
+** QN: caravan example A (12 s per car, 100 km/hr)
++ ten-car caravan; toll booth takes 12 s to service a car; cars propagate at 100 km/hr; 100 km between booths
++ push entire caravan through booth 1: 12*10 = 120 s (2 min)
++ propagation: 100 km / 100 kmph = 1 hr
++ caravan is lined up before booth 2 after 2 min + 60 min = 62 min
++ all 10 cars serviced by booth 2: 62 + 2 = 64 min
+** QN: caravan example B (1 min per car, 1000 km/hr)
++ 1 min delay per car: 10th car gets serviced at 10 min
++ travel time: 100 km / 1000 kmph = 6 min
++ first car reaches booth 2 at 6 + 1 = 7 min, three cars still at booth 1
+
+* "REAL" network delays
++ Traceroute used to measure delay; RTT (round trip time) is shown
+** Throughput
++ rate at which bits are sent from sender/receiver
++ Rs = rate of server to router link
++ Rc = router to client link
++ bottleneck link: throughput = min(Rs, Rc)
++ for a shared core, its speed matters, not Rs or Rc
++ for network-network throughput, queuing delay is ignored
+
+* Security: line of defense
++ authentication
++ confidentiality
++ integrity checks
++ access restrictions
+
+* Protocols, Layers, Service models
+** 5 layers
+1. Application
+2. Transport
+3. Network
+4. Link
+5. Physical
+
+   wraps in
+   message (application) -> segment (transport) -> datagram (network) -> frame (link) -> bits (physical)
+
+* Server-Client protocol
++ Sockets are used to communicate between servers and clients
++ socket identified by IP addr and port number
++ UDP socket: no handshake, unreliable datagrams
++ TCP socket: connection-oriented, reliable byte stream
+** How to choose transport service
+*** data integrity -> TCP (reliable transfer)
+*** Timing (latency) -> UDP (no retransmission delays)
+*** throughput -> TCP has congestion control (may throttle the rate)
+*** security -> both; add TLS on top
+
+* P2P
++ download rarest piece (rarest-first chunk selection)
++ BitTorrent details:
+  - file divided into 256 kb chunks
+  - torrent: group of peers exchanging chunks of the same file
+  - tracker: keeps track of peers participating in the torrent
+  - new peer registers with the tracker, gets a list of peers, connects to a subset ("neighbors")
+  - while downloading, peer also uploads chunks to other peers
+  - requests missing chunks rarest-first
+  - sends chunks tit-for-tat: uploads to the 4 peers currently uploading to it at the highest rate; other peers are choked; top-4 re-evaluated every 10 s
+  - every 30 s, one random peer is optimistically unchoked
+  - churn: peers may come and go; a peer may leave or stay after getting the whole file
++ P2P scales: each peer brings upload capacity, so distribution time drops as peers join
+
+* Video streaming
++ context: video streaming is a major consumer of Internet bandwidth
+  - Netflix, YouTube, Amazon Prime: ~80% of residential ISP traffic (2020)
++ challenges:
+  - scale: how to reach ~1 billion users
+  - heterogeneity: different users have different capabilities (wired vs mobile, bandwidth-rich vs bandwidth-poor)
++ solution: distributed, application-level infrastructure
+** Multimedia video
++ video: sequence of images displayed at a constant rate (e.g. 24 images/sec)
++ digital image: array of pixels, each pixel represented by bits
++ coding: use redundancy within and between images to decrease the number of bits
+  - spatial coding (within an image): e.g. send one color value + count of repeats instead of N identical values
+  - temporal coding (from one frame to the next): send only the differences from frame i to frame i+1
++ CBR (constant bit rate): video encoding rate is fixed
++ VBR (variable bit rate): video encoding rate changes as the amount of spatial/temporal coding changes
++ examples:
+  - MPEG1 (CD-ROM): 1.5 Mbps
+  - MPEG2 (DVD): 3-6 Mbps
+  - MPEG4 (often used on the Internet): 64 kbps - 12 Mbps
+** Streaming stored video
++ main challenges:
+  - server-to-client bandwidth varies over time with changing congestion (in house, access network, core, video server)
+  - packet loss and delay due to congestion will delay playout or result in poor video quality
++ continuous playout constraint: during playout, timing must match the original timing
++ network delays are variable (jitter) -> need a client-side buffer (playout delay) to compensate
++ other challenges: client interactivity (pause, fast-forward, rewind, jump), lost packets (retransmission)
+** DASH (Dynamic Adaptive Streaming over HTTP)
++ server divides the video file into multiple chunks, each encoded at multiple rates
++ different rate encodings stored in different files, replicated on various CDN nodes
++ manifest file: provides URLs for the different chunks
++ client periodically estimates server-to-client bandwidth
++ client requests one chunk at a time, choosing the maximum coding rate sustainable for the current bandwidth
++ client can choose different rates at different times and fetch from different servers
++ streaming video = encoding + DASH + playout buffering
+
+* CDN: content distribution networks
++ challenge: stream content (from millions of videos) to hundreds of thousands of simultaneous users
+** option 1: single large "mega-server"
++ single point of failure
++ point of network congestion
++ long (and possibly congested) path to distant clients
++ quite simply: this solution doesn't scale
+** option 2: store/serve copies at many geographically distributed sites (CDN)
++ enter deep: push CDN servers deep into many access networks, close to users
+  - Akamai: ~240,000 servers deployed in > 120 countries (2015)
++ bring home: smaller number (tens) of larger clusters in POPs near access networks
+  - used by Limelight
+** how a CDN works
++ CDN stores copies of content (e.g. Mad Men) at CDN nodes
++ subscriber requests content; service provider returns a manifest
++ using the manifest, client retrieves content at the highest supportable rate
++ client may choose a different rate or a different copy if the network path is congested
+** OTT: "over the top"
++ Internet host-to-host communication as a service
++ OTT challenges: coping with a congested Internet from the "edge"
+  - what content to place in which CDN node?
+  - from which CDN node to retrieve content? at which rate?
+** CDN content access: a closer look (DNS redirection)
++ Bob requests a video URL, e.g. http://netcinema.com/6Y7B23V
++ Bob's local DNS server resolves the URL
++ netcinema's authoritative DNS returns a CNAME pointing at the CDN, e.g. http://KingCDN.com/NetC6y&B23V
++ KingCDN's authoritative DNS returns the IP of a nearby CDN server
++ Bob requests the video from that CDN server, streamed via HTTP
+** case study: Netflix
++ Netflix registration/accounting servers live in the Amazon cloud
++ multiple versions of each video are uploaded to CDN servers
++ Bob browses Netflix; requests the manifest file for a specific video; manifest is returned
++ a DASH server is selected and contacted, and streaming begins
+
+* HTTP
+** Conditional GET
++ request: sends object if-modified-since
++ if not modified: sends 304
+** HTTP Versions
+*** 1.1
++ single persistent TCP connection
++ HOL (head-of-line) issues: one slow object blocks the objects behind it
+*** HTTP/2
++ multiplexes multiple objects over a single persistent TCP connection
++ no application-layer HOL issues (one slow object no longer blocks the rest)
++ but TCP-level HOL remains (a lost packet stalls the whole connection)
++ adds server push and stream priorities
+*** HTTP/3 aka QUIC
++ uses Quick UDP Internet Connections to mitigate congestion
++ runs over UDP, removing TCP-level HOL blocking
++ requires 1 handshake (1 RTT) instead of TCP+TLS which has 2 RTT
+
+* Email: SMTP and IMAP
+** SMTP (RFC 5321)
++ handshaking
++ transfer of message
++ closure
+** command/response interaction
++ commands: ASCII text
++ response: status code and phrase
+** Comparison with HTTP
++ SMTP and HTTP use ASCII command/response
++ SMTP uses CRLF for EOF (end of message)
++ SMTP always uses ASCII, persistent connections
++ SMTP for user -> server -> server
+** IMAP
++ Internet Mail Access Protocol, for Server to User (pull protocol; mail stays on the server, remote folders)
++ POP3 (contrast): download-and-delete style pull protocol, stateless
+
+* DNS
++ two parts: hostname and IP address
++ distributed database is used for many name servers
++ services:
+  - hostname -> ip
+  - host aliasing
+  - mail server aliasing
+  - load balancing
++ there are 13 root servers (Verisign, ICANN, NASA, etc..); each root identity is implemented by many machines via anycast
++ each root server has sub-servers (13 more from Verisign)
+** Type of queries
+*** Iterative: the queried server replies with a referral; the client asks the next server itself
+*** Recursive: the queried server asks multiple DNS servers in sequence on the client's behalf
+** Type of records:
+A, AAAA, CNAME, MX, NS (records also carry a TTL)
+** DNS protocol messages
+Identifier: 2 bytes (+ flags)
+
+* OSI MODEL
+** 7. Application
++ supports network applications (e.g. FTP, SMTP, HTTP)
+** 6. Presentation
++ allows applications to interpret the meaning of data (e.g. encryption, compression, machine-specific conventions)
+** 5. Session
++ synchronization, check-pointing, recovery of data exchange
+** 4. Transport
++ process-to-process data transfer
+** 3. Network
++ routing of datagrams from source to destination
+** 2. Data link
++ data transfer between neighboring network elements
+** 1. Physical
++ bits on the wire
+** OSI vs Internet layers
++ OSI has 7 layers; the Internet (TCP/IP) model has 5 layers
++ mapping: application + presentation + session -> application; transport -> transport; network -> network; data link -> link; physical -> physical
++ OSI splits the top 3 layers (application, presentation, session) that the Internet model merges into one application layer
+
+* Transport layer (Ch 3)
+** Transport services
++ transport-layer protocol provides logical communication between application processes running on different hosts
++ from the application's viewpoint, the hosts appear directly connected (logical communication), even though messages actually traverse routers and links in between
++ transport protocols run in end systems only:
+  - sender side: converts application messages into segments (appends a transport-layer header), passes them to the network layer
+  - receiver side: reassembles segments into messages, passes them to the application layer
++ network layer: logical communication between hosts
++ transport layer: logical communication between processes (extends host-to-host delivery to process-to-process delivery)
++ routers act only up to the network layer; they do not act on the transport layer
++ transport-layer protocols on different hosts communicate with each other (peer transport protocols)
+** Transport protocols in the Internet
++ the Internet has two transport protocols: TCP and UDP
++ both provide:
+  - multiplexing/demultiplexing (port numbers) to deliver to the right process
+  - integrity checking (error detection via checksum in the segment header)
++ UDP (User Datagram Protocol):
+  - connectionless: no handshake before sending data
+  - unreliable: no guarantee of delivery, ordering, or integrity
+  - no congestion control: may send as fast as desired (useful for real-time apps)
++ TCP (Transmission Control Protocol):
+  - connection-oriented: handshake establishes the connection before data flows
+  - reliable, in-order delivery (byte stream)
+  - congestion control: throttles the sender when the network is congested
+  - flow control: sender does not overwhelm the receiver
++ application examples:
+  - TCP: HTTP, FTP, SMTP, Telnet
+  - UDP: DNS, streaming, VoIP (typically UDP; some can use either)
++ both TCP and UDP get the same network-layer (host-to-host) service from IP; they differ only in the additional services they provide to applications
+
+** Multiplexing / demultiplexing (3.2)
++ extends host-to-host delivery (network layer) to process-to-process delivery (transport layer)
++ multiplexing at sender: gather data from multiple sockets, wrap each chunk in a segment header, hand it to the network layer
++ demultiplexing at receiver: read the destination port in the segment header, deliver the payload to the correct socket
++ requirements:
+  - each socket has a unique identifier
+  - each segment carries source and destination port-number fields so the receiver knows which socket to deliver to
++ port numbers are 16-bit: 0-65535; 0-1023 are reserved well-known ports (e.g. HTTP 80, HTTPS 443, SMTP 25, FTP 21, Telnet 23, DNS 53)
++ source port: only needed so the receiver can send a reply back to the right socket
++ UDP demultiplexing (connectionless):
+  - socket identified by a 2-tuple: (destination IP, destination port)
+  - segments with the same dest IP and dest port go to the same socket, regardless of the sender
+  - example: two different clients can send to the same UDP socket (e.g. a DNS server socket)
++ TCP demultiplexing (connection-oriented):
+  - socket identified by a 4-tuple: (source IP, source port, destination IP, destination port)
+  - a server can support many simultaneous TCP sockets; each connection gets its own socket (a web server has one socket per client connection)
+  - two segments from the same source IP/port but different dest IP/port are demultiplexed to different sockets
+  - demultiplexing uses all four fields to identify the receiving socket
+
+** Socket programming in Python (UDP)
++ A socket is the software interface between the application and the transport layer
++ To create a UDP socket, call socket(AF_INET, SOCK_DGRAM)
+  - AF_INET means IPv4. An address is a pair: (IP address, port number)
+  - SOCK_DGRAM means datagram socket, that is UDP
+  - SOCK_STREAM creates a TCP socket instead. We do not use it here
++ Four calls form the basic UDP API:
+  - bind((ip, port)): give the socket its local IP and port. A socket needs bind() to receive datagrams
+  - sendto(data, (ip, port)): send one datagram to a destination address
+  - recvfrom(size): wait until a datagram arrives, then return (data, (source IP, source port))
+  - close(): release the socket
++ UDP needs no connection. sendto() works immediately. Anyone can send datagrams to the server's address
++ UDP gives no guarantee. The network can lose, reorder, or duplicate datagrams. The application must handle this
++ Data moves as bytes. Use encode() to send. Use decode() to receive
++ One UDP socket serves all clients. The receiver is identified by the 2-tuple (dest IP, dest port), as in the transport-layer notes
++ Testing:
+  - On one machine: use the address 127.0.0.1
+  - On a LAN: use the real IP addresses. Server 192.168.0.125. Client 192.168.0.48
+  - The machines must be on the same subnet. The firewall must allow the port
+*** UDP server (run on 192.168.0.125)
+#+begin_src python
+import socket
+
+SERVER_IP = "192.168.0.125"   # this machine's IP on the LAN
+SERVER_PORT = 9000
+
+# create a UDP socket (IPv4, datagram)
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# bind to (IP, port) so the socket can receive datagrams
+sock.bind((SERVER_IP, SERVER_PORT))
+print(f"UDP server listening on {SERVER_IP}:{SERVER_PORT}")
+
+while True:
+    data, addr = sock.recvfrom(1024)  # wait for a datagram; 1024 = max bytes
+    print(f"received from {addr}: {data.decode()}")
+
+    # reply to whoever sent the datagram (addr = (source IP, source port))
+    sock.sendto(f"hello {addr}, got your message".encode(), addr)
+
+sock.close()
+#+end_src
+*** UDP client (run on 192.168.0.48)
+#+begin_src python
+import socket
+
+SERVER_IP = "192.168.0.125"   # server's IP on the LAN
+SERVER_PORT = 9000
+
+# create a UDP socket
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# no connect() needed: send straight to the server's address
+message = "ping from client 192.168.0.48"
+sock.sendto(message.encode(), (SERVER_IP, SERVER_PORT))
+
+# wait for the server's reply
+reply, server_addr = sock.recvfrom(1024)
+print(f"reply from {server_addr}: {reply.decode()}")
+
+sock.close()
+#+end_src
++ notes on the scripts:
+  - The server binds to its IP and port, then loops: receive, then reply. One socket handles all clients
+  - The client does not bind. The operating system assigns a free source port. The port travels in the segment header. That is the only job of the source port
+  - recvfrom() gives the sender's IP and port. The server replies to that exact address
+  - Start the server first. A datagram sent to a stopped server is dropped. UDP has no error for this
+
+** Socket programming in Python (TCP)
++ TCP is connection-oriented. It starts with a handshake between the two hosts
++ TCP sends a byte stream. The stream is reliable and in-order
++ TCP needs more API calls than UDP. The server and the client use different sequences
++ Server sequence: socket() -> bind() -> listen() -> accept()
+  - listen(n): mark the socket ready for connection requests
+  - accept(): wait for a client to connect. It returns (conn, addr). conn is a new socket for that one connection. addr is the client's address
++ Client sequence: socket() -> connect() -> send()/recv() -> close()
+  - connect((ip, port)): open a connection to the server. The handshake happens here
++ The server sends and receives on conn, not on the listening socket
++ The listening socket accepts many connections. Each connection gets its own socket. This matches the 4-tuple demultiplexing in the theory above
++ We test on one machine. Use 127.0.0.1 for both the server and the client. 127.0.0.1 is the loopback address of the local host. No other machine can reach it
++ Like UDP, data moves as bytes. Use encode() to send. Use decode() to receive
+*** TCP server (run first, binds to 127.0.0.1)
+#+begin_src python
+import socket
+
+SERVER_IP = "127.0.0.1"   # loopback address: the local machine
+SERVER_PORT = 9000
+
+# create a TCP socket (IPv4, stream)
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# bind to (IP, port) so the socket can receive connections
+sock.bind((SERVER_IP, SERVER_PORT))
+
+# mark the socket ready for connection requests
+sock.listen(1)
+print(f"TCP server listening on {SERVER_IP}:{SERVER_PORT}")
+
+conn, client_addr = sock.accept()  # wait for a client to connect
+print(f"connection from {client_addr}")
+
+data = conn.recv(1024)  # receive bytes from the connection
+print(f"received: {data.decode()}")
+
+conn.send("hello client, got your message".encode())  # send bytes back
+
+conn.close()  # close the connection
+sock.close()
+#+end_src
+*** TCP client (run second, connects to 127.0.0.1)
+
+#+begin_src python
+import socket
+
+SERVER_IP = "127.0.0.1"   # the server runs on the same machine
+SERVER_PORT = 9000
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+sock.connect((SERVER_IP, SERVER_PORT))  # the handshake happens here
+print("connected to server")
+
+sock.send("ping from the client".encode())  # send bytes over the connection
+
+reply = sock.recv(1024)  # wait for the server's reply
+print(f"reply: {reply.decode()}")
+
+sock.close()
+#+end_src
++ notes on the scripts:
+  - Start the server first. The client connect() fails if the server does not listen
+  - accept() blocks until a connection request arrives
+  - Each connection gets its own socket. The 4-tuple (source IP, source port, dest IP, dest port) identifies it
+  - recv() returns a byte stream. It can return fewer bytes than the size you gave. Loop until you receive all the bytes you need
+  - close() ends the connection
+
+** UDP
++ handshakeless bare bones protocol
+*** UDP Segment Header
+32 bits
++ source port
++ destination port
++ length
++ checksum
++ application data (payload)
+*** example checksum
++ add two 16 bit digits and return carry bit

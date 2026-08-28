@@ -1,0 +1,9 @@
+** Record Reader-Input Splits
+Input - Linebyline text from the input file
+Output - KV store
+
+** MapReduce Program without Combiner
+Eg: Hello is Hello is Sunny is Sunny
+Mapper 1, Combiner 1: (Hello,2), (is,3)
+Mapper 1, Combiner 1: (is,3), (Sunny,3)
+Reducer 
