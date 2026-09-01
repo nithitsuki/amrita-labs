@@ -1,0 +1,990 @@
+#+TITLE: Computer Networks — Midsem Prep Questions
+#+DATE: <2026-09-01 Tue>
+
+CO1 + CO2 questions from 5 past papers (19CSE302 Sep 2024, 22AIE204 Sep 2025,
+22AIE204 Missed Mid Oct 2025, 23AID206 Sep 2024, 23CSE302 Nov 2025), ordered
+by CO (Kurose textbook order): CO1 ~ Ch. 1 (intro), CO2 ~ Ch. 2-3
+(application + transport).
+Duplicate questions (same wording across papers) have been removed and the
+numbering re-sequenced. Question wording is unchanged; user answers are
+reproduced verbatim (typos preserved) and only reformatted. Questions marked
+"Model Answer" contain reference answers written for study.
+
+* CO1 — Architectural components, switching, delays, encapsulation (Kurose Ch. 1)
+
+** Q1. LAN/WAN architecture [CO1, BTL2] [5]
+You are working in a small company that plans to connect 10 computers to share
+data and resources. Explain what type of network architecture you would
+propose (LAN, WAN, etc.) and justify your choice.
+
+*** Answer
+I would propose LAN (Local area network) as the network is quite small
+consisting of only 10 devices in close vicinty as compared to WAN (wide area
+network) which is generally a network of LANs that span larger distances like
+multiple buildings
+
+This LAN can be made possible by using just unmanaged switches and ethernet
+
+** Q2. Client-server vs peer-to-peer (startup file sharing) [CO1, BTL2] [5]
+A startup company plans to launch an online file-sharing service that allows
+users to upload and download files directly from each other's devices.
+Identify the suitable network architecture (client-server or peer-to-peer)
+and explain why it fits this use case.
+
+*** Answer
+p2p is the right architecture here as in p2p protocols users can directly
+download from each other (like the torrenting protocol), this way the startup
+company does not need to have expensive servers to accomodate expensive
+uploads and downloads centrally from other users
+
+** Q3. Client-server vs P2P models [CO1, BTL3]
+Online applications can follow either the Client-Server model or the
+Peer-to-Peer (P2P) model. With suitable examples (e.g., web browsing, file
+sharing), compare these two architectures in terms of scalability,
+reliability, and resource sharing. Which model would you recommend for
+large-scale file distribution and why?
+
+*** Answer
+Client-Server: centralised servers serve resources and services to multiple
+clients
+
+p2p: there is no 'centralised' server, every client is a server who serve
+each other
+
+in terms of scalability, p2p is much more scalable as more clients can serve
+each other rather than having to scale up and down a central server,p2p is
+auto scaling
+
+as for reliability, it is a mixed bag. generally client-server is more
+reliable due to its centralised nature that keeps it protected. but a well
+connected p2p network thats large enough can also be just as reliable albeit
+requiring lots of support from the clients themselves
+
+for resource distributions like github repos or printers I would recommend
+client-server architecture as its more reliable and is a centralised source
+of truth that stays up even if not many clients use it
+
+for large-scale file distribution like linux installation ISOs I would
+recommend p2p as it greatly reduces the load on the main server and increases
+the total bandwidth available to users alogn with download speeds
+
+** Q4. Circuit vs packet switching (food delivery app) [CO1, BTL2] [5]
+A food delivery company like Swiggy/Zomato handles thousands of simultaneous
+orders across multiple cities. Each order consists of small data packets,
+including customer details, restaurant menus, order confirmation, and
+delivery tracking updates. The company must choose between circuit switching
+and packet switching for its communication network. Which method is more
+suitable in this scenario? Explain why, comparing both approaches.
+
+*** Answer
+packet switching is more suitable in this scenario as it is much more
+efficient in handling smaller bursts of data accross multiple users as
+compared to circuit switching which priorities dedicated channels for every
+user.
+
+packet switching can efficiently handle thousands of users by aggregating all
+of their small data packets together and routing them
+
+Circuit switching is not a great option here as the routes would quickly get
+exhausted and become expensving for the quick switching that would be
+required amongst bursty traffic from so many users
+
+** Q5. Packet switching efficiency [CO1, BTL2] [5]
+A new ISP advertises that it uses packet switching for data transfer. As a
+network engineer, explain how packet switching helps improve efficiency
+compared to circuit switching for internet usage.
+
+*** Answer
+packet switching helps improve efficiency compared to cs (circ switching) as
+it can handle multiplexing of lots of users traffic at once by efficiently
+packing everybodys packets through a single stream rather than having to
+share the stream individually, this is great for the kidn of traffic that is
+generated my network edges unlike telephone lines which usually need an
+allocated resource line
+
+** Q6. Compare Packet Switching and Circuit Switching [CO1, BTL2] [5]
+Compare Packet Switching and Circuit Switching in communication networks.
+Explain how each method works, highlighting their key differences in terms of
+data transmission, efficiency, and use cases.
+
+*** Answer
+ps:
+communication method where data is transmitted as packets through a link,
+where multiple packets travel thru the link and be routed individually
++ very scalable: just increase total bandwidth for everyone
++ very efficient: packs packets into a single link this not wasting bandwifth
++ transmission: higher latency but supports more clients and bursty traffic
+  better
+
+cs:
+communication method where data is transmitted thru dedicated path for each
+session
++ lower latency
++ not efficient: doesnt share bandwidth with others
++ not scalable: expensive to scale compared to ps
+
+** Q7. FDM vs TDM suitability [CO1, BTL3] [6]
+A telecommunications company is planning to allocate bandwidth to multiple
+users on a shared communication channel. The company is considering two
+techniques: Frequency Division Multiplexing (FDM) and Time Division
+Multiplexing (TDM). In this scenario, explain which technique would be more
+suitable under the following conditions:
+a) Users require continuous data transmission, like in analog voice
+   communication.
+b) Users have varying data transmission needs at different times, such as in
+   a digital communication system where users send data in bursts.
+Justify your answer by discussing how each technique handles bandwidth
+allocation and channel utilization.
+
+*** Answer
+a) FDM as they all can transmit at once kind of like AM in planes, good for
+   lower latency
+b) TDM as to be able to accomodate more traffic at once efficiently
+
+** Q8. TDM file transmission time [CO1, BTL3] [2]
+Host A wants to send a file of size 640,000 bits to Host B over a
+circuit-switched network. All the links in the network use Time Division
+Multiplexing (TDM) with 24 slots and have a bit rate of 1.536 Mbps. Also,
+suppose that it takes 500 msec to establish an end-to-end circuit before Host
+A can transmit the file. Calculate the time it takes to transmit the file.
+
+*** Answer
+500ms + (1/2.4)s ~ 916.66 ms
+
+** Q9. Propagation delay and bandwidth-delay product [CO1, BTL3] [2]
+Suppose two hosts, A and B are separated by 10,000 kilometers and are
+connected by a direct link of R = 1Mbps. Suppose the propagation speed over
+the link is 2.5×10⁸~meters/sec. Calculate the propagation delay and
+bandwidth-delay product.
+
+*** Answer
+$p_delay = 10,000*1000 / 2.5 * 10^8 ~= 250ms$ propogation delay
+bandwidth-delay ~= 0.25 * 10^6 ~= 250 kb
+
+** Q10. Delay calculation (video conferencing link) [CO1, BTL3] [4]
+A video conferencing company is testing a new link between its office in
+Delhi and its partner office in London, which is approximately 10,000 km
+apart. The link has a bandwidth of 1 Mbps, and the propagation speed is
+2.5×10⁸~m/s. Each video packet is 1,000 bytes in size. The packets pass
+through 2 intermediate routers, each introducing a processing delay of 2 ms.
+i. Calculate the transmission delay of one packet.
+ii. Calculate the propagation delay across the link.
+iii. Calculate the total processing delay across the two routers.
+iv. Based on your results, explain which type of delay is the most
+    significant in this scenario and why.
+
+*** Answer
+1. total transmission delay = L/R = 1000/1000000 = 1/10^3s = 1ms
+
+2. propogation delay = $(10^4*10^3)$/$2.5*10^8$ = $\frac{1}_{25} s$ = 4ms
+
+3. processing delay total = 2 + 2 = 4ms
+
+4. processing delay and propogation delay are the highest in this scenario
+
+** Q11. Delays and congestion (e-commerce) [CO1, BTL3] [4]
+An e-commerce platform is facing customer complaints about delayed page loads
+during peak shopping hours. As a network analyst, explain how propagation
+delay, transmission delay, and queuing delay could contribute to this issue.
+Which of these delays is most affected by network congestion?
+
+*** Model Answer
+- Transmission delay: time to push packet bits onto the link (L/R). Fixed by
+  packet size and link rate; congestion does not change it because the link
+  rate is constant.
+- Propagation delay: time for a bit to travel the physical distance
+  (distance/speed). Fixed by the geography of the links; congestion cannot
+  change it either.
+- Queuing delay: time a packet waits in router buffers before transmission.
+  It is zero at low load and grows with the number of packets arriving at a
+  router. During peak shopping hours more packets arrive per second than the
+  router can forward, so queues build up and the wait grows rapidly; when
+  buffers overflow, packets are dropped and TCP retransmits, adding further
+  delay.
+
+Queuing delay is the delay most affected by network congestion — it is the
+only one of the three that varies with load.
+
+** Q12. Total end-to-end delay [CO1, BTL3] [4]
+A packet of 2,000 bytes is sent from Host A to Host B across three links and
+two routers. Each link has a transmission rate of 5 Mbps and a propagation
+delay of 5 ms. Each router introduces a processing delay of 1 ms. Assume the
+packet must be completely received by one router before being forwarded, and
+neglect queuing delays. Calculate the total end-to-end delay experienced by
+the packet.
+
+*** Model Answer
+Packet size L = 2000 bytes = 2000 x 8 = 16,000 bits. R = 5 Mbps = 5 x 10^6 bps.
+
+Per link:
+- transmission delay: t_trans = L/R = 16,000 / (5 x 10^6) = 3.2 ms
+- propagation delay: t_prop = 5 ms
+
+Router processing: 1 ms per router, two routers -> 2 ms.
+
+Total (store-and-forward, 3 links + 2 routers):
+= 3 x (t_trans + t_prop) + 2 x t_proc
+= 3 x (3.2 + 5) + 2 x 1
+= 3 x 8.2 + 2 = 24.6 + 2 = 26.6 ms
+
+Answer: the total end-to-end delay is 26.6 ms.
+
+** Q13. Header and tail addition per layer [CO1, BTL2] [4]
+Discuss how header and tail are getting added in each layer when a message is
+traveling from Application layer to Physical Layer.
+
+*** Model Answer
+This is encapsulation — as the message moves down the stack, each layer
+wraps the data received from the layer above with its own control
+information:
+
+- Application layer: produces the application message (e.g., an HTTP request
+  body). No protocol header is added inside the TCP/IP stack at this layer.
+- Transport layer: adds a transport header (TCP ~20 bytes or UDP 8 bytes)
+  with source/destination port numbers, sequence/acknowledgment numbers
+  (TCP) and checksum -> the segment.
+- Network layer: adds an IP header (20+ bytes) with source/destination IP
+  addresses, TTL, protocol number -> the datagram.
+- Link layer: adds a frame header (e.g., Ethernet: destination/source MAC
+  addresses, type) AND a frame trailer (CRC / error-detection bits) -> the
+  frame. This is the only layer that adds a tail.
+- Physical layer: transmits the frame as bits/signals on the medium; no
+  header/tail.
+
+At the receiver the reverse happens: each layer strips and inspects its own
+header (decapsulation) and passes the payload up to the next layer, until
+the application gets the original message.
+
+** Q14. TCP vs UDP [CO1, BTL2] [5]
+Differentiate between TCP and UDP. Even though UDP is considered as
+unreliable, on what parameters, certain application use UDP in the transport
+layer?
+
+*** Model Answer
+TCP:
+- Connection-oriented: 3-way handshake before data transfer.
+- Reliable, in-order byte stream: sequence numbers, ACKs, retransmissions,
+  duplicate detection.
+- Flow control and congestion control built in.
+- Higher overhead: 20+ byte header, connection state per connection.
+- Used by HTTP, FTP, SMTP (where reliability matters).
+
+UDP:
+- Connectionless: no handshake, just fire segments.
+- Unreliable, best-effort: no guarantees on delivery, ordering, or
+  duplicates; no retransmission.
+- No flow/congestion control; tiny 8-byte header.
+- Used by DNS, video/voice streaming, online games, DHCP.
+
+Why applications still choose UDP despite unreliability:
+- Low overhead: 8-byte header vs 20+ for TCP; useful for tiny messages like
+  DNS queries.
+- No connection setup: saves a full RTT of handshake, so first data is
+  delivered sooner.
+- No retransmission delay: real-time applications (live video, VoIP, gaming)
+  prefer a slightly corrupted/lost packet over a delayed one; a retransmitted
+  packet would arrive too late to be useful.
+- Application-level control: the app itself decides when/if to retransmit and
+  at what rate, instead of TCP's congestion control slowing the stream.
+
+** Q15. IP addressing plan (192 devices) [CO1, BTL3] [8]
+An organization has 192 devices spread across 5 different blocks: P, Q, R,
+S, and T. Machines belonging to different blocks must be placed in separate
+subnets. The number of devices in each block is:
+- Block P: 60 devices
+- Block Q: 90 devices
+- Block R: 8 devices
+- Block S: 20 devices
+- Block T: 14 devices
+Starting from the address block 192.168.5.0/24, design an IP addressing plan
+that assigns subnets to each block with the minimum address waste. For each
+block, provide:
+- The network address assigned.
+- The subnet mask (in both dotted-decimal and prefix notation).
+- The usable host range (first and last usable IP).
+- The broadcast address.
+Assume you must reserve exactly enough usable host addresses to accommodate
+each block (i.e., choose the smallest possible subnet that fits the block's
+device count).
+
+*** Model Answer
+Smallest subnet that fits each block (usable hosts = 2^(32-n) - 2):
+- Q: 90 devices -> /25 (126 usable) -> 128 addresses
+- P: 60 devices -> /26 (62 usable)  -> 64 addresses
+- S: 20 devices -> /27 (30 usable)  -> 32 addresses
+- T: 14 devices -> /28 (14 usable)  -> 16 addresses
+- R: 8 devices  -> /28 (14 usable)  -> 16 addresses
+
+Assign the largest blocks first so that every subnet is aligned to its size
+boundary (a /25 must start at a multiple of 128): 128+64+32+16+16 = 256,
+so the whole /24 is used with zero waste.
+
+| Block | Network address | Mask (dotted)  | Prefix | Usable host range   | Broadcast     |
+|-------+-----------------+----------------+--------+---------------------+---------------|
+| Q     | 192.168.5.0     | 255.255.255.128| /25    | .1 - .126           | 192.168.5.127 |
+| P     | 192.168.5.128   | 255.255.255.192| /26    | .129 - .190         | 192.168.5.191 |
+| S     | 192.168.5.192   | 255.255.255.224| /27    | .193 - .222         | 192.168.5.223 |
+| T     | 192.168.5.224   | 255.255.255.240| /28    | .225 - .238         | 192.168.5.239 |
+| R     | 192.168.5.240   | 255.255.255.240| /28    | .241 - .254         | 192.168.5.255 |
+
+(Rule: subnet address = block size multiple; usable = network+1 to
+broadcast-1; broadcast = network + block size - 1. A /28 with 14 usable
+hosts exactly fits block T's 14 devices.) Total devices accommodated =
+126+62+30+14+14 usable per subnet across the network — no address wastage.
+
+* CO2 — Application layer & transport layer (Kurose Ch. 2-3)
+
+** Q16. Encapsulation across TCP/IP layers [CO2, BTL2] [5]
+A software company has offices in Bengaluru and Chennai, connected through a
+high-speed link. When employees send a message, headers and trailers are
+added at different layers as the data travels from their application to the
+physical medium. With reference to this real-life case, explain how
+encapsulation works across the layers of the TCP/IP model.
+
+*** Model Answer
+When an employee in Bengaluru sends a message (say, via an application like
+email or chat), the data travels down the TCP/IP stack and each layer adds
+its own header (encapsulation):
+
+- Application layer: produces the application message (the payload).
+- Transport layer: adds a TCP/UDP header — source & destination port numbers
+  (identifying the sending/receiving process), sequence numbers and checksum
+  -> a segment.
+- Network layer: adds an IP header — source IP (Bengaluru office) and
+  destination IP (Chennai office), TTL, protocol field -> a datagram, which
+  is routed across the high-speed link between the offices.
+- Link layer: adds a frame header (source/destination MAC addresses, type)
+  and a frame trailer (CRC for error detection) -> a frame.
+- Physical layer: transmits the frame as electrical/optical signals on the
+  link.
+
+Each header contains exactly the control information that the peer layer on
+the receiving side (Chennai) needs to process it. At the receiver, the
+process reverses: the link layer checks and strips the trailer and header,
+the network layer uses the IP header to deliver to the right host and
+process, the transport layer uses the port numbers to hand the segment to
+the correct application — decapsulation. Only the link layer adds a tail
+(the CRC trailer).
+
+** Q17. HTTP message analysis [CO2, BTL2]
+Analyze the below given HTTP message and explain the various fields in it.
+
+#+begin_example
+HTTP/1.1 200 OK
+Connection: close
+Date: Fri, 03 Sep 2024 02:30:30 GMT
+Server: Apache/1.3.0 (Unix)
+Last-Modified: Mon, 31 Aug 2024 12:10:30 GMT
+Content-Length: 2345
+Content-Type: text/html
+
+(data data data data ...)
+#+end_example
+
+*** Model Answer
+Status line:
+- HTTP/1.1: protocol version the server is using.
+- 200: status code — request succeeded.
+- OK: reason phrase describing the code.
+
+Header lines (one per header field, "Name: value"):
+- Connection: close — the server will close the TCP connection after sending
+  this response (non-persistent HTTP behaviour).
+- Date: Fri, 03 Sep 2024 02:30:30 GMT — when the response was generated by
+  the server (in GMT).
+- Server: Apache/1.3.0 (Unix) — the web-server software and version.
+- Last-Modified: Mon, 31 Aug 2024 12:10:30 GMT — when the requested object
+  was last changed; used later by a conditional GET (If-Modified-Since) for
+  caching.
+- Content-Length: 2345 — size of the body in bytes (the HTML object).
+- Content-Type: text/html — the MIME type of the object, here an HTML
+  document.
+
+Body: (data data data data ...) — the actual requested object (web page
+content); a blank line separates the header section from the body.
+
+** Q18. HTTP message analysis [CO2, BTL2]
+Analyze the below given HTTP message and explain the various fields in it.
+
+#+begin_example
+HTTP/1.1 200 OK
+Connection: close
+Date: Mon, 08 Sep 2025 09:50:00 GMT
+Server: Apache/1.4.1 (Unix)
+Last-Modified: Sun, 31 Aug 2025 10:10:30 GMT
+Content-Length: 3100
+Content-Type: text/html
+
+(data data data data...)
+#+end_example
+
+*** Model Answer
+Same structure and meaning as the previous HTTP response (Q17), with
+different values:
+- HTTP/1.1 200 OK — HTTP version 1.1, success status code 200 with reason
+  phrase OK.
+- Connection: close — server closes the connection after this response.
+- Date: Mon, 08 Sep 2025 09:50:00 GMT — response generation time.
+- Server: Apache/1.4.1 (Unix) — server software and version.
+- Last-Modified: Sun, 31 Aug 2025 10:10:30 GMT — last modification time of the
+  object (basis for conditional GET caching).
+- Content-Length: 3100 — body size in bytes (larger page than Q17's 2345).
+- Content-Type: text/html — object type.
+- Blank line then the body (the HTML content) follows.
+
+** Q19. Conditional GET [CO2, BTL3] [5]
+Describe the Conditional GET method in HTTP. Which headers are involved, and
+how does this mechanism help reduce unnecessary data transfer between a
+client and a server?
+
+*** Model Answer
+A conditional GET is a request that asks the server to send the object only
+if it has changed since the version the client already has cached.
+
+Working:
+1. The first time the client requests an object, the server returns it along
+   with a Last-Modified header (when the object was last changed).
+2. The browser stores (caches) the object and remembers that timestamp.
+3. On a later request, the client sends a GET with the header
+   If-Modified-Since: <last-modified date>.
+4. The server compares that date with the object's actual last modification
+   time:
+   - not modified -> responds 304 Not Modified with an EMPTY body; the
+     client serves the cached copy.
+   - modified -> responds 200 OK with the full object, and the cache is
+     updated.
+
+Headers involved: If-Modified-Since (request), Last-Modified (response),
+plus the 304 Not Modified status line. (The question is "conditional" because
+the GET is executed fully only when the condition holds.)
+
+Benefit: unchanged objects are never retransmitted — only a small 304
+response travels — saving bandwidth, reducing server load, and making
+page loads (especially for frequently refreshed pages) much faster.
+
+** Q20. Conditional GET (news website) [CO2, BTL3]
+A news website like BBC allows users to frequently refresh the homepage to
+check for updates. To avoid sending the entire webpage every time, the
+website uses the Conditional GET mechanism in HTTP.
+i. Describe how the Conditional GET method works.
+ii. Identify the HTTP headers involved in this process.
+iii. Explain how this mechanism reduces unnecessary data transfer between the
+    BBC server and the client's browser.
+
+*** Model Answer
+i. How it works: the BBC homepage is cached in the browser after the first
+   visit, along with its last-modified timestamp. Each time the user hits
+   refresh, the browser sends a GET with If-Modified-Since: <date of the
+   cached copy>. The BBC server checks whether the homepage has changed
+   since that date:
+   - unchanged -> replies 304 Not Modified with no body; the browser just
+     re-renders its cached page.
+   - changed -> replies 200 OK with the fresh page (and a new Last-Modified).
+
+ii. Headers involved: If-Modified-Since (in the request), Last-Modified (in
+    the original response), and the status line 304 Not Modified in the
+    response. The request is a GET, so GET + the condition = conditional GET.
+
+iii. Reduction in data transfer: on every refresh where nothing changed, the
+     server sends only the small 304 header response instead of the entire
+     homepage (which can be hundreds of KB with images). For a news site
+     refreshed frequently by millions of readers, this saves most of the
+     bandwidth and cuts server load, while the user sees a faster refresh
+     because the heavy content never travels the network again.
+
+** Q21. HTTP vs FTP [CO2, BTL2] [5]
+Differentiate between HTTP and FTP. Provide an example application for each
+of the protocols.
+
+*** Model Answer
+- Connections: HTTP uses a single TCP connection per request/response —
+  control and data are on the same connection (in-band). FTP uses TWO
+  connections: a control connection (port 21, for commands like login,
+  listing, navigation) and a separate data connection (port 20, for the
+  actual file transfer) — out-of-band control.
+- State: HTTP is stateless — the server keeps no information about past
+  requests. FTP is stateful — the server maintains the session state (logged
+  in user, current directory) for the whole control connection.
+- Authentication: FTP normally requires a username/password login (or
+  anonymous login) and supports upload, delete and directory listing. HTTP
+  is designed to fetch/download resources anonymously; uploads need extra
+  methods (PUT/POST).
+- Security: both send data (and FTP credentials) in clear text by default
+  (secure variants: HTTPS, FTPS/SFTP).
+- Use cases: HTTP serves web pages and web content; FTP is used for bulk
+  file transfer, publishing websites to servers, and file archives.
+
+Example application for each: HTTP — a web browser (Chrome/Firefox) loading
+a web page; FTP — an FTP client such as FileZilla uploading files to a
+server, or downloading from an FTP mirror.
+
+** Q22. Persistent vs non-persistent HTTP [CO2, BTL3] [5]
+Imagine you are designing a website for an e-commerce platform. Customers are
+complaining about slow page loading. Explain how using persistent HTTP
+connections instead of non-persistent connections can improve the user
+experience.
+
+*** Model Answer
+Non-persistent HTTP (HTTP/1.0 style): each object (HTML file, image, CSS,
+JS) requires its own TCP connection. For every object the client must
+complete a TCP handshake (1 RTT) and then the request/response exchange
+(another 1 RTT) — i.e., ~2 RTTs of overhead per object, and each connection
+also restarts TCP's slow start, so throughput ramps up slowly. A page with
+many embedded objects (typical for e-commerce) therefore takes many RTTs to
+load and creates heavy load on the server (many parallel sockets).
+
+Persistent HTTP (default since HTTP/1.1): all objects of a page are sent
+over ONE TCP connection kept open after the first response.
+- The handshake cost (1 RTT) is paid only once.
+- TCP's congestion window stays warmed up from earlier transfers, so later
+  objects are sent at high rate immediately.
+- The server maintains fewer connection states, reducing resource use.
+
+Result for the e-commerce customer: page load time drops from roughly
+(1+2N) RTTs to about (1+N) RTTs (N objects), and even less with pipelining —
+so the perceived experience improves significantly during peak hours when
+many customers load the same heavy pages.
+
+** Q23. HTTP page download time (persistent/non-persistent) [CO2, BTL3] [6]
+A client wants to download a web page that contains one base HTML file and
+eight embedded objects. Before contacting the web server the client performs
+a DNS lookup that contacts three DNS servers sequentially, each with an RTT
+of 45 ms. The RTT between the client and the web server is 100 ms, and the
+transmission time for each object is negligible. Calculate the total time for
+the client to receive the entire page in the following cases:
+(i) Using non-persistent HTTP with a separate TCP connection per object.
+(ii) Using persistent HTTP without pipelining.
+
+*** Model Answer
+Total objects = 1 base HTML + 8 embedded = 9 objects.
+
+DNS time = 3 servers x 45 ms = 135 ms (sequential).
+
+(i) Non-persistent HTTP, separate TCP connection per object:
+Each object: TCP handshake (1 RTT = 100 ms) + GET/response (1 RTT = 100 ms)
+= 2 RTTs = 200 ms per object.
+9 objects x 200 ms = 1800 ms.
+Total = DNS 135 + 1800 = 1935 ms.
+
+(ii) Persistent HTTP without pipelining:
+One TCP connection: handshake 1 RTT = 100 ms (once).
+Each object: 1 RTT = 100 ms (request/response, no connection overhead).
+9 objects x 100 ms = 900 ms.
+Total = DNS 135 + 100 + 900 = 1135 ms.
+
+Answers: (i) 1935 ms, (ii) 1135 ms. Persistence saves the connection-setup
+RTT for 8 of the 9 objects (800 ms).
+
+** Q24. Cookies and caching [CO2, BTL3] [5]
+A user notices that after logging into a shopping website, their cart items
+remain saved even after refreshing or closing the browser tab. Explain how
+cookies and caching make this possible and discuss their impact on website
+performance and user privacy.
+
+*** Model Answer
+Cookies: when the user first visits/logs into the shopping site, the server
+sends a Set-Cookie header with a unique identifier (cookie ID). The browser
+stores it and attaches a Cookie header to every subsequent request to that
+site. The server keeps the cart items keyed to that ID in its own state, so
+on refresh or even after closing and reopening the tab (as long as the
+cookie is still stored), the server recognizes the same session and
+restores the cart. Caching by itself does not save the cart — the cookie
+(server-side session state + client-side identifier) is what preserves it;
+caching speeds up loading of the site's static assets (images, CSS, JS) by
+reusing locally stored copies instead of re-downloading.
+
+Impact on performance:
+- Cookies avoid re-authentication/re-adding items; caching avoids
+  re-downloading unchanged objects (often via conditional GET), cutting
+  latency, bandwidth and server load — a better user experience.
+
+Impact on privacy:
+- Cookies make stateful personalization possible but also enable tracking:
+  a cookie ID lets the site follow the user's behaviour across visits, and
+  third-party cookies (set by ad networks embedded in many sites) build
+  cross-site browsing profiles for targeted advertising without explicit
+  consent.
+- Caching on a shared/public computer can leave sensitive pages or
+  credentials readable by the next user; privacy-conscious users clear
+  cookies/cache or use private browsing, which disables tracking but loses
+  session state (cart) as well.
+
+** Q25. Mail access protocols [CO2, BTL2] [3]
+Explain the different mail access protocols and suggest a suitable mail
+access protocol for a slow internet scenario.
+
+*** Model Answer
+Mail delivery has two sides: SMTP is the protocol used to send mail (push)
+— from the user agent to the sender's mail server and from server to server.
+To READ mail, the user agent retrieves it from its own mail server using an
+access protocol:
+
+- POP3 (Post Office Protocol v3): the client downloads messages to the local
+  device; messages are typically deleted from the server (or kept
+  explicitly). Simple, works offline after download, designed for a single
+  device; no folders/server-side state besides INBOX.
+- IMAP (Internet Message Access Protocol): messages remain on the server;
+  the client synchronizes folders, flags, and read state across multiple
+  devices; supports server-side search and partial download (headers only).
+  More features, more traffic and more server state.
+- HTTP-based webmail (e.g., Gmail in the browser): mail is read through a
+  web interface using HTTP/HTTPS instead of a dedicated protocol.
+
+Suitable for slow internet: POP3 — the user connects once, downloads all
+mail to the device, disconnects, and can then read everything offline
+without further transfers. IMAP would repeatedly synchronize with the
+server, generating traffic that is slow and unreliable on a weak
+connection.
+
+** Q26. IMAP vs POP3 (slow connection) [CO2, BTL2]
+A user in a rural area has a very slow and unstable Internet connection but
+still needs to access emails regularly. The email service provider supports
+both IMAP and POP3.
+i. Briefly describe the role of IMAP and POP3 protocols in email
+   communication.
+ii. Which protocol (IMAP or POP3) is more efficient for downloading and
+    reading emails over such a slow connection? Justify your answer.
+
+*** Model Answer
+i. Roles: both are mail access protocols that let the user's mail client
+   fetch mail from the mail server.
+   - IMAP: keeps messages on the server and synchronizes the client with it
+     (folders, read/unread flags, state). Designed for multiple devices and
+     always-on connections.
+   - POP3: downloads messages to the local device, normally removing them
+     from the server. Designed for a single device and offline reading.
+
+ii. POP3 is more efficient for a slow/unstable connection:
+   - The client makes one connection, downloads all new mail in one burst,
+     then disconnects; everything is then read locally with NO further
+     network traffic.
+   - Under IMAP the client keeps synchronizing with the server (folder list,
+     headers, flags, partial body fetches). Every sync round-trip over a
+     slow, unstable link is slow and error-prone, and interruptions force
+     re-synchronization — much more traffic overall.
+   - Trade-off: POP3 sacrifices multi-device synchronization and leaves a
+     single local copy, but for one user on one slow connection it minimizes
+     data transfer, which is exactly the goal.
+
+** Q27. Recursive and Iterative DNS [CO2, BTL2] [4]
+Explain the working mechanisms of Recursive DNS Query Processing and
+Iterative DNS Query Processing. How do DNS servers respond differently in
+each method? Provide examples for each query type.
+
+*** Model Answer
+A complete resolution of a name like www.example.com normally involves the
+local (resolver) DNS server and a chain of servers: root -> .com TLD ->
+example.com authoritative.
+
+Recursive querying: the client sends ONE query to its local DNS server, and
+that server takes full responsibility — it queries the root, then the TLD,
+then the authoritative server itself, forwarding nothing back until it has
+the final answer. Each server in the chain that is asked recursively replies
+with either the answer or an error; it does not redirect the client. The
+intermediate queries (root/TLD) are typically referrals returned to the
+resolver, which continues the chain on the client's behalf.
+Example: your browser asks your ISP's resolver for www.example.com; the
+resolver contacts the root, the .com TLD, and the example.com server, then
+returns the IP address to your browser. (Public resolvers like 8.8.8.8 are
+recursive resolvers.)
+
+Iterative querying: the client (or resolver) makes the queries itself, one
+at a time, to each server in the chain; every server responds with the best
+answer it can give — the final IP, or a referral ("I don't know; ask this
+other server"), and the client follows up with the next query. The root and
+TLD servers work this way: they never do the full resolution themselves,
+they only point to the next server.
+Example: your client asks the root server for www.example.com; the root
+replies "ask the .com TLD server at X"; the client asks X, which replies
+"ask the authoritative name server of example.com at Y"; the client asks Y
+and gets the IP.
+
+Response difference: recursive servers (the local resolver) give the final
+answer; iterative servers give either the answer or a referral/pointer to
+the next server in the hierarchy.
+
+** Q28. Recursive and Iterative DNS [CO2, BTL2]
+Explain the mechanisms of Recursive and Iterative DNS query processing. How
+does the response behaviour of DNS servers differ in each case? Illustrate
+your answer with suitable examples for both query types.
+
+*** Model Answer
+Recursive processing: the queried server resolves the name completely on
+behalf of the requester. The user's host sends a single query to its local
+DNS server; the local server chains through the root, TLD and authoritative
+servers, and finally returns the resolved IP (or an error) to the host. One
+query in, one final answer out — the requester never deals with the rest of
+the DNS hierarchy.
+
+Iterative processing: the requester interacts with each DNS server in the
+chain one step at a time. Each server examined replies with either the
+answer it already knows or a referral — the address of the next server to
+ask. The requester then sends a fresh query to that next server, and so on
+until an authoritative server supplies the answer.
+
+Response behaviour differs: a server answering recursively performs the
+resolution and returns the definitive answer; a server answering
+iteratively returns the best information it has — final answer if it is the
+authoritative server for the name, otherwise a referral.
+
+Examples:
+- Recursive: host -> local DNS resolver -> (root, .com TLD, example.com
+  authoritative, all queried by the resolver) -> final IP back to the host.
+- Iterative: host -> root ("ask .com TLD") -> .com TLD ("ask example.com
+  nameserver") -> example.com authoritative ("here is the IP") — with the
+  host issuing each successive query itself.
+
+** Q29. Multiplexing and demultiplexing [CO2, BTL2] [5]
+Explain the concept of multiplexing and demultiplexing in the transport layer
+with a diagram.
+
+*** Model Answer
+Multiplexing (sender side): the transport layer collects data from multiple
+application processes (sockets) at the source host, each identified by its
+port number, wraps each chunk in a segment labelled with the destination
+port, and passes all segments down to the single network layer below — many
+processes sharing one network path (many-to-one).
+
+Demultiplexing (receiver side): the transport layer at the destination reads
+the destination port field of each incoming segment and delivers the
+payload to the correct socket/process — one incoming stream split to many
+processes (one-to-many).
+
+#+begin_example
+  Sender host                          Receiver host
+  app P1 (port 80)   \                       / -> app P1 (port 80)
+  app P2 (port 1200) --- transport mux --- demux transport --- app P2 (port 1200)
+  app P3 (port 5000) /   (add dst port)     (read dst port) \ -> app P3 (port 5000)
+  +--------------------+                    +--------------------+
+  | TCP/UDP segments   |    network path    | deliver by port no. |
+  +--------------------+                    +--------------------+
+#+end_example
+
+Rules:
+- UDP demultiplexing uses only the destination port number (one socket per
+  port).
+- TCP demultiplexing uses the full 4-tuple: source IP, source port,
+  destination IP, destination port — which is why a web server with many
+  concurrent clients can share port 80: different source (IP, port) pairs
+  map to different sockets.
+
+** Q30. UDP segment error check [CO2, BTL3] [3]
+If a process receives the following information as a UDP segment, state
+whether the data is not having any errors or not.
+
+#+begin_example
+0000010000000000 0000100000000000 000000001000100
+1011010100111101 0110011001100000 0101010101010101
+1000111100001100
+#+end_example
+
+*** Model Answer
+Method: TCP/UDP checksum uses one's-complement arithmetic over 16-bit words.
+To verify, add ALL 16-bit words (data words plus the stored checksum word,
+the last group) with end-around carry; if the final sum is all 1s (0xFFFF),
+the data is error-free, otherwise errors are present.
+
+16-bit words (hex):
+0x0400, 0x0800, 0x0084* , 0xB53D, 0x6660, 0x5555 and checksum word 0x8F0C.
+(* The third group is printed with 15 bits; assuming the intended 16-bit
+word is 0x0084 — the conclusion below is unchanged for any reasonable
+reading.)
+
+Sum of data words:
+0x0400 + 0x0800 = 0x0C00
+0x0C00 + 0x0084 = 0x0C84
+0x0C84 + 0xB53D = 0xC1C1
+0xC1C1 + 0x6660 = 0x12821 -> wrap (end-around carry) -> 0x2822
+0x2822 + 0x5555 = 0x7D77
+
+Sum including the checksum word:
+0x7D77 + 0x8F0C = 0x10C83 -> wrap -> 0x0C84
+
+Result 0x0C84 != 0xFFFF, so the data HAS errors — the segment is received
+corrupted.
+
+** Q31. UDP segment error check [CO2, BTL2]
+If a process receives the following information as a UDP segment, state
+whether the data has any errors or not.
+
+#+begin_example
+00000000 01010000 00000000 00011001
+00000000 00010100 01100110 01100110
+01010101 01010101 10001111 00001100
+#+end_example
+
+*** Model Answer
+Method: one's-complement addition of all 16-bit words including the stored
+checksum (last word); a valid segment sums to 0xFFFF (all 1s).
+
+16-bit words (hex):
+0x0050, 0x0019, 0x0014, 0x6666, 0x5555, checksum word 0x8F0C.
+
+Sum of the data words:
+0x0050 + 0x0019 = 0x0069
+0x0069 + 0x0014 = 0x007D
+0x007D + 0x6666 = 0x66E3
+0x66E3 + 0x5555 = 0xBC38
+
+Sum including the checksum word:
+0xBC38 + 0x8F0C = 0x14B44 -> wrap -> 0x4B45
+
+Result 0x4B45 != 0xFFFF (and the expected checksum ~0xBC38 = 0x43C7 differs
+from the stored 0x8F0C), so the data HAS errors — the segment is corrupted
+in transit.
+
+** Q32. TCP vs UDP services [CO2, BTL3] [5]
+Compare the services provided by TCP and UDP for application-layer protocols,
+such as HTTP, DNS, and FTP.
+
+*** Model Answer
+Services provided to the application layer:
+
+TCP provides:
+- Reliable, ordered delivery of a byte stream: retransmission of lost
+  segments, duplicate detection, in-order reassembly + buffers out-of-order
+  data.
+- Connection-oriented service: 3-way handshake before any data flows.
+- Flow control (receiver's advertised window) so a fast sender never
+  overruns a slow receiver.
+- Congestion control: the sender throttles its rate when the network is
+  congested.
+- Full-duplex, connection state at both ends; 20+ byte header.
+
+UDP provides:
+- Connectionless, best-effort delivery: no handshake, no reliability, no
+  ordering guarantee, no flow/congestion control — just a checksum.
+- Message boundaries preserved; supports broadcast/multicast (TCP cannot);
+  8-byte header.
+
+How the example protocols use them:
+- HTTP: uses TCP — web pages must arrive intact and in order; a corrupted
+  page is useless.
+- FTP: uses TCP on BOTH its control and data connections — file integrity
+  and reliability are essential.
+- DNS: typically uses UDP — one small query/response (fits one datagram),
+  low overhead and one RTT; if a response is lost, the application (or an
+  OS resolver) simply retries, and DNS can fall back to TCP when needed.
+
+| Service            | TCP                         | UDP                          |
+|--------------------+-----------------------------+------------------------------|
+| Connection         | connection-oriented (setup) | connectionless (none)        |
+| Reliability        | reliable, in-order          | unreliable, best-effort      |
+| Flow/congestion    | both provided               | neither provided             |
+| Header size        | 20+ bytes                   | 8 bytes                      |
+| Multicast/broadcast| no                          | yes                          |
+| Example apps       | HTTP, FTP, SMTP             | DNS, VoIP, video, DHCP, games|
+
+** Q33. TCP reliable data transfer [CO2, BTL4]
+During a file transfer, a sender notices that some packets are lost or arrive
+out of order. Explain how TCP achieves reliable data transfer in such cases
+through mechanisms like packet numbering, acknowledgements, and
+retransmissions.
+
+*** Model Answer
+TCP turns an unreliable IP service into a reliable byte stream using:
+
+1. Sequence numbers: every byte of the stream is numbered. The sender puts
+   the sequence number of the first byte in each segment. The receiver uses
+   these numbers to (a) detect missing bytes and (b) buffer out-of-order
+   segments until the gap is filled, so data is reassembled in the correct
+   order.
+
+2. Acknowledgements (ACKs): the receiver sends back an ACK with the
+   sequence number of the next expected byte (cumulative ACK — ACK n
+   acknowledges all bytes before n). Receiving an ACK tells the sender which
+   bytes are safely delivered and which must still be retransmitted; a
+   duplicate ACK signals that a gap exists (a segment was lost or arrived
+   out of order).
+
+3. Retransmissions:
+   - Timeout-based: the sender timestamps each transmitted segment and
+     estimates the round-trip time (RTT); a timer for the oldest unacked
+     segment — on timeout (RTO) the segment is retransmitted and sent again
+     with a fresh timer.
+   - Fast retransmit: if the sender receives 3 duplicate ACKs for the same
+     sequence number, it retransmits the missing segment immediately,
+     without waiting for the timeout — this is the main recovery path for a
+     single lost segment in practice.
+
+4. Supporting mechanisms: a checksum detects corrupted segments (discarded,
+   treated as lost); the receiver window combines reliability with flow
+   control (sliding window keeps many segments in flight instead of
+   stop-and-wait, improving throughput); full-duplex piggybacking lets ACKs
+   ride on data segments in the reverse direction.
+
+So for a file transfer: lost segment -> (timeout or 3 dup-ACKs) ->
+retransmission; out-of-order segments -> buffered and delivered in sequence
+once the missing bytes arrive — the application sees a clean, ordered byte
+stream even though the network delivered segments out of order.
+
+** Q34. Go-Back-N vs Selective Repeat [CO2, BTL3]
+Evaluate the advantages and drawbacks of Go-Back-N and Selective Repeat
+protocols in terms of efficiency & reliability. Explain with the help of an
+example.
+
+*** Model Answer
+Both are pipelined reliable-transfer protocols with a sender window of N
+outstanding packets.
+
+Go-Back-N (GBN):
++ Simple: ONE timer (oldest unacked packet), one cumulative ACK, receiver
+  needs almost no buffer (discards out-of-order packets).
+- Inefficient on lossy links: a single lost packet forces retransmission of
+  the lost packet AND all packets sent after it (the whole window),
+  wasting bandwidth — the cost grows with window size and RTT.
+- Reliability: correct, but "dumb" — it retransmits packets the receiver
+  already has.
+
+Selective Repeat (SR):
++ Efficient: the receiver ACKs each packet individually, buffers out-of-order
+  packets, and the sender retransmits ONLY the lost packet(s) — no wasted
+  retransmissions; much better under loss and over long-RTT links.
+- More complex: per-packet timers, per-packet ACKs, receiver buffering, and
+  the window must be <= half the sequence-number space to avoid ambiguity
+  between new and retransmitted packets.
+
+Example (window N = 4, packets 0,1,2,3 sent; packet 1 is lost):
+- GBN: receiver discards out-of-order 2 and 3 (no buffering), sends
+  cumulative ACK 1 (expects 1) — dup ACKs. Sender times out and
+  retransmits 1, 2 AND 3: 3 packets resent, only 1 was actually missing.
+- SR: receiver buffers 2 and 3, sends selective ACKs for 2 and 3;
+  sender times out only packet 1 and retransmits exactly 1. Receiver now
+  delivers 0,1,2,3 in order. Bandwidth saved: 2 packets.
+
+Verdict: GBN's simplicity wins when the error rate is low; SR's efficiency
+wins when errors are frequent or the bandwidth-delay product is large
+(more packets in flight), paying for it with buffering and protocol
+complexity.
+
+** Q35. IP addressing plan (165 devices) [CO2, BTL3]
+An organisation has 165 devices spread across 3 different blocks: R, S, and
+T. Machines belonging to different blocks must be placed in separate subnets.
+The number of devices in each block is: • Block R: 12 devices • Block S: 45
+devices • Block T: 108 devices Starting from the address block
+$192.168.5.0/24$, design an IP addressing plan that assigns subnets to each
+block with the minimum address waste. For each block, provide: • The network
+address assigned. • The subnet mask (in both dotted-decimal and prefix
+notation). • The usable host range (first and last usable IP). • The
+broadcast address. Assume you must reserve exactly enough usable host
+addresses to accommodate each block (i.e., choose the smallest possible
+subnet that fits the block's device count).
+
+*** Model Answer
+Smallest subnet that fits each block (usable = 2^(32-n) - 2):
+- T: 108 devices -> /25 (126 usable) -> 128 addresses
+- S: 45 devices  -> /26 (62 usable)  -> 64 addresses
+- R: 12 devices  -> /28 (14 usable)  -> 16 addresses
+
+Assign the largest block first so subnets stay aligned to their size
+boundaries (a /25 must start at a multiple of 128, a /26 at a multiple of
+64, a /28 at a multiple of 16). Used: 128 + 64 + 16 = 208 of 256 addresses.
+
+| Block | Network address | Mask (dotted)  | Prefix | Usable host range   | Broadcast     |
+|-------+-----------------+----------------+--------+---------------------+---------------|
+| T     | 192.168.5.0     | 255.255.255.128| /25    | .1 - .126           | 192.168.5.127 |
+| S     | 192.168.5.128   | 255.255.255.192| /26    | .129 - .190         | 192.168.5.191 |
+| R     | 192.168.5.192   | 255.255.255.240| /28    | .193 - .206         | 192.168.5.207 |
+
+Check: T gets 126 usable >= 108; S gets 62 >= 45; R gets 14 >= 12. Addresses
+192.168.5.208 - 192.168.5.255 (48 addresses) remain unused/unallocated.
