@@ -1,0 +1,836 @@
+#+TITLE: Embedded Systems — Midsem Prep (23CSE304)
+#+AUTHOR: Nithilan
+#+DATE: 2026-09-06
+#+OPTIONS: toc:3 num:t
+#+STARTUP: overview
+#+PROPERTY: Effort_ALL 5min 15min 30min 1h
+#+TAGS: midsem important confusing memorise registers memory modes isa
+#+SEQ_TODO: LEARN(l) REVISE(r) DONE(d)
+
+* Study plan :midsem:
+  :PROPERTIES:
+  :Effort:   15min
+  :END:
+** How to use this file
+- Each ~Part~ = one deck (~1-Introduction~, ~2-ARM~).
+- Each section ends with ~Practice~ questions. Answers are folded headlines (~TAB~ to open).
+- Priorities: [#A] = almost certainly asked, [#B] = likely, [#C] = good-to-know.
+- Check off boxes as you finish a chunk.
+** Checklist
+- [ ] A: Intro — definitions + characteristics
+- [ ] A: MP vs MC vs DSP
+- [ ] A: Von Neumann vs Harvard, RISC vs CISC
+- [ ] B: ARM history / versions / Cortex features
+- [ ] B: Cortex-M4 buses + memory map + endianness
+- [ ] B: Registers + PSR + exception masks
+- [ ] B: Reset sequence + operating modes
+- [ ] B: Addressing modes + LDR/STR + alignment
+- [ ] B: Logical / arithmetic / shift + NZCV + 2's complement
+
+* PART A — Introduction to Embedded Systems :midsem:
+  Source deck: ~1-Introduction.odp~ (31 slides). Syllabus Unit-1 basics.
+
+** A1. What is a System? [#B]
+:PROPERTIES:
+:CATEGORY: intro
+:END:
+*** Definition
+#+begin_quote
+A system is a way of working, organizing or doing one or many tasks according
+to a fixed plan, program or set of rules. It is an arrangement in which all its
+units assemble and work together according to the plan or program.
+#+end_quote
+*** Two worked examples (image-only slides, keep as stories)
+- *WATCH (time-display system)* — Parts: hardware, needles, battery, dial,
+  chassis, strap. Rules: all needles move clockwise only; thin needle rotates
+  every second; long every minute; short every hour; all return to origin after
+  12 hours.
+- *WASHING MACHINE (automatic clothes-washing system)* — Parts: status display
+  panel, switches & dials, motor, power supply & control unit, water-level
+  sensor, solenoid valve. Rules: wash by spinning → rinse → drying; blink when
+  done; display stage at each step; on interruption, execute only the remainder.
+*** Midsem angle
+- A "system" = *parts + rules*. Examiners love: "find a system with no
+  electronic system in it, and say how electronics would improve it."
+
+** A2. What is an Embedded System? [#A] :important:
+*** Core definitions (learn both, quote either)
+#+begin_quote
+An embedded system is a computer system with a dedicated function within a
+larger mechanical or electrical system, often with real-time computing
+constraints. It is embedded as part of a complete device often including
+hardware and mechanical parts.
+#+end_quote
+#+begin_quote
+An Embedded System is one that has computer hardware with software embedded in
+it as one of its important components.
+#+end_quote
+*** Key phrases to drop in answers
+- Special-purpose computer, dedicated function(s).
+- Ubiquitous, invisible, hidden computer inside.
+- Controlling many everyday devices: cell phones, washing machines, traffic
+  signals with timers, automobile electronics.
+- Statistic from deck: over 95% of software systems are actually embedded.
+*** One-line contrast
+- Desktop/server PCs = flexible, wide end-user needs. Embedded = far more
+  common, single dedicated purpose.
+
+** A3. Characteristics of Embedded Systems [#A] :important:
+*** 1. Single-functioned
+- Does one specialized operation repeatedly. Example: a pager is always a pager.
+*** 2. Tightly constrained (design metrics)
+- Design metrics = cost, size, power, performance.
+- Must fit on (nearly) a single chip, run fast enough for real time, sip power
+  for battery life.
+*** 3. Reactive and real-time
+- Continually reacts to the environment; must compute within a deadline.
+- Example: car cruise controller watches speed/brake sensors; late math = loss
+  of control.
+*** 4. Microprocessor/microcontroller based
+- Must be MP- or MC-based by definition in this course.
+*** 5. Memory
+- Software usually lives in ROM; no secondary memory needed (unlike PCs).
+*** 6. Connected (peripherals)
+- Has connected peripherals for input/output devices.
+*** 7. HW–SW co-system
+- Software → features + flexibility. Hardware → performance + security.
+*** Memory hook
+- Mnemonic: *STR MCH* — Single-function, Tightly-constrained, Reactive,
+  Micro-based, Connected, HW-SW (+ Memory).
+
+** A4. Components of an Embedded System [#B]
+- Diagram in deck (3 stacked boxes with double arrows):
+  =APPLICATION SOFTWARE ⇄ OPERATING SYSTEM ⇄ HARDWARE=
+*** 1. Hardware
+- Processor, timers, interrupt controller, I/O devices, memories, ports, etc.
+*** 2. Main application software
+- May perform a series / concurrent / multiple tasks.
+*** 3. Real-Time Operating System (RTOS)
+- Defines how the system works; supervises application software; sets rules of
+  execution. Note: a small-scale ES may not need an RTOS.
+
+** A5. Microprocessor vs Microcontroller vs DSP [#A] :important:
+*** MP: CPU for computers
+- No RAM/ROM/I-O on the CPU chip itself.
+- Examples: Intel x86 (4004 … 8080 … x86), Freescale 6800 … 9S12 … PowerPC;
+  also ARM, DEC, SPARC, MIPS, National Semi.
+- Applications: desktops, laptops, notepads.
+*** MC: a smaller computer
+- On-chip RAM, ROM, I/O ports (fixed on the chip).
+- Examples: Motorola 6811, Intel 8051, Zilog Z8, PIC 16X.
+- = Processor + Memory + I/O ports (interfaces).=
+- Applications: keyboards, mouse, pendrive, mobiles, etc.
+*** Comparison table (direct exam favourite)
+| Feature              | Microprocessor                                              | Microcontroller                              |
+|----------------------+-------------------------------------------------------------+----------------------------------------------|
+| Nature               | Multitasking (music + editor at once)                       | Single-task oriented (washer washes only)    |
+| Memory/I-O           | RAM/ROM/ports/timers added externally, variable in number   | Embedded on-chip, fixed in number            |
+| Design freedom       | Designer chooses how much memory/I-O                        | Fixed → ideal for limited, specific tasks    |
+| Cost/weight          | Heavier, costlier (external support)                        | Lightweight, cheaper                         |
+| Space/power          | More space, higher power                                    | Less space, less power                       |
+*** DSP (Digital Signal Processor)
+- Definition: process of analysing/modifying a signal (math + computational
+  algorithms on analog/digital signals) to get a higher-quality signal.
+- Architecture optimized for: long streams of math on data samples; hardware
+  Multiply/Accumulate (MAC); critical for FFT-type apps.
+- FFT in one line: algorithm computing the DFT — converts cyclic waveform
+  structure into sine components.
+- Chain (memorise order): =Analog → ADC → Digital Signal Processing → DAC → Analog=
+- Example device: TI TMS5100; classic product: Speak & Spell toy.
+- DSP traits: better power efficiency (good for mobiles); special memory
+  architectures fetching multiple data/instructions at once; dedicated DSPs
+  preferred in portables due to power constraints.
+
+** A6. Evolution of Microprocessors + Moore's Law [#C]
+- Slide 20 (first gen): 1971–73, PMOS, non-TTL-compatible; 4-bit → 16 pins;
+  8/16-bit → 40 pins; pin limits forced signal multiplexing.
+- Slide 21 table (Intel line, learn trend not every cell):
+| Name      | Year | Transistors | Data width | Clock  |
+|-----------+------+-------------+------------+--------|
+| 8080      | 1974 | 6,000       | 8 bits     | 2 MHz  |
+| 8085      | 1976 | 6,500       | 8 bits     | 5 MHz  |
+| 8086      | 1978 | 29,000      | 16 bits    | 5 MHz  |
+| 8088      | 1979 | 29,000      | 8 bits     | 5 MHz  |
+| 80286     | 1982 | 134,000     | 16 bits    | 6 MHz  |
+| 80386     | 1985 | 275,000     | 32 bits    | 16 MHz |
+| 80486     | 1989 | 1,200,000   | 32 bits    | 25 MHz |
+| PENTIUM   | 1993 | 3,100,000   | 32/64 bits | 60 MHz |
+| PENTIUM II| 1997 | 7,500,000   | 64 bits    | 233 MHz|
+| PENTIUMIII| 1999 | 9,500,000   | 64 bits    | 450 MHz|
+| PENTIUM IV| 2000 | 42,000,000  | 64 bits    | 1.5 GHz|
+*** Moore's Law (quote-ready)
+#+begin_quote
+The number of transistors on a microchip doubles every two years, though the
+cost of computers is halved. Speed/capability rise every couple of years while
+we pay less.
+#+end_quote
+
+** A7. Von Neumann vs Harvard [#A] :important:
+*** Von Neumann architecture
+- Stored-program concept (John von Neumann, 1945): program data + instruction
+  data in the *same* memory.
+- Blocks: Main Memory System ⇄ CPU (operational registers, PC, ALU, control
+  unit) ⇄ Input/Output System. Single Data/Instruction path.
+*** Harvard architecture
+- Separate storage + separate buses (signal paths) for instruction and data.
+- Built to overcome the Von Neumann bottleneck.
+- Same boxes, but memory exposes: Instruction-Address/Instruction pair AND
+  Data-Address/Data pair in parallel.
+*** Comparison table (learn row-for-row)
+| Von Neumann                              | Harvard                                   |
+|------------------------------------------+-------------------------------------------|
+| Single shared memory for code + data     | Separate memories for code + data         |
+| Fetch code one cycle, data another cycle | Single cycle suffices (separate buses)    |
+| Slower, more time-consuming              | Higher speed, less time-consuming         |
+| Simple in design                         | Complex in design                         |
+- Note: the deck's prose rows for speed are arguably swapped vs the standard
+  telling (Harvard is the faster one) — the table above gives the *intended
+  exam* reading: separate buses ⇒ faster. Say that explicitly if asked.
+
+** A8. RISC vs CISC [#A] :important:
+*** RISC (Reduced Instruction Set)
+- Idea: simpler hardware; small uniform instruction set (e.g. load does load,
+  store does store); mostly same format.
+- More registers → fewer memory accesses; fewer addressing modes; pipelineable.
+- Performance play: *fewer cycles per instruction*, at cost of more
+  instructions per program.
+*** CISC (Complex Instruction Set)
+- Idea: one instruction does more (e.g. multiply = load + evaluate + store).
+- Fewer instructions per program via multi-operation instructions ⇒ variable
+  length, unpredictable fetch-decode-execute; more addressing modes; fewer
+  general-purpose registers (work happens in memory).
+- Performance play: *fewer instructions per program*, at cost of more cycles
+  per instruction.
+*** Comparison table
+| CISC                                              | RISC                                        |
+|---------------------------------------------------+---------------------------------------------|
+| Larger set, easy to program                       | Smaller set, harder to program              |
+| Simpler compiler                                  | Complex compiler                            |
+| Many addressing modes, complex formats            | Few modes, fixed format                     |
+| Variable instruction length                       | Fixed instruction length                    |
+| Higher clock cycles per instruction¹              | Low cycles per instruction                  |
+| Emphasis on hardware                              | Emphasis on software                        |
+| Micro-programmed control unit                     | Each instruction executed by hardware       |
+| Slower (read + decode from memory)                | Faster (hardware-executed)                  |
+| Pipelining not possible                           | Pipelining possible                         |
+- ¹ Deck says "clock cycles per second" — read as /cycles per instruction/.
+
+** A9. Practice — Part A :practice:
+*** Q-A1. Define embedded system. Give 2 examples + 2 characteristics. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- Definition: dedicated-function computer system within a larger
+  mechanical/electrical system, often real-time-constrained; HW with SW
+  embedded as a key component.
+- Examples: automatic washing machine, traffic signal with timer (also: cell
+  phone, auto electronics).
+- Characteristics (any 2): single-functioned; tightly constrained
+  (cost/size/power/performance); reactive + real-time; MP/MC-based; ROM-resident
+  SW; connected peripherals; HW-SW co-design.
+*** Q-A2. MP vs MC — 4 differences with an example each. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- MP: no on-chip RAM/ROM/I-O (Intel x86); multitasking; externally expandable;
+  heavier/costlier/hungrier. MC: RAM/ROM/ports on-chip fixed (Intel 8051);
+  single-task; lightweight/cheap/low-power.
+- Table in [[*A5. Microprocessor vs Microcontroller vs DSP]].
+*** Q-A3. Von Neumann vs Harvard, 3 points + bottleneck line. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- VN: one shared memory/bus → code fetch and data fetch take separate cycles →
+  bottleneck; simple design. Harvard: separate memories/buses → parallel,
+  single-cycle fetch; faster but complex. Harvard was developed to overcome the
+  VN bottleneck.
+*** Q-A4. RISC vs CISC: performance trade-off in one sentence each. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- RISC: reduce cycles-per-instruction at cost of more instructions per program
+  (fixed length, pipelineable, HW-simple). CISC: reduce instructions-per-program
+  at cost of more cycles per instruction (variable length, micro-programmed,
+  harder to pipeline).
+*** Q-A5. What are design metrics? List 4 + why they bite harder in ES. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- Cost, size/size-on-chip, power, performance. They bite harder because ES must
+  fit ~one chip, meet real-time deadlines, and stretch battery life.
+*** Q-A6. DSP chain + why MAC matters. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- Analog → ADC → DSP → DAC → Analog. MAC (multiply-accumulate) in hardware is
+  critical for FFT/filtering over sample streams; dedicated DSPs also win on
+  power + multi-fetch memory.
+
+* PART B — ARM Cortex-M4 :midsem:
+  Source deck: ~2-ARM.odp~ (99 slides). This is the heavy midsem chunk.
+
+** B1. Why ARM? History + business model [#B]
+*** History (Acorn → ARM)
+- ARM = Acorn RISC Machine (Acorn Computers, Cambridge UK, 1985): new powerful
+  CPU to replace 8-bit 6502. First models: only 26-bit PC → 64 MB memory
+  (huge then).
+- 1990 spin-off → renamed Advanced RISC Machines; now focuses on embedded CPU
+  cores.
+*** Why ARM wins in embedded
+- IP-licensing model: almost every silicon vendor ships an ARM-core MCU (some
+  compete with own designs too).
+- Processing power at low current; good MIPS/Watt; ideal for portables; compact
+  memories via 16-bit Thumb opcodes.
+*** Partnership model (slide 4, diagram)
+- ATAP = ARM Technology Access Partner (+ standard licensees, foundries,
+  OEMs). ARM sells IP, partners sell chips. Powered-products slide: phones,
+  tablets, wearables, automotive, networking, storage, Fugaku supercomputer
+  (Japan, fully live for COVID-era workloads per deck).
+*** Cortex features (slides 8–9, learn as list)
+- Multiprocessing: designed for multi-CPU use; first AMP example ARMv6K → 4 CPUs + HW support.
+- Tightly Coupled Memory (TCM): very fast, low-latency, predictable (vs cache).
+- Memory management: MMU + MPU sections for efficient memory handling.
+- Thumb-2 (2003): variable-length set extending 16-bit Thumb → 32-bit; better perf.
+- One-cycle execution: fixed-length instructions → CPI ≈ 1, fetch-next while
+  executing-current.
+- Pipelining: break/decode instructions across stages, advance one step at a
+  time → higher throughput.
+- Large register file: many registers = local store → fewer memory accesses.
+*** Base architecture + enhancements (slides 10–11)
+- RISC + embedded enhancements: large uniform register file; load-store
+  architecture; uniform fixed-length instructions; 32-bit; good speed/power;
+  high code density.
+- Enhancements: ALU+shifter control in every data-processing op; auto-inc/dec
+  addressing for loops; load-store-multiple for throughput; conditional
+  execution for throughput.
+
+** B2. ARM architecture versions [#C]
+- V1 (1983–85): first ARM at Acorn.
+- V2: volume in Acorn Archimedes/A3000; 26-bit addressing; 32-bit result
+  multiply + coprocessor. V2a: CP15 as system-control coprocessor (cache) +
+  SWP atomic load-store.
+- V3 (1990, first by ARM Ltd): ARM6 macrocell, ARM60 standalone, ARM600
+  (CPU+cache+MMU+write buffer), ARM610 (Apple Newton); 32-bit addressing;
+  separate CPSR/SPSRs; undefined + abort modes (coprocessor emulation, virtual
+  memory in supervisor mode). V3M: signed/unsigned multiply + MAC with full
+  64-bit result.
+- V4: signed/unsigned halfword + signed byte LDR/STR; part of SWI space
+  reserved; System mode introduced. V4T: 16-bit Thumb compressed form.
+- V5T: superset of 4T + BLX, CLZ, BRK. V5TE: signal-processing (DSP) extension.
+- V6: SIMD media extensions (2× MPEG4, 2× audio DSP); better caches (physical,
+  less flush/refill, cheaper context switch); better exception/interrupt
+  handling (real-time); unaligned + mixed-endian data support.
+
+** B3. Cortex-M4: the chip you must know [#A] :important:
+*** What it is
+#+begin_quote
+The ARM Cortex-M4 is a high-performance, low-power 32-bit microcontroller core
+for embedded and real-time applications … bridges performance and power
+efficiency; ideal for signal processing + control.
+#+end_quote
+- Family: Cortex-M (consumer, industrial, automotive, IoT).
+*** Common applications (pick 3 in exam)
+- Digital signal control, motor control/automation, wearables/healthcare,
+  industrial automation/instrumentation, audio processing, IoT nodes/sensor
+  interfaces.
+*** Popular M4 MCUs
+- ST STM32F3/F4; NXP Kinetis K; TI Tiva C; Nordic nRF52 (+BLE).
+- Lab boards in deck: ST Nucleo photo, TI EK-TM4C1294XL Connected LaunchPad +
+  full X11 pin map (slide 62 — recognise the red TI board).
+*** Harvard core + buses
+- Harvard: separate data/instruction buses. ICode bus fetches instructions from
+  Flash; system bus moves data with memory/I-O; second I-O bus for high-speed
+  (e.g. USB); DCode bus for debug (breakpoints/watchpoints); NVIC on Private
+  Peripheral Bus (PPB) → fast ISRs, low interrupt latency.
+- ICode vs DCode: ICode = fetch program code from Flash (sequential-optimized);
+  DCode = read/write data in Flash (constants, LUTs) + debug; parallel access
+  to same Flash boosts performance.
+*** Bus table (slide 42)
+| Bus    | Function                                              |
+|--------+-------------------------------------------------------|
+| ICode  | Fetch opcodes from Flash                              |
+| DCode  | Read constant data from Flash                         |
+| System | R/W data from RAM or I-O; fetch from RAM              |
+| PPB    | Internal peripherals (NVIC, SysTick)                  |
+| AHB    | High-speed I-O, parallel ports (M4 only)              |
+- AHB = Advanced High-Performance Bus; multiple buses = parallel ops.
+*** Key features (slide 26, [#A])
+- 32-bit ARMv7-M: perf/power balance.
+- DSP instructions: filters, FFT, PID.
+- Optional FPU: single-precision IEEE-754.
+- NVIC: low-latency, prioritized interrupts for real-time.
+- Thumb-2 ISA: smaller code + faster.
+- Low-power modes: battery-friendly.
+- Integrated debug/trace: SWD (Serial Wire Debug).
+
+** B4. Registers + PSR + exception masks [#A] :important:registers:
+*** General + special registers
+- R0–R12: general purpose (data/addresses), fast, inside CPU.
+- R13 = SP (Stack Pointer): top of stack; fn calls, locals, interrupts; in
+  Cortex-M usually MSP (Main SP).
+- R14 = LR (Link Register): return address for calls/exceptions.
+- R15 = PC (Program Counter): next instruction; auto-incremented after fetch.
+*** AAPCS (procedure-call standard, slide 28)
+- R0–R3: input args in. R0: return value out. R4–R11: callee-saved (must
+  preserve). Stack: keep 8-byte aligned (push/pop even register counts).
+*** PSR trio (slide 29)
+- APSR (Application), IPSR (Interrupt), EPSR (Execution) — flags/status of ALU ops.
+- APSR flags: N (negative result), Z (zero), C (unsigned overflow/carry),
+  V (signed overflow). T bit = 1 always → executing Thumb (16-bit compact ISA).
+- IPSR: ISR_NUMBER — which interrupt is active (0 = none).
+*** Exception masks (slides 32–33)
+- PRIMASK bit0: 1 = disable most interrupts/exceptions; 0 = enable.
+- FAULTMASK bit0: 1 = disable all interrupts + fault handlers; 0 = enable.
+- NMI is NOT affected by either. BASEPRI: threshold — numerically-higher
+  (= lower priority) at/above threshold blocked; numerically-lower (= higher
+  priority) allowed. Example: BASEPRI=3 → levels 0,1,2 run; ≥3 blocked. Lower
+  number = higher priority.
+
+** B5. Reset [#B]
+*** Triggers
+- Power applied (power-on reset); reset signal asserted (board reset button).
+*** Types (7, slide 35)
+1. Power-ON (power to MCU). 2. External (pin/button). 3. Software (write AIRCR;
+   also ~NVIC_SystemReset()~). 4. Watchdog (recover from lockup/hang).
+5. Brown-out (voltage dip → unsafe). 6. System reset request (app/RTOS).
+7. Lockup (unrecoverable faults, e.g. HardFault inside NMI).
+*** Real-time examples (slide 37)
+| Device            | Reset type  | Why                                        |
+|-------------------+-------------+--------------------------------------------|
+| Smartwatch        | Watchdog    | Hang during sensor read → restore          |
+| Car ECU           | Brown-out   | Battery dips at ignition → avoid erratic   |
+| IoT node          | Software    | New firmware → reset to apply              |
+| Drone controller  | Lockup      | Unrecoverable fault → HW reset             |
+| Industrial PLC    | External    | Operator reset after critical error        |
+*** Internal sequence (slide 36, [#A])
+- Enter Thread Mode, privileged, on MSP.
+- SP ← Flash[0x00000000] (word-aligned, bits[1:0]=0).
+- PC ← Flash[0x00000004] (reset vector, halfword-aligned, bit0=0 — but
+  assembler sets bit0=1 to flag Thumb, T=1).
+- LR ← 0xFFFFFFFF.
+*** Summary mini-table
+| Register | Loaded from | Purpose                 |
+|----------+-------------+-------------------------|
+| SP       | Flash[0]    | MSP stack pointer       |
+| PC       | Flash[4]    | Reset vector / entry    |
+| LR       | 0xFFFFFFFF  | Exceptions/calls        |
+| T bit    | 1           | Force Thumb execution   |
+- Vector address 0x00000004 = reset handler; purpose: safe recovery +
+  re-initialization (watchdog expiry, firmware update, power failure).
+
+** B6. Memory, memory map, endianness [#A] :important:memory:
+*** Variants (LM3S/TM4C, all Cortex-M; only Flash/RAM end addresses vary)
+| Part          | RAM  | Flash | I/O | Extras                              |
+|---------------+------+-------+-----+-------------------------------------|
+| LM3S811       | 8    | 64    | 32  | PWM                                 |
+| LM3S6965      | 64   | 256   | 42  | PWM, Ethernet                       |
+| TM4C123GH6PM  | 32   | 256   | 43  | FPU, CAN, DMA, USB, PWM             |
+| TM4C1294NCPDT | 256  | 1024  | 90  | FPU, CAN, DMA, USB, PWM, Ethernet   |
+- All have SysTick, RTC, timers, UART, I2C, SSI, ADC. TM4C1233H6PM ≡
+  LM4F120H5QR (EK-LM4F120XL LaunchPad).
+*** Memory map (generalized Cortex-M)
+| Region              | Start                 | Holds                              |
+|---------------------+-----------------------+------------------------------------|
+| Flash ROM           | 0x0000_0000           | Program code                       |
+| SRAM                | 0x2000_0000           | Data + stack                       |
+| Peripheral I/O      | 0x4000_0000–0x5FFF_FFFF | Memory-mapped external peripherals |
+| PPB                 | 0xE000_0000–0xE00F_FFFF | NVIC, SysTick (internal)           |
+*** Endianness (worked, [#A])
+- Little-endian (Cortex-M default, Intel): LSB at lowest address.
+  Store 16-bit 0x03E8 @0x20000850 → 0xE8@…50, 0x03@…51.
+  Store 32-bit 0x12345678 → 78@…50, 56@…51, 34@…52, 12@…53.
+- Big-endian (Freescale/Motorola): MSB at lowest address.
+  0x03E8 → 03@…50, E8@…51. 0x12345678 → 12@…50 … 78@…53.
+- Strings immune: "LM3S" = 4C 4D 33 53 stored byte-by-byte in order in both
+  schemes — a string is an array of independent 1-byte chars (ASCII/UTF-8), read
+  sequentially, index 0 always lowest. (Breaks for multibyte encodings.)
+- Cortex-M specifics: little-endian by default for 16/32-bit; some ARM cores
+  bi-endian (configurable); instruction fetches always little-endian; mixed
+  store/load endianness = corrupt data.
+*** Practice — B6 :practice:
+**** Q-B6a. Map these: code, stack, UART register, NVIC. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+***** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- Code → Flash 0x0000_0000 (ICode fetch). Stack/data → SRAM 0x2000_0000
+  (system bus). UART register → peripheral space 0x4000_0000+. NVIC → PPB
+  0xE000_0000+.
+**** Q-B6b. Store 0xABCD1234 little-endian @0x20000000. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+***** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- …00:34, …01:12, …02:CD, …03:AB (LSB first). Big-endian would be AB CD 12 34.
+
+** B7. Operating modes [#A] :important:modes:
+*** Two primary modes
+- Thread Mode: main program (foreground); default after reset; no interrupt
+  serviced; ISR_NUMBER=0.
+- Handler Mode: ISRs (background); entered automatically on interrupt;
+  ISR_NUMBER≠0. Exit returns to Thread.
+*** Two privilege levels (orthogonal to above)
+- Privileged: full access (memory, peripherals, CONTROL/NVIC/SCB/SysTick); can
+  drop to unprivileged; runs kernels, init, ISRs (interrupts always privileged).
+- Unprivileged: restricted (no NVIC/SCB); cannot re-privilege directly — only
+  via exception/interrupt (or SVC supervisor call); runs user tasks safely.
+*** CONTROL register + switching
+- CONTROL bit0: 0 → Thread=Privileged; 1 → Thread=Unprivileged.
+- Privileged→Unprivileged: write CONTROL. Unprivileged→Privileged: only via
+  exception/interrupt.
+*** Examples
+- Home-automation/RTOS: kernel=Privileged; WiFi(ESP8266) task=Unprivileged;
+  DHT11 sensor task=Unprivileged; init=Privileged; button ISR=Handler+Privileged.
+- Thermostat: main-loop temp read + display refresh = Thread; 1 ms SysTick +
+  UART button ISR = Handler.
+*** Summary table
+| Feature      | Thread                              | Handler                          |
+|--------------+-------------------------------------+----------------------------------|
+| Default      | Normal main-program mode            | Active on exception/interrupt    |
+| Privilege    | Privileged or unprivileged          | Always privileged                |
+| Executes     | User code                           | ISRs                             |
+| Interrupts   | Cannot directly handle              | Handles NMI/HardFault/etc.       |
+| Context      | No switch unless interrupted        | Switch on trigger                |
+| Resources    | Restrictable if unprivileged        | Full access                      |
+| Return       | Stays until interrupt               | Always back to Thread            |
+*** Practice — B7 :practice:
+**** Q-B7. SVC scenario: unprivileged task needs NVIC. What happens? :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+***** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- Direct access faults (restricted). Correct path: SVC exception → Handler +
+  privileged → service runs → return to Thread. Unprivileged can never set
+  itself privileged by writing CONTROL.
+
+** B8. Addressing modes + operands [#A] :important:isa:
+*** Why addressing modes?
+- They tell the CPU how/where an operand lives: constant in the instruction,
+  register, or memory — and how to compute that address.
+*** Four types
+1. *Immediate*: data embedded in instruction, no extra memory access.
+   #+begin_src asm
+   MOV R0, #100      ; R0 = 100
+   #+end_src
+2. *Register*: operands in CPU registers.
+   #+begin_src asm
+   ADD R2, R2, R0    ; R2 = R2 + R0
+   ADD R2, R0, R1    ; R2 = R0 + R1
+   #+end_src
+3. *Indexed* (register as pointer; offsets/auto-inc/scale):
+   #+begin_src asm
+   LDR R0, [R1]       ; R0 = *(R1)
+   LDR R0, [R1, #4]   ; R0 = *(R1+4), R1 unchanged (pre-indexed)
+   LDR R0, [R1, #4]!  ; R1 += 4 then R0 = *(R1) (pre + auto-index, ! = writeback)
+   LDR R0, [R1], #4   ; R0 = *(R1) then R1 += 4 (post-indexed, no ! needed)
+   #+end_src
+   - Numeric check: R3=0x20000000 → ~LDR R2,[R3,#8]~ touches 0x20000008, R3
+     unchanged; ~LDR R2,[R3],#8~ touches 0x20000000 then R3=0x20000008.
+   - Register-indirect: ~LDR r0,[r1]~ ≡ r0:=mem32[r1]; ~STR r0,[r1]~ ≡ mem32[r1]:=r0.
+   - Scaled: ~LDR Rd,[Rn,Rm,LSL #n]~ ≡ Rd:=mem[Rn+(Rm<<n)] (also STR form).
+4. *PC-relative*: PC as base for branches/calls/constant loads.
+   #+begin_src asm
+   B location        ; jump
+   BL Subroutine     ; call, return addr -> LR
+   LDR R1, =Count    ; PC-relative address of Count
+   LDR R0, [R1]      ; (this second line is indexed, not PC-relative)
+   #+end_src
+*** Flexible second operand ~<op2>~ + register lists
+#+begin_src asm
+ADD R0, R1, #100          ; op2 = immediate
+ADD R0, R1, R2, ASR #4    ; op2 = R2 arith-shifted right 4 (signed)
+PUSH {R1-R3, LR}          ; save many
+POP  {R1-R3, PC}          ; restore + return (PC instead of LR)
+#+end_src
+- Quiz from deck: ~ADD r0,r0,r0,LSL #2~ ≡ r0 = r0 + 4·r0 = 5·r0. For 7·r0: ~RSB
+  r0,r0,r0,LSL #3~ (= 8·r0 − r0).
+*** Load/store summary table
+| Syntax                   | Meaning                    |
+|--------------------------+----------------------------|
+| LDR Rd, [Rn]             | Rd = mem[Rn]               |
+| STR Rt, [Rn]             | mem[Rn] = Rt               |
+| LDR Rd, [Rn, #n]         | Rd = mem[Rn+n]             |
+| STR Rt, [Rn, #n]         | mem[Rn+n] = Rt             |
+| LDR Rd, [Rn, Rm, LSL #n] | Rd = mem[Rn + (Rm<<n)]     |
+| STR Rt, [Rn, Rm, LSL #n] | mem[Rn + (Rm<<n)] = Rt     |
+*** Alignment + widths (slide 65)
+- Aligned: word→addr%4=0 (bits[1:0]=00); halfword→addr%2=0; byte→always.
+| Instr      | Loads      | Extension              |
+|------------+------------+------------------------|
+| LDRB       | 8-bit      | Zero-extend            |
+| LDRSB      | 8-bit      | Sign-extend            |
+| LDRH       | 16-bit     | Zero-extend            |
+| LDRSH      | 16-bit     | Sign-extend            |
+| STRB/STRH  | store      | Exact bits, no extend  |
+- Unaligned allowed only for LDR, LDRH, LDRSH, STR, STRH — others raise usage fault.
+*** Practice — B8 :practice:
+**** Q-B8a. ~LDR R0,[R1,#4]!~ vs ~LDR R0,[R1],#4~ with R1=0x2000_0000? :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+***** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- ~!~ (pre): R1 becomes 0x20000004, then loads from it. Post: loads from
+  0x20000000 first, then R1 becomes 0x20000004. Same final R1, different word.
+**** Q-B8b. Which loads sign-extend? What faults on unaligned? :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+***** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- Sign: LDRSB, LDRSH. Zero: LDRB, LDRH. Unaligned-safe: LDR/LDRH/LDRSH/STR/STRH;
+  LDRB/LDRSB/STRB/STRH-style byte/half misuse or others → usage fault.
+
+** B9. Logical / arithmetic / shift operations [#A] :important:
+*** Logical ops (bitwise on 32-bit regs)
+| Instr | Op         | C equiv   | Use                        |
+|-------+------------+-----------+----------------------------|
+| AND   | a AND b    | ~a & b~   | Mask/read bits (TST)       |
+| ORR   | a OR b     | ~a \| b~  | Set bits high              |
+| EOR   | a XOR b    | ~a ^ b~   | Toggle bits                |
+| BIC   | a AND ~b   | ~a&(~b)~  | Clear bits                 |
+| ORN   | a OR ~b    | ~a\|(~b)~ | OR with complement         |
+| MVN   | ~a         | ~int ~a~  | Bitwise NOT (unary)        |
+*** C ↔ ASM mapping (GPIO-flavoured, slide 72)
+| Task              | Embedded C               | ASM                          |
+|-------------------+--------------------------+------------------------------|
+| Set PIN0          | ~PIO_PORT \|= PIN0;~       | ~ORR R0,R0,#1~                 |
+| Clear PIN7        | ~GPIO_PORT &= ~PIN7;~      | ~BIC R0,R0,#(1<<7)~            |
+| Toggle PIN15      | ~GPIO_PORT ^= PIN15;~      | ~EOR R0,R0,#(1<<15)~           |
+| Test PIN0         | ~if (GPIO_PORT & PIN0)~    | ~TST R0,#1~ / ~AND R1,R0,#1~   |
+| NOT 0x0000000F    | ~b = ~a;~ → 0xFFFFFFF0     | ~MVN R1,R0~                    |
+*** Worked ORR bit pattern
+- R1=0x12345678, R2=0x87654321 → ~ORR R0,R1,R2~ = 0x97755779 (bitwise OR of the
+  nibbles: 0001|1000=1001 …).
+*** Set-bit-0 in memory (pseudo-instruction pattern, LPC2148 example)
+#+begin_src asm
+LDR R1, =N        ; R1 = &N (pseudo-instruction)
+LDR R0, [R1]      ; R0 = N
+ORR R0, R0, #1    ; R0 = N | 1
+STR R0, [R1]      ; N = N | 1
+#+end_src
+*** Arithmetic ops
+#+begin_src asm
+ADD r0,r1,r2   ; r0 = r1 + r2
+ADC r0,r1,r2   ; r0 = r1 + r2 + C
+SUB r0,r1,r2   ; r0 = r1 - r2
+SBC r0,r1,r2   ; r0 = r1 - r2 + C - 1   (borrow = ~C)
+RSB r0,r1,r2   ; r0 = r2 - r1
+RSC r0,r1,r2   ; r0 = r2 - r1 + C - 1
+#+end_src
+*** Shifts (uses: ×/÷ by 2ⁿ, pack/unpack bits)
+- LSR logical-right (zero fill, unsigned); ASR arithmetic-right (sign fill,
+  signed); LSL/ASL logical/arithmetic-left (same op); ROR rotate-right; RRX
+  rotate-right-extended (1 bit through Carry).
+- Flags: C = last bit shifted out; V unaffected; shift count = #n or Rs; ~S~
+  suffix updates N,Z,C.
+- Canonical forms (slide 81): ~LSR{S}{cond}~, ~ASR{S}{cond}~, ~LSL{S}{cond}~,
+  ~ROR{S}{cond}~ (reg or #n), ~RRX{S}{cond}~ (1-bit via C).
+*** Condition field (slide 82 — recognise, don't rote-learn all)
+- EQ(Z=1), NE(Z=0), CS(C=1), CC(C=0), MI(N=1), PL(N=0), VS(V=1), VC(V=0),
+  HI(C=1&Z=0), LS(C=0|Z=1), GE(N=V), LT(N≠V), GT(Z=0&N=V), LE(Z=1|N≠V), AL(true).
+*** Practice — B9 :practice:
+**** Q-B9a. ~ADDS~ on 0x7FFFFFFF+1: result + NZCV? :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+***** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- 0x7FFFFFFF+1 = 0x80000000. N=1 (MSB set → looks negative signed), Z=0, C=0
+  (no unsigned carry out of bit31… wait: positive+positive wrapping to negative
+  is signed overflow not carry), V=1 (signed overflow). Deck answer: N=1,Z=0,C=0,V=1.
+- Note: with plain ~ADD~ (no S) flags wouldn't update — deck's "Problem 1" mixes
+  ADD/ADDS text; assume S-suffixed.
+**** Q-B9b. ~ADDS~ on 0xFFFFFFFF+1: result + NZCV? :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+***** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- = 0x00000000. N=0, Z=1, C=1 (carry out), V=0 (no signed overflow: −1+1=0 is exact).
+**** Q-B9c. GPIO: set bit3, clear bit5, toggle bit0 — C + ASM. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+***** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- C: ~PORT|=1<<3~, ~PORT&=~(1<<5)~, ~PORT^=1<<0~. ASM: ~ORR R0,R0,#8~,
+  ~BIC R0,R0,#0x20~, ~EOR R0,R0,#1~.
+
+** B10. 2's complement + sign extension + overflow [#A] :important:
+*** Representing negatives (4-bit workouts, slide 66)
+- +4 = 0100. −4: 1's comp of 0100 = 1011, +1 → 1100.
+- +6 = 0110. −6: 1's comp 1001, +1 → 1010.
+*** Sign extension (slide 67)
+- −4 in 4 bits = 1100 → −4 in 8 bits = 11111100 (replicate sign bit).
+- Verify: 2's-comp of 11111100 = 00000100 = +4. ✓
+*** Quick quizzes (slides 90–96, answers folded in practice below)
+- 4-bit signed +ve ladder: 0111=+7 … 0000=+0. −ve ladder: 1000=−8 … 1111=−1.
+- Overflow rule: same-sign inputs producing opposite-sign result ⇒ overflow.
+  (+7)+(+2), (−7)+(−2) overflow in 4 bits; (−7)+(+2), (+7)+(−2) don't.
+*** 8-bit worked arithmetic (slides 98–99)
+- 54+69: 00110110+01000101 = 01111011 = 123 ∈ [−128,127], + + + ⇒ no overflow.
+- 54−43 = A + 2's-comp(B): 00110110 + 11010101 = 00001011 = 11. ✓
+*** The +478 / −281 / −2 slide (97): recognise-only; method = decimal → binary
+→ 2's complement → add, then range-check.
+*** Practice — B10 :practice:
+**** Q-B10a. 4-bit: (+7)+(+2) overflow? (−7)+(+2)? Show it. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+***** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- (+7)=0111, (+2)=0010 → 1001 = −7 (wrong sign, + + −) ⇒ OVERFLOW.
+- (−7)=1001, (+2)=0010 → 1011 = −5 (mixed signs can't overflow) ⇒ NO overflow, −5. ✓
+**** Q-B10b. Sign-extend −6 (4-bit 1010) to 8 bits and verify. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+***** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- 8-bit: 11111010. Verify: invert → 00000101, +1 → 00000110 = 6 ⇒ original −6. ✓
+**** Q-B10c. V vs C in one line each. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+***** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- C = unsigned overflow (carry out of MSB). V = signed overflow (same-sign in,
+  flipped-sign out). 0x7FFFFFFF+1 sets V not C; 0xFFFFFFFF+1 sets C not V.
+
+** B11. Mixed midsem drill (entire deck) [#A] :practice:
+*** Q-M1. Cortex-M4 in 4 bullets + 2 M4 chips. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- 32-bit ARMv7-M Harvard core; Thumb-2 + DSP (+optional FPU); NVIC + low-power
+  modes + SWD debug; buses ICode/DCode/System/PPB/AHB. Chips: STM32F4,
+  TM4C123GH6PM (also Kinetis K, nRF52, Tiva C).
+*** Q-M2. Reset vector: addresses, values, alignment gotchas. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- SP←Flash[0] (word-aligned); PC←Flash[4] reset vector (halfword-aligned);
+  LR=0xFFFFFFFF; T=1 (assembler sets PC bit0=1 for Thumb). Thread+privileged on MSP.
+*** Q-M3. Thread vs Handler vs Privileged — untangle in 3 lines. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- Thread = main program (default, ISR_NUMBER=0); Handler = ISRs (auto-entry).
+  Privileged = full access (kernel/init/ISRs); unprivileged = restricted user
+  tasks, re-privilege only via exception/SVC. CONTROL[0] selects Thread level.
+*** Q-M4. PRIMASK vs FAULTMASK vs BASEPRI=3. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- PRIMASK1 = most interrupts off; FAULTMASK1 = all + faults off; NMI immune to
+  both. BASEPRI=3 → priorities 0–2 run, ≥3 blocked (lower number = higher pri).
+*** Q-M5. AAPCS: args, return, callee-saved, stack rule. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- In: R0–R3; out: R0; preserve: R4–R11; stack 8-byte aligned.
+*** Q-M6. LDR/STR + PUSH/POP one-liners. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- ~LDR Rd,[Rn,#n]~ / ~STR~; ~[Rn,#n]!~ pre-writeback; ~[Rn],#n~ post; scaled
+  ~[Rn,Rm,LSL#n]~; ~PUSH{R1-R3,LR}~ / ~POP{R1-R3,PC}~ returns.
+*** Q-M7. N/Z/C/V + T + ISR_NUMBER in one breath. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- N neg, Z zero, C unsigned-carry, V signed-overflow; T=1 Thumb always;
+  ISR_NUMBER = active interrupt (0 = Thread).
+*** Q-M8. Little-endian 0x12345678 @0x20000850 + why strings don't care. :question:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+**** Answer :answer:
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+- 78@…50 56@…51 34@…52 12@…53 (LSB lowest). Strings are byte arrays read
+  sequentially — no MSB/LSB role — so order is identical both-endian (ASCII/UTF-8).
+
+* Footnotes & sources
+- Decks: ~5/embedded-systems/midsem/1-Introduction.odp~, ~5/embedded-systems/midsem/2-ARM.odp~.
+- Textbooks (from slide 4): Valvano ARM Cortex-M (T1); Furber ARM SoC (R1);
+  Lutenberg/Gomez/Pernia beginner guide (R2); Yiu SoC design (R3).
