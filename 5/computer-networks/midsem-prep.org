@@ -340,7 +340,13 @@ high-speed link. When employees send a message, headers and trailers are
 added at different layers as the data travels from their application to the
 physical medium. With reference to this real-life case, explain how
 encapsulation works across the layers of the TCP/IP model.
-
+*** answer
+Data usually travels through 5 layers, of which 4 layers add headers over recieved data causing encaspulation with 1 layer adding a trailer
+1. Application Layer: adds header information about the application protocol eg. HTTPS / SMTP
+2. Transport Layer: adds destiation port and transport protocol (TCP/UDP) 
+3. Network Layers: resolves the IP and adds a header containing the source and destination IP
+4. Link Layer: resolves the MAC addr and adds that as header along with a trailer checksum frame
+5. Physical Layer: the medium which transmits the data
 *** Model Answer
 When an employee in Bengaluru sends a message (say, via an application like
 email or chat), the data travels down the TCP/IP stack and each layer adds
