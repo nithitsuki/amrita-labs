@@ -1,0 +1,303 @@
+# AI & Robotics (23CSE472) - Midsem Study Notes
+#+STARTUP: inlineimages
+#+PROPERTY: header-args:org :width 600
+
+Notes compiled from the 8 Section lecture PDFs, the Intro / Pose / Introductory
+presentations, and the course syllabus. Diagrams and photos were reviewed
+visually; figures are inlined as images where a slide was a diagram or photo.
+
+* Part 1 - Introduction to Robotics (Section 1 & 1.1)
+
+** Course Overview
+- Objectives: introductory understanding of robotics; the mathematical concepts
+  needed for robotic operation; the sub-systems (vision, control, navigation).
+- Course Outcomes: explain fundamentals of robotics; mathematical concepts for
+  robotics; the various sub-systems in a robotic system.
+- Text / reference books:
+  - "Robotics, Vision & Control", P. Corke, 2nd ed., Springer, 2011
+  - "Robot Modeling and Control", Spong, Hutchinson, Vidyasagar, Wiley, 2006
+  - "Robotics: Fundamental Concepts & Analysis", A. Ghosal, OUP
+  - "Introduction to AI Robotics", R. Murphy, MIT Press, 2000
+- Hands-on: MATLAB + Robotics Toolbox by Peter Corke.
+- Evaluation: Internal 70 (10 assignments x 4.5, 5 quizzes x 5);
+  External 30 (group project 15, individual online viva 15).
+
+** What is a Robot?
+- Robot: a machine capable of carrying out a complex series of actions
+  automatically, especially one programmable by a computer (Wikipedia).
+- Robot Institute of America (1979): a reprogrammable, multifunctional
+  manipulator designed to move material, parts, tools or specialised devices
+  through variable programmed motions for a variety of tasks.
+- Robotics: the branch of technology dealing with the design, construction,
+  operation and application of robots, plus the computer systems for control,
+  sensory feedback and information processing (Wikipedia).
+
+** Why Robotics?
+- Automating dull / repetitive work, and precision tasks such as teleoperation.
+
+#+CAPTION: Home-made robot doing a repetitive task ("Repetitive and Boring Tasks")
+[[file:_work/img/01/page-12.png]]
+
+#+CAPTION: da Vinci surgical robot in an OR ("Precision, Flexibility and Control", (c) 2013 Intuitive)
+[[file:_work/img/01/page-13.png]]
+
+** History of Robotics
+- 13th-15th c.: automatons (automated clockwork rooster, automatic scribe that
+  could write ~40 characters, robotic woman playing a piano).
+- 1898: Nikola Tesla reveals a wireless-controlled torpedo he calls
+  "teleautomation".
+- 1921: Karel Capek's play RUR (Rossum's Universal Robots) coins the word
+  "Robot" (Robota = worker, Slavic); machines take over the world.
+- 1942: Asimov's Laws of Robotics - do not harm humans; obey human orders that
+  do not violate law 1; protect own existence if it does not conflict with 1/2.
+- George Devol designs the first programmable robot, coins "Universal
+  Automation" -> shortens to Unimation, the first robot company (1962).
+- 1978: PUMA (Programmable Universal Machine for Assembly) developed by
+  Unimation with GM design support.
+- 1971: Soviet Union's Mars rover - the first interplanetary robot (technically
+  it crashed on Mars).
+
+** Current Trends & AI in Robotics
+- Trend sources referenced: IEEE Computer Society top-10, Business Insider 12
+  tech trends, Fortune's 4 trends, thenextweb 13 trends, Accenture tech vision.
+- Applications of AI in robotics: industrial automation / warehouse management,
+  customer service, domestic purposes, planetary exploration, disaster
+  management, law enforcement, toy robots, and many others.
+
+** Classification of Robots
+- Manual-handling, fixed-sequence, variable-sequence, playback, numerically
+  controlled, intelligent robots.
+
+** Components of a Robot
+- Actuators / limbs (muscles), sensors, controller (brain), power conversion
+  unit, user interface, manipulator linkage, base (fixed or movable).
+- Human-sense analogues: speaker+mouth (voice), microphone (ears), odor sensor
+  (nose), camera (eyes).
+
+** Basic Terminologies
+- Body: a graph of links and joints; wheel design; other mechanical parts;
+  stability ratio for a basic rover chassis is 16:9:5.
+- Senses robots need: measure robot configuration/condition and environment -
+  beyond the five human senses.
+- Actuators: DC motor, servo motor, stepper motor, brushless motor.
+- Controller: the programmable "brain" that determines and controls functioning.
+- Power: on-board or off-board; typically 3V-24V DC.
+
+** Degree of Freedom (DoF)
+- DoF = number of independently controlled actuators/joints; can be very high
+  for many-jointed robots.
+- A point in space needs X, Y, Z (translation) + roll, pitch, yaw (orientation)
+  = 6 DoF (limited to 6 in 3D).
+- A car has 3 DoF (translation in two directions + rotation) but only 2
+  controllable (forward/reverse + steering) - cannot move sideways.
+- Holonomic: controllable DoF = total DoF. Non-holonomic: controllable < total.
+  Redundant: controllable > total.
+
+** Applications & Assignment
+- Service robots (hospitals, homes, hotels, courier), industrial, medical,
+  space, rescue, tele-, military, robo-pets.
+- Assignment A1: case study of a state-of-the-art AI application in robotics
+  (no drones). 4+ page PDF report, Times New Roman 14 bold title / 12 content,
+  named XXXXX_A1.pdf; plagiarism-checked.
+
+* Part 2 - Position, Orientation & Pose in 2D (Section 2.1)
+
+** A Point in 2D
+- A point P on the plane is the simplest object to describe.
+- In the Cartesian system, P is located by perpendicular projections onto the
+  X and Y axes, giving coordinates (a, b) -> P = (a, b).
+- The same point is equivalently a position vector p from the origin O to P:
+  p = [a, b] (x-component a, y-component b).
+
+#+CAPTION: A point P on the 2D plane
+[[file:_work/img/03/page-04.png]]
+
+#+CAPTION: P located by perpendicular projections onto X and Y: P = (a, b)
+[[file:_work/img/03/page-09.png]]
+
+#+CAPTION: The point as a position vector p = [a, b]
+[[file:_work/img/03/page-12.png]]
+
+** An Object in 2D Space
+- A rigid object (e.g. a car) is placed on the X-Y plane with origin O.
+- A body frame {B} (axes x_B, y_B) is attached to the object, centred at point B
+  and oriented with the object.
+- Points fixed on the body are described in {B}, then mapped to the world frame.
+- An object needs BOTH a position and an orientation - together these are its pose.
+
+#+CAPTION: Object with body frame {B} (x_B, y_B) attached
+[[file:_work/img/03/page-20.png]]
+
+** Rotation & Translation in 2D
+- Frame {A} (x_A, y_A): a point P is located by vector ^A p from the origin
+  (leading superscript A = expressed in frame {A}).
+- Frame {B} (x_B, y_B) is rotated by angle theta and translated from the origin:
+  describing a frame's pose relative to another combines rotation + translation.
+
+#+CAPTION: Frame {A} with vector ^A p to point P
+[[file:_work/img/03/page-36.png]]
+
+#+CAPTION: Frame {B} rotated by theta and translated from {A}
+[[file:_work/img/03/page-49.png]]
+
+* Part 3 - Position, Orientation & Pose in 3D (Section 2.2)
+
+** Point in 3D
+- Right-handed 3D Cartesian frame X, Y, Z from origin O. Counter-clockwise =
+  positive rotation sense. Generalises the 2D point to 3 coordinates.
+
+#+CAPTION: Right-handed 3D Cartesian coordinate system
+[[file:_work/img/04/page-04.png]]
+
+** Pose in 3D
+- Pose = position + orientation of a frame relative to a reference frame.
+- Rotation about an axis follows the right-hand rule: thumb along the axis,
+  fingers curl in the positive-rotation direction.
+
+#+CAPTION: Right-hand rule for rotation about an axis
+[[file:_work/img/04/page-11.png]]
+
+** Rotation in 3D
+- In 2D, rotation is about the hidden Z axis.
+- A rotation matrix has columns that are the new (rotated) axes; each column is
+  a unit vector and orthogonal to the others.
+- The matrix transforms vectors from frame {B} to frame {A}.
+- The inverse of a rotation matrix equals its transpose; determinant is +1.
+
+** Rotations are Non-Commutative
+- Two sequences of pi/2 rotations give different final orientations (e.g. about
+  Z then Y vs about X then Z). Order matters - rotation matrices do not commute.
+
+#+CAPTION: Two pi/2 rotation sequences giving different final orientations
+[[file:_work/img/04/page-18.png]]
+
+** Rotation & Translation in 3D
+- Combined rotation + translation maps a point/vector between frames in 3D.
+
+* Part 4 - Manipulators & Kinematics (Section 3, 3.1, 3.2)
+
+** Introduction to Manipulators (Section 3)
+- Joints (lower-pair symbols): Revolute (R, hinge), Prismatic (P, slider),
+  Rotary, Twist.
+
+#+CAPTION: Joint symbols: Revolute, Prismatic, Rotary, Twist
+[[file:_work/img/06/page-06.png]]
+
+- The six lower-pair joint types: Revolute, Prismatic, Cylindrical, Planar,
+  Screw (helical), Spherical (ball-and-socket).
+
+#+CAPTION: The six lower-pair joint types
+[[file:_work/img/06/page-07.png]]
+
+- Wrist configuration: an RPY (roll-pitch-yaw) wrist needs a minimum of 3 DoF;
+  labels: Arm, Roll, Pitch, Yaw, Face plate (end-effector attachment).
+
+#+CAPTION: RPY wrist configuration (Arm, Roll, Pitch, Yaw, Face plate)
+[[file:_work/img/06/page-17.png]]
+
+- Types of robot: (a) ABB 6-axis articulated arm, (b) SCARA (revolute +
+  prismatic, selective compliance), (c) gantry / cartesian (linear axes),
+  (d) Delta (parallel-link). Source: P. Corke.
+
+#+CAPTION: Robot types: articulated, SCARA, gantry, Delta
+[[file:_work/img/06/page-19.png]]
+
+** Planar Manipulators (Section 3.1)
+- 1-joint planar manipulator: one link pivots about the origin of base frame
+  {R}; end-effector E at the link tip; the single joint variable is angle q1.
+
+#+CAPTION: 1-joint planar manipulator, joint angle q1 in base frame {R}
+[[file:_work/img/07/page-05.png]]
+
+- 2-joint planar manipulator: link1 (length a1) at angle q1, link2 (length a2)
+  at angle q2; end-effector E. Joints q1, q2 set the end position.
+
+#+CAPTION: 2-joint planar manipulator (links a1, a2; angles q1, q2)
+[[file:_work/img/07/page-11.png]]
+
+- Configurations are NOT unique: the same end position E is reachable by an
+  elbow-down and an elbow-up configuration - multiple inverse-kinematic
+  solutions.
+
+#+CAPTION: Same end point E reached elbow-up vs elbow-down
+[[file:_work/img/07/page-17.png]]
+
+#+CAPTION: PUMA 560 labelled (links 0-6, joints 1-6, base frame)
+[[file:_work/img/07/page-24.png]]
+
+** Analysing Manipulator Moves in 3D - PUMA 560
+- Labelled PUMA 560: links 0-6, joints 1-6, base frame x0, y0, z0. Used to map
+  physical links/joints onto frames for forward kinematics.
+
+** Forward Kinematics & the SE(n) Group
+- Forward kinematics computes the end-effector pose from the joint variables.
+- The 2D transforms (translation Tx/Ty, rotation R) are elements of SE(2);
+  the 3D transforms (Tx/Ty/Tz, Rx/Ry/Rz) are elements of SE(3).
+- Robot configuration is the vector of joint variables; the configuration space
+  C has dimension = number of joints (DoF).
+- The task space is the set of all possible end-effector poses; a robot can
+  achieve any position/orientation and control the path when it has enough DoF.
+
+** Denavit-Hartenberg (DH) Parameters (Section 3.2)
+- Standardised convention (introduced 1955) to attach a coordinate frame to
+  each link and describe the chain with a minimal parameter set.
+- Each joint is attached, via a link, to the previous one.
+- The result uses only 4 parameters per link (not 6), describing how each joint
+  axis relates to the next.
+- The DH table completely describes the robot's kinematics; it is implemented as
+  an array of SE(3) transforms indexed along the link chain.
+
+* Part 5 - Intro to AI (presentation)
+
+** What is Artificial Intelligence?
+- John McCarthy: "the science and engineering of making intelligent machines,
+  especially intelligent computer programs... related to using computers to
+  understand human intelligence, but AI need not confine itself to biologically
+  observable methods."
+- Intelligence: the computational part of the ability to achieve goals in the
+  world; occurs in varying degrees in people, animals and some machines.
+- Views of AI fall into four categories:
+  - Thinking humanly (simulate human thought) - introspection, GPS (Newell & Simon).
+  - Thinking rationally - formal logic / "laws of thought".
+  - Acting humanly - the Turing Test (A. M. Turing, 1950): requires natural
+    language, knowledge representation, automated reasoning, machine learning,
+    and (for the full test) vision & robotics.
+  - Acting rationally - achieve goals with a performance measure.
+- AI sub-fields: human-like simulation, mathematical problems (puzzles, games,
+  theorems), common-sense reasoning, expert knowledge (law, medicine, diagnosis),
+  social behaviour, rational goal achievement.
+
+** Types of AI (nested scope)
+- Artificial Intelligence is the broad set; Machine Learning is a subset;
+  Deep Learning is a subset of Machine Learning.
+
+#+CAPTION: AI contains ML contains Deep Learning
+[[file:_work/img/p1/page-17.png]]
+
+* Part 6 - Pose & Rotation Matrices (presentation)
+
+** Pose of a Rigid Body
+- A rigid body is completely defined in space by its position and orientation
+  with respect to a reference (inertial / ground frame).
+- Notation: position vector of frame 0' with respect to frame 0.
+- Tools to represent pose: Homogeneous Transformation Matrix, DH Convention,
+  DH Parameters, and homogeneous transforms built from DH parameters.
+
+** Rotation Matrix
+- Using direction cosines (projection method) a rotation needs 9 variables.
+- Using Euler angles (roll, pitch, yaw) it needs only 3 variables.
+- A point P observed from frame B, and the transformation between frames
+  {A} and {B}, are expressed via these rotation/transformation matrices.
+
+* Summary - Key Formulas & Facts
+- Point in 2D: P = (a, b), position vector p = [a, b]^T.
+- 2D rotation by theta is about hidden Z; 3D rotation matrix R is orthogonal,
+  R^{-1} = R^T, det(R) = +1.
+- Rotations do not commute: order of rotations changes the result.
+- Pose = (position, orientation); rigid body fully described by both.
+- DoF: translational (X,Y,Z) + rotational (roll, pitch, yaw) = up to 6 in 3D.
+- Holonomic = controllable DoF == total DoF; non-holonomic < ; redundant >.
+- 2R planar arm: elbow-up and elbow-down both reach the same end point.
+- DH parameters: 4 per link (standardised 1955), table fully describes kinematics.
+- SE(2) = 2D rigid transforms (Tx,Ty,R); SE(3) = 3D rigid transforms.
+- AI scope: AI > ML > Deep Learning.

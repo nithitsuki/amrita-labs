@@ -1,0 +1,354 @@
+#+TITLE: AI & Robotics (23CSE472) - Midsem PYQ
+#+STARTUP: overview
+#+STARTUP: inlineimages
+#+STARTUP: latexpreview
+
+Reg. No.: ________________
+Amrita Vishwa Vidyapeetham
+Amrita School of Computing, Bengaluru
+B.Tech Mid Semester Examination – September 2025
+Fifth Semester, CSE | 23CSE472 Artificial Intelligence and Robotics
+Duration: 2 hours | Maximum: 50 Marks
+
+Each question below folds into three parts: *Answer* (direct response),
+*Concept* (what to study to derive it yourself, with prerequisites), and
+*Model Answer* (full worked solution).
+
+* Q1. Rotation representations & robot applications
+a) Summarize any four alternate representation of rotations with respect to
+singularity and number of parameters involved in rotation representation.
+[CO1] [BTL2] [8M]
+b) Name any three applications where robotics is being employed.
+[CO1] [BTL1] [3M]
+
+** Answer
+- a) Four rotation representations: rotation matrix (9 params, no singularity),
+  Euler angles (3 params, gimbal-lock singularity), roll-pitch-yaw / fixed angles
+  (3 params, singularity), axis-angle / angle-axis (3-4 params, ambiguous at 0/180),
+  quaternion (4 params, no singularity). Pick any four and state params + singularity.
+- b) Three applications: industrial welding/assembly, surgical (da Vinci) robots,
+  warehouse/logistics (AGV, picking), space/planetary rovers, disaster rescue,
+  domestic/service robots.
+
+** Concept
+- Prerequisites:
+  - A rotation is an element of SO(3): orthogonal matrix with det = +1.
+  - Singularity = a configuration where the representation loses a degree of
+    freedom / becomes non-unique (e.g. gimbal lock).
+  - "Number of parameters" = minimal real numbers needed; >3 means redundancy
+    that must satisfy constraints.
+- Rotation matrix: 9 numbers, 6 constraints (orthonormal columns) -> 3 DOF; no
+  singularity but verbose.
+- Euler angles (Z-Y-X / Z-Y-Z etc.): 3 angles; singular when the middle rotation
+  is +/-90 deg (gimbal lock) -> first and third axes align.
+- Roll-pitch-yaw (fixed / nautical): 3 angles about fixed X,Y,Z; same gimbal-lock
+  issue at pitch = +/-90 deg.
+- Axis-angle (angle-axis): rotation by angle theta about unit axis k -> 3 params
+  (k,theta) or 4 (kx,ky,kz,theta); singular/ambiguous at theta=0 and theta=180.
+- Quaternion: \(q = [\cos(\theta/2),\ k \sin(\theta/2)]\) -> 4 params, 1 constraint
+  (unit norm); no singularity; standard for interpolation.
+- Application areas: recall CO1 "fundamentals + components" and the Section 1
+  "Applications of AI in Robotics" list.
+
+** Model Answer
+- a) Tabulate any four:
+  | Representation | # params | Singularity |
+  |---|---|---|
+  | Rotation matrix | 9 (3 DOF, 6 constraints) | none |
+  | Euler angles | 3 | gimbal lock at middle angle = +/-90 deg |
+  | Roll-pitch-yaw | 3 | gimbal lock at pitch = +/-90 deg |
+  | Axis-angle | 3-4 | ambiguous at 0 deg and 180 deg |
+  | Quaternion | 4 (unit) | none |
+  (Any four rows accepted.)
+- b) e.g. (i) industrial pick-and-place/ welding, (ii) surgical teleoperation
+  (da Vinci), (iii) warehouse AGVs. [3M]
+
+* Q2. Block diagram of basic robot components
+Draw the diagram that shows how the basic components of a robot are connected.
+[CO1] [BTL2] [3M]
+
+** Answer
+- Draw a block diagram: Power source -> Power conversion unit -> Controller
+  (brain, programmable) -> Actuators (muscles) + Sensors (eyes/ears/nose) ->
+  Manipulator linkage / End-effector, all on a Base; user interface feeds the
+  controller.
+
+** Concept
+- Prerequisites:
+  - A robot = sensors + controller + actuators + manipulator + power + frame.
+  - Signal flow: command (UI) -> controller -> actuator motion -> environment;
+    sensors feed state back to controller (closed loop).
+- Components (from Section 1.1 "Components of a Robot"):
+  - Actuators / limbs (DC, servo, stepper, brushless motors).
+  - Sensors (camera=eyes, mic=ears, odor=nose, encoders for joint state).
+  - Controller = programmable "brain".
+  - Power conversion unit; User interface; Manipulator linkage; Base (fixed/
+    movable).
+- Diagram should show the *connections*, not just a list.
+
+** Model Answer
+- Sketch with boxes and arrows:
+  Power Source --> Power Conversion Unit --> Controller.
+  Controller <--> (Actuators, Sensors) --> Manipulator/End-effector.
+  User Interface --> Controller. Base supports manipulator.
+  (A labelled, connected diagram earns the 3M.)
+
+* Q3. Humanoid robot components & 1-joint manipulator pose
+a) "MoreRobotics" company produces robots and they recently recruited a
+robotics engineer for developing a humanoid robot. Brief upon what all
+components the engineer will use while building a humanoid robot.
+[CO2] [BTL2] [6M]
+b) For a one joint manipulator, find the end effector pose as well as position
+if the length of link is 4 and joint variable is \(130^\circ\).
+[CO2] [BTL3] [2M]
+
+** Answer
+- a) Humanoid components: actuators (motors/servos at joints), sensors
+  (vision=cameras, force/torque, IMU, tactile), controller/computer (brain),
+  power system, structural links/frame, end-effectors (hands/feet),
+  communication, battery.
+- b) Link length \(L=4\), joint \(q_1=130^\circ\).
+  Position = \((4 \cos130^\circ, 4 \sin130^\circ, 0) = (-2.571, 3.064, 0)\);
+  orientation = \(R_z(130^\circ)\).
+
+** Concept
+- Prerequisites:
+  - A 1-joint planar manipulator = single link of length L pivoting about base
+    frame origin {R}; joint variable q1 measures angle from X axis.
+  - Position of end-effector E: \(x = L \cos q_1\), \(y = L \sin q_1\).
+  - Pose (planar) = homogeneous transform \(T = [R_z(q_1) \mid p;\ 0\ 0\ 1]\),
+    \(p=(x,y,0)\).
+- Humanoid = multi-DOF serial chain; map each body part to the component list.
+- Recall "components of a robot" and "1-joint planar manipulator" from notes.
+
+** Model Answer
+- a) Brief (any relevant): structure/frame + links; actuators at joints (servos,
+  BLDC); sensors (cameras, LiDAR, IMU, force/torque, tactile); onboard
+  controller/ML computer; power/battery + conversion; hands/feet end-effectors;
+  comms. [6M]
+- b) \(L=4\), \(q_1=130^\circ\).
+  \(x = 4 \cos130^\circ = 4(-0.6428) = -2.571\)
+  \(y = 4 \sin130^\circ = 4(0.7660) = 3.064\)
+  Position = (-2.571, 3.064, 0).
+  Pose:
+  \[
+  \begin{bmatrix} \cos130 & -\sin130 & 0 & -2.571 \\ \sin130 & \cos130 & 0 & 3.064 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}
+  \]
+  [2M]
+
+* Q4. Rotation matrices (fixed & moving frames)
+Find the rotation matrices for the following cases: [CO2] [BTL3]
+a) When rotation has happened with respect to \(y\)-axis by \(49^\circ\). [2M]
+b) When rotation has happened with respect to \(x\)-axis by \(126^\circ\). [2M]
+c) Rotation in \(x\)-axis by \(56^\circ\) with respect to fixed frame followed by
+rotation in \(z\)-axis by \(27^\circ\) with respect to fixed frame and then followed
+by rotation in \(x\)-axis by \(230^\circ\) with respect to fixed frame. [3M]
+d) Rotation in \(z\)-axis by \(12^\circ\) with respect to moving frame followed by
+rotation in \(y\)-axis by \(68^\circ\) with respect to fixed frame and then followed
+by rotation in \(z\)-axis by \(78^\circ\) with respect to moving frame. [3M]
+
+** Answer
+- a) R_y(49) (fixed-frame about Y).
+- b) R_x(126) (fixed-frame about X).
+- c) Fixed-frame chain: R = R_x(56) R_z(27) R_x(230) (left-multiply order).
+- d) Mixed: R = R_z(12) R_y(68) R_z(78) where first z is moving, y is fixed,
+  final z is moving -> R = R_z(12) * R_y(68) * R_z(78) (pre-multiply fixed,
+  post-multiply moving).
+
+** Concept
+- Prerequisites:
+  - Basic rotation matrices \(R_x(\theta)\), \(R_y(\theta)\), \(R_z(\theta)\)
+    (memorise the 3 forms).
+  - Fixed / inertial frame rotations: compose by LEFT multiplication, order
+    written left-to-right as applied: \(R = R_a R_b R_c\).
+  - Moving / body frame rotations: compose by RIGHT (post) multiplication:
+    \(R = R_a R_b R_c\) (\(R_a\) applied first, then b in new frame, then c).
+  - Rule of thumb: "fixed frame -> pre-multiply; moving frame -> post-multiply."
+\[
+R_x(\theta) = \begin{bmatrix}1&0&0\\0&c&-s\\0&s&c\end{bmatrix}
+\quad
+R_y(\theta) = \begin{bmatrix}c&0&s\\0&1&0\\-s&0&c\end{bmatrix}
+\quad
+R_z(\theta) = \begin{bmatrix}c&-s&0\\s&c&0\\0&0&1\end{bmatrix}
+\]
+  with \(c=\cos\theta\), \(s=\sin\theta\).
+
+** Model Answer
+- a) \(R_y(49)\): \(c=\cos49=0.656\), \(s=\sin49=0.755\).
+  \[
+  R = \begin{bmatrix}0.656&0&0.755\\0&1&0\\-0.755&0&0.656\end{bmatrix}
+  \]
+  [2M]
+- b) \(R_x(126)\): \(c=\cos126=-0.588\), \(s=\sin126=0.809\).
+  \[
+  R = \begin{bmatrix}1&0&0\\0&-0.588&-0.809\\0&0.809&-0.588\end{bmatrix}
+  \]
+  [2M]
+- c) Fixed-frame, so pre-multiply in given order:
+  \(R = R_x(56)\, R_z(27)\, R_x(230)\).
+  Compute numerically or leave in this form. [3M]
+- d) z(moving) -> post, y(fixed) -> pre, z(moving) -> post:
+  \(R = R_z(12)\, R_y(68)\, R_z(78)\). [3M]
+
+* Q5. Homogeneous transform + inverse
+Find the homogeneous transformation matrix and its inverse when a robot has
+rotated by \(34^\circ\) with respect to \(x\)-axis as well as translated to point
+\((2, 1, 5)\) from origin. [CO2] [BTL3] [4M]
+
+** Answer
+- \(R = R_x(34)\), \(p = (2,1,5)\).
+  \[
+  T = \begin{bmatrix} R_x(34) & p \\ 0^T & 1 \end{bmatrix}
+  \]
+  Inverse:
+  \[
+  T^{-1} = \begin{bmatrix} R^T & -R^T p \\ 0^T & 1 \end{bmatrix}
+  \]
+
+** Concept
+- Prerequisites:
+  - Homogeneous transformation
+    \[
+    T = \begin{bmatrix} R & p \\ 0^T & 1 \end{bmatrix}
+    \]
+    combines rotation \(R\) and translation \(p\).
+  - For a rotation+translation, the inverse uses \(R^{-1}=R^T\) (orthogonal) and
+    moves the origin back:
+    \[
+    T^{-1} = \begin{bmatrix} R^T & -R^T p \\ 0^T & 1 \end{bmatrix}
+    \]
+  - \(R_x(\theta)\) form from Q4 concept.
+
+** Model Answer
+- \(R_x(34)\): \(c=\cos34=0.829\), \(s=\sin34=0.559\).
+  \[
+  T = \begin{bmatrix}1&0&0&2\\0&0.829&-0.559&1\\0&0.559&0.829&5\\0&0&0&1\end{bmatrix}
+  \]
+  [2M]
+- \(R^T = R_x(-34)\) (transpose flips the off-diagonal signs):
+  \[
+  R^T = \begin{bmatrix}1&0&0\\0&0.829&0.559\\0&-0.559&0.829\end{bmatrix}
+  \]
+  \[
+  -R^T p = -\begin{bmatrix}1&0&0\\0&0.829&0.559\\0&-0.559&0.829\end{bmatrix}
+  \begin{bmatrix}2\\1\\5\end{bmatrix}
+  = -\begin{bmatrix}2\\3.624\\3.586\end{bmatrix}
+  = \begin{bmatrix}-2\\-3.624\\-3.586\end{bmatrix}
+  \]
+  \[
+  T^{-1} = \begin{bmatrix}1&0&0&-2\\0&0.829&0.559&-3.624\\0&-0.559&0.829&-3.586\\0&0&0&1\end{bmatrix}
+  \]
+  [2M]
+
+* Q6. Forward vs inverse kinematics (serial vs parallel)
+Mention the differences between forward kinematics and inverse kinematics of
+parallel as well as serial link robots. [CO2] [BTL2] [4M]
+
+** Answer
+- Forward kinematics (FK): given joint variables -> compute end-effector pose.
+  Serial: straightforward chain multiplication, unique solution, closed form easy.
+  Parallel: more complex, multiple loops, FK harder.
+- Inverse kinematics (IK): given desired end-effector pose -> find joint
+  variables. Serial: often multiple/no solutions, computationally hard.
+  Parallel: often unique/closer solutions, IK relatively easier due to
+  constraints.
+
+** Concept
+- Prerequisites:
+  - Kinematics = study of motion without forces. FK maps configuration (joint
+    angles) to task-space pose; IK is the inverse map.
+  - Serial manipulator: open chain (links in series); each joint adds a transform.
+  - Parallel manipulator: closed kinematic chain (e.g. Delta, Stewart platform);
+    end-effector driven by several legs.
+- Key difference: in serial robots FK is easy / IK hard (multiple solutions,
+  singularities); in parallel robots the opposite tends to hold (FK harder
+  because of coupled loops, IK simpler / more constrained).
+
+** Model Answer
+- Forward kinematics:
+  - Serial: product of link transforms \(T = A_1 A_2 \cdots A_n\); unique, simple. [1M]
+  - Parallel: coupled loops; FK involves solving loop-closure eqns; harder. [1M]
+- Inverse kinematics:
+  - Serial: may have 0/1/many solutions (elbow-up/down); needs iterative or
+    algebraic solving; harder. [1M]
+  - Parallel: constraints reduce solution count; IK often direct/unique; easier.
+    [1M]
+
+* Q7. Angular velocity composition across frames
+Prove that angular velocities of coordinate frames \(\{1\}\), \(\{2\}\) and
+\(\{3\}\) with arbitrary rotation is related by
+\({}^1\omega^3 = {}^1\omega^2 + {}_2^1R {}^2\omega^3\)
+(\({}^M\omega^N\) can be read as angular velocity of frame-\(N\) with respect to
+frame-\(M\) and \({}_M^NR\) can be read as rotation of frame-\(N\) with respect to
+frame-\(M\)). [CO2] [BTL3] [7M]
+
+** Answer
+- Using {2} as intermediate: angular velocity of frame 3 w.r.t {1} = angular
+  velocity of {2} w.r.t {1} PLUS the angular velocity of {3} w.r.t {2}
+  expressed in {1}. The second term is rotated by \({}_2^1R\), giving
+  \({}^1\omega^3 = {}^1\omega^2 + {}_2^1R\,{}^2\omega^3\).
+
+** Concept
+- Prerequisites:
+  - Angular velocity is a vector; when adding velocities measured in different
+    frames, you must express them in the SAME frame.
+  - Rotation matrix \({}_B^A R\) rotates a vector expressed in {B} into {A}:
+    \({}^A v = {}_B^A R\, {}^B v\).
+  - Angular velocity addition:
+    \({}^A\omega^C = {}^A\omega^B + {}^A\omega^{C/B}\),
+    where the relative part is expressed in {A}.
+- This is the rotational analogue of relative linear velocity
+  \(v_{C/A} = v_{B/A} + v_{C/B}\) (all in one frame).
+
+** Model Answer
+- Treat {2} as the intermediate frame. By definition,
+  \({}^1\omega^3 = {}^1\omega^2 + {}^1\omega^{3/2}\),
+  where \({}^1\omega^{3/2}\) is the angular velocity of {3} relative to {2}, but
+  expressed in frame {1}.
+- The relative angular velocity is natively expressed in {2}:
+  \({}^2\omega^3\). To express it in {1}, rotate by \({}_2^1R\):
+  \({}^1\omega^{3/2} = {}_2^1R\,{}^2\omega^3\).
+- Substituting:
+  \({}^1\omega^3 = {}^1\omega^2 + {}_2^1R\,{}^2\omega^3.\) \(\square\) [7M]
+
+* Q8. Singularity and degree of freedom
+Explain briefly how singularity and robot's degree of freedom are connected.
+[CO2] [BTL2] [3M]
+
+** Answer
+- A robot is at a singularity when it loses the ability to move in some
+  direction in task space (the Jacobian drops rank) even though it still has
+  DOF. DOF = number of independently controllable joints; singularity is a
+  configuration where those DOF cannot be used to produce arbitrary
+  end-effector motion -> the manipulator is at a kinematic extreme (e.g. fully
+  stretched or folded).
+
+** Concept
+- Prerequisites:
+  - DOF = number of independently controlled joints/actuators (recall Part 1:
+    up to 6 in 3D: X,Y,Z + roll,pitch,yaw).
+  - The Jacobian \(J\) maps joint velocities to end-effector twist:
+    \(\dot{x} = J \dot{q}\).
+  - Singularity occurs when \(\mathrm{rank}(J) < \mathrm{DOF}\)
+    (\(\det J = 0\) for square \(J\)): the robot
+    cannot instantaneously move along some task-space direction.
+  - Connection: DOF sets the dimension of reachable motion; a singularity is a
+    *pose* where that full motion capability collapses locally.
+
+** Model Answer
+- Degree of freedom = count of independent joint variables (controllable DOF).
+  [1M]
+- The relationship between joint motion and end-effector motion is given by the
+  Jacobian; at a singularity \(\mathrm{rank}(J) < \mathrm{DOF}\), so some
+  end-effector directions
+  become unreachable instantaneously even though the joints can still move. [1M]
+- Thus a robot "has N DOF" but is at a singularity when those N DOF cannot
+  produce arbitrary N-dimensional end-effector motion (e.g. arm fully extended
+  or two axes aligned). Singularity is a configuration-level loss of mobility,
+  not a loss of DOF. [1M]
+
+* Mark distribution (reference)
+- CO1 = 14M, CO2 = 36M (CO3/4/5 = 0 in this paper).
+- BTL1 = 3M, BTL2 = 24M, BTL3 = 23M.
+- Fold note: each question above is a folded subtree (* heading) containing
+  Answer / Concept / Model Answer (** headings). Use TAB on a * to fold/unfold.
