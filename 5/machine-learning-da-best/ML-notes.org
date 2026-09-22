@@ -657,3 +657,219 @@ Find a situation where Type-I error (False Positives) has more consequences than
 | Examples         | Random Forest               | AdaBoost, Gradient Boosting |
 
 - Gradient boosting is the current workhorse. XGBoost, LightGBM and CatBoost are optimized implementations used in competitions (Kaggle) and industry.
+
+* Perceptron and Neural Networks
+- The perceptron is the simplest model of a neuron and the building block of neural networks.
+- Proposed by Frank Rosenblatt (1958); it is a *binary linear classifier*.
+- It takes a feature vector, computes a weighted sum, applies an activation function, and outputs a label.
+
+** The Perceptron
+- *Forward computation:*
+  1. Inputs $x_1, x_2, \dots, x_n$ (one per feature).
+  2. Each input has a weight $w_1, \dots, w_n$ (importance of that feature).
+  3. The weighted sum plus a bias $b$ gives the *pre-activation* (net input):
+     $z = \sum_{i=1}^{n} w_i x_i + b = w \cdot x + b$
+  4. The activation function maps $z$ to the output: $\hat{y} = f(z)$.
+- Compact vector form: $\hat{y} = f(w^\top x + b)$, where $w, x \in \mathbb{R}^n$.
+- *Bias $b$:* shifts the decision boundary away from the origin. It acts as a threshold, so the unit can fire at zero input when $b \geq 0$ (and is silent at zero input when $b < 0$).
+- *Weight:* the sign gives the direction (does the feature support the positive or the negative class); the magnitude gives the strength of influence.
+
+*** Input Summation (Linear Combination)
+- The weighted sum $z = \sum_i w_i x_i + b$ is an affine function of the inputs: linear in $w$, plus the bias $b$.
+- Decision rule with the step activation: output $1$ if $z \geq 0$, else $0$ (equivalently $\pm 1$ with the sign activation).
+- The *decision boundary* is the set of points where $z = 0$:
+  $w_1 x_1 + w_2 x_2 + \dots + w_n x_n + b = 0$
+- Geometry of the boundary:
+  - $n = 1$: a point.
+  - $n = 2$: a straight line.
+  - $n = 3$: a plane.
+  - $n > 3$: a *hyperplane* that splits the space into two half-spaces.
+- The weight vector $w$ is *normal* (perpendicular) to the boundary. The distance of the boundary from the origin is $\frac{|b|}{\|w\|}$.
+- A single perceptron is therefore a *linear classifier*: it can separate only classes that a hyperplane can separate.
+
+*** Logic Gates as a Perceptron (inputs 0/1, step activation)
+- Output $\hat{y} = 1$ if $z \geq 0$, else $0$.
+
+| Gate | $w_1$ | $w_2$ | $b$    | Decision boundary     | Linearly separable? |
+|------|-------|-------|--------|-----------------------|---------------------|
+| AND  | 1     | 1     | -1.5   | $x_1 + x_2 = 1.5$     | Yes                 |
+| OR   | 1     | 1     | -0.5   | $x_1 + x_2 = 0.5$     | Yes                 |
+| NAND | -1    | -1    | 1.5    | $x_1 + x_2 = 1.5$     | Yes                 |
+| NOR  | -1    | -1    | 0.5    | $x_1 + x_2 = 0.5$     | Yes                 |
+| XOR  | -     | -     | -      | none exists           | *No*                |
+
+** Activation Function
+- The activation function $f$ turns the pre-activation $z$ into the output and decides whether the neuron fires.
+- In a *multi-layer* network it also introduces *non-linearity*. Without a non-linear activation, any stack of layers collapses into one linear function.
+
+*** Common Activation Functions
+
+| Name              | Formula                                   | Range            | Derivative            | Used in                     |
+|-------------------|-------------------------------------------|------------------|-----------------------|-----------------------------|
+| Step (Heaviside)  | $f(z)=1$ if $z\geq 0$, else $0$           | $\{0,1\}$        | $0$ (undefined at 0)  | Original perceptron         |
+| Sign              | $f(z)=+1$ if $z\geq 0$, else $-1$         | $\{-1,+1\}$      | $0$                   | Classic perceptron          |
+| Sigmoid           | $f(z)=\frac{1}{1+e^{-z}}$                 | $(0,1)$          | $f(z)(1-f(z))$        | Binary output / probability |
+| Tanh              | $f(z)=\frac{e^{z}-e^{-z}}{e^{z}+e^{-z}}$  | $(-1,1)$         | $1-f(z)^2$            | Hidden layers (older)       |
+| ReLU              | $f(z)=\max(0,z)$                          | $[0,\infty)$     | $1$ if $z>0$, else $0$| Hidden layers (modern default) |
+| Softmax           | $f(z_i)=\frac{e^{z_i}}{\sum_j e^{z_j}}$   | $(0,1)$, sums to 1 | -                   | Multi-class output          |
+
+  #+CAPTION: Activation functions: step, sigmoid, tanh and ReLU.
+  #+ATTR_ORG: :width 620
+  [[./ml-notes-figures/perceptron_activation_functions.png]]
+
+*** Step vs Sigmoid vs ReLU
+- *Step / sign:* matches the perceptron learning rule. Not differentiable, so it cannot be trained by gradient descent.
+- *Sigmoid / tanh:* smooth and differentiable. The output reads as a probability (sigmoid) or a signed confidence (tanh). Problem: the gradient is near $0$ for large $|z|$, so deep networks suffer from the *vanishing gradient*.
+- *ReLU:* cheap, non-saturating for $z>0$, and avoids the vanishing gradient. Problem: a neuron can "die" (stuck at $0$) for $z<0$. Variants: Leaky ReLU, ELU.
+- *Why non-linearity is essential:* if $f$ is the identity (linear), then two stacked layers give
+  $a = W_2(W_1 x + b_1) + b_2 = (W_2 W_1)x + (W_2 b_1 + b_2)$,
+  which is again one linear layer. A non-linear $f$ is what lets depth increase the model's power.
+
+** How the Perceptron Learns (Weight Update Rule)
+- Goal: find weights that classify all training samples correctly.
+- Labels $y \in \{-1, +1\}$; activation $\hat{y} = \text{sign}(z)$.
+- *Perceptron learning rule:*
+  1. Initialize weights $w = 0$ (or small random values) and bias $b = 0$.
+  2. For each training sample $(x, y)$:
+     a. Compute $\hat{y} = \text{sign}(w^\top x + b)$.
+     b. Compute the error $e = \frac{y - \hat{y}}{2} \in \{-1, 0, +1\}$.
+     c. Update $w_i \leftarrow w_i + \eta \, e \, x_i$ and $b \leftarrow b + \eta \, e$.
+  3. Repeat over all samples (one *epoch*) until no sample is misclassified.
+- $\eta$ = *learning rate* (e.g. $0.1$), which controls the step size.
+- *Interpretation of the update:* only mistakes change the weights.
+  - Correct prediction: $e = 0$, no change.
+  - Actual $+1$, predicted $-1$: $e > 0$; $w$ moves *toward* $x$.
+  - Actual $-1$, predicted $+1$: $e < 0$; $w$ moves *away from* $x$.
+- Each update rotates or shifts the boundary toward the misclassified point.
+
+*** Derivation as Gradient Descent
+- Use the *perceptron loss*, which is $0$ for a correct sample and positive for a wrong one:
+  $L(w, b) = \max(0, -y\,(w^\top x + b))$
+- For a misclassified sample $-y(w^\top x + b) > 0$, so the gradients are
+  $\frac{\partial L}{\partial w} = -y x$ and $\frac{\partial L}{\partial b} = -y$.
+- Gradient descent step: $w \leftarrow w + \eta y x$ and $b \leftarrow b + \eta y$. For a correct sample the gradient is $0$, so no update.
+- This is the same rule as above: for a misclassified sample with labels $\pm 1$, $e = y$.
+
+*** Worked Example: Two Update Steps
+- Start: $w = (0.1, 0.1)$, $b = 0$, $\eta = 0.5$, activation $\text{sign}(z)$.
+- *Sample 1:* $x = (1, 2)$, $y = -1$.
+  - $z = 0.1(1) + 0.1(2) + 0 = 0.3 \geq 0 \Rightarrow \hat{y} = +1$. Wrong.
+  - $e = \frac{-1 - (+1)}{2} = -1$.
+  - $w_1 = 0.1 + 0.5(-1)(1) = -0.4$
+  - $w_2 = 0.1 + 0.5(-1)(2) = -0.9$
+  - $b = 0 + 0.5(-1) = -0.5$
+  - Check: $z = -0.4(1) - 0.9(2) - 0.5 = -2.7 < 0 \Rightarrow \hat{y} = -1$. Correct.
+- *Sample 2:* $x = (2, 1)$, $y = +1$ (weights now $(-0.4, -0.9)$, $b = -0.5$).
+  - $z = -0.4(2) - 0.9(1) - 0.5 = -2.2 < 0 \Rightarrow \hat{y} = -1$. Wrong.
+  - $e = \frac{1 - (-1)}{2} = +1$.
+  - $w_1 = -0.4 + 0.5(1)(2) = 0.6$
+  - $w_2 = -0.9 + 0.5(1)(1) = -0.4$
+  - $b = -0.5 + 0.5(1) = 0$
+  - Check: $z = 0.6(2) - 0.4(1) + 0 = 0.8 \geq 0 \Rightarrow \hat{y} = +1$. Correct.
+- The weights moved to fix each mistake. Continue until every sample is correct.
+
+*** Perceptron Convergence Theorem
+- If the training data is *linearly separable*, the perceptron learning rule converges in a finite number of updates, for any fixed positive learning rate.
+- If the data is *not* linearly separable, the weights never settle; they oscillate forever with no best stopping point.
+- Novikoff's bound limits the number of updates to roughly $(R / \gamma)^2$, where $R$ is the largest input norm and $\gamma$ is the separation margin. The bound is data-dependent and often very loose.
+- The theorem says nothing about generalization to unseen data.
+
+** Limitation: Linear Separability and XOR
+- A single perceptron can represent only *linearly separable* functions, because its decision boundary is one hyperplane.
+- For two binary inputs, AND, OR, NAND and NOR are linearly separable. XOR and XNOR are not.
+- *Proof for XOR* (inputs $0/1$, output $1$ iff exactly one input is $1$). A boundary $w_1 x_1 + w_2 x_2 + b = 0$ must satisfy:
+  - $(0,0) \to 0$: $b < 0$
+  - $(0,1) \to 1$: $w_2 + b \geq 0$
+  - $(1,0) \to 1$: $w_1 + b \geq 0$
+  - $(1,1) \to 0$: $w_1 + w_2 + b < 0$
+- Add the two middle inequalities: $w_1 + w_2 + 2b \geq 0$, so $w_1 + w_2 + b \geq -b > 0$ (because $b < 0$). This contradicts the last inequality, so no such line exists.
+- Minsky and Papert (1969) proved this rigorously in the book *Perceptrons*. This result contributed to the first "AI winter" (along with the 1973 Lighthill Report).
+
+  #+CAPTION: AND and OR are linearly separable; XOR is not. Green = the single boundary a perceptron can draw.
+  #+ATTR_ORG: :width 720
+  [[./ml-notes-figures/perceptron_logic_gates.png]]
+
+- The same wall appears outside logic gates: on non-linear data (e.g. two interleaving moons) one straight line cannot separate the classes, while a multi-layer network fits a curved boundary.
+
+  #+CAPTION: Left: a single perceptron is limited to one straight line. Right: an MLP learns a curved boundary.
+  #+ATTR_ORG: :width 720
+  [[./ml-notes-figures/perceptron_nonlinear_boundary.png]]
+
+** Solution: The Multi-Layer Perceptron (MLP)
+- Add a *hidden layer* of perceptrons between the inputs and the output.
+- Each hidden unit draws its own boundary in the input space. The output unit combines those boundaries with a second linear layer.
+- The hidden layer *learns a new representation* of the data. In that new space the classes are linearly separable, so the linear output layer is enough.
+- *Architecture terms:*
+  - *Input layer:* the features (no computation).
+  - *Hidden layer(s):* weighted sum + non-linear activation.
+  - *Output layer:* produces the final prediction.
+  - *Deep network:* more than one hidden layer.
+- *XOR solution* (inputs $0/1$, step activation, $\hat{y} = 1$ if $z \geq 0$):
+  - $h_1$ = OR: $w = (1, 1)$, $b = -0.5$
+  - $h_2$ = NAND: $w = (-1, -1)$, $b = +1.5$
+  - output $y$ = AND of $h_1, h_2$: $w = (1, 1)$, $b = -1.5$
+  - Check: $(0,0) \to h=(0,1) \to y=0$; $(0,1) \to (1,1) \to 1$; $(1,0) \to (1,1) \to 1$; $(1,1) \to (1,0) \to 0$. Correct.
+- *Key idea:* the hidden layer lifts the data into a space where a linear output layer suffices. Depth turns many weak linear boundaries into one powerful non-linear boundary.
+
+  #+CAPTION: XOR solved by a hidden layer. (a) The two hidden lines in input space. (b) In the hidden space $(h_1, h_2)$ the classes are linearly separable.
+  #+ATTR_ORG: :width 720
+  [[./ml-notes-figures/perceptron_xor_solution.png]]
+
+  #+CAPTION: The 2-2-1 XOR network: two inputs, two hidden neurons (OR and NAND), one output (AND).
+  #+ATTR_ORG: :width 620
+  [[./ml-notes-figures/perceptron_xor_network.png]]
+
+** How a Multi-Layer Network Learns: Backpropagation
+- The perceptron rule needs a target for every unit, but hidden units have no target. Backpropagation solves this.
+- It combines the chain rule of calculus with gradient descent.
+
+*** Forward Pass
+- Compute and store the activations of every layer, from input to output.
+  $z^{(l)} = W^{(l)} a^{(l-1)} + b^{(l)}$, $a^{(l)} = f(z^{(l)})$, with $a^{(0)} = x$.
+
+*** Loss Function
+- Measures the gap between the prediction and the target. Common choices:
+  - Regression: mean squared error $L = \frac{1}{m}\sum (\hat{y} - y)^2$.
+  - Classification: cross-entropy. Binary form $L = -\left[ y \log \hat{y} + (1-y)\log(1-\hat{y}) \right]$; multi-class form $L = -\sum y \log \hat{y}$.
+
+*** Backward Pass (Error Propagation)
+- *Output-layer error (delta):* $\delta^{(L)} = \nabla_a L \odot f'(z^{(L)})$
+- *Hidden-layer error (chain rule):* $\delta^{(l)} = \left( (W^{(l+1)})^\top \delta^{(l+1)} \right) \odot f'(z^{(l)})$
+- *Weight and bias gradients:*
+  $\frac{\partial L}{\partial W^{(l)}} = \delta^{(l)} (a^{(l-1)})^\top$, $\frac{\partial L}{\partial b^{(l)}} = \delta^{(l)}$
+- *Update:*
+  $W^{(l)} \leftarrow W^{(l)} - \eta \frac{\partial L}{\partial W^{(l)}}$, $b^{(l)} \leftarrow b^{(l)} - \eta \frac{\partial L}{\partial b^{(l)}}$
+- $\odot$ = element-wise product; $\eta$ = learning rate.
+- One full pass over the training set = one *epoch*. Repeat for many epochs until the loss stops falling.
+- *Problems:* vanishing / exploding gradients in deep networks. Fixes: ReLU, batch normalization, careful initialization (Xavier/He), residual connections.
+
+** Universal Approximation Theorem
+- *Statement:* A feed-forward network with a single hidden layer and a finite number of neurons can approximate any continuous function on a compact (closed and bounded) set to any desired accuracy, given a suitable activation function.
+- *Formal form:* let $f$ be continuous on a compact set $K \subset \mathbb{R}^n$. For every $\epsilon > 0$ there exist $N$, weights $w_i$, biases $b_i$ and output weights $v_i$ such that
+  $\left| \sum_{i=1}^{N} v_i \, \sigma(w_i^\top x + b_i) - f(x) \right| < \epsilon$ for all $x \in K$.
+- Here $\sigma$ is the hidden activation. The classical sufficient conditions are that $\sigma$ is continuous, bounded and non-constant (Cybenko 1989; Hornik 1989, for sigmoidal / squashing activations). Leshno et al. (1993) weakened this to any non-polynomial activation, which also covers the unbounded ReLU.
+- *Intuition:* each hidden unit is a smooth step ("ridge") at a chosen position and width. A weighted sum of many ridges can build up any curve, just as enough straight segments trace any shape or enough Fourier terms build any signal.
+
+  #+CAPTION: Universal approximation in action. (a) A single hidden layer of sigmoids fits a non-linear target. (b) The error falls as the number of hidden units grows.
+  #+ATTR_ORG: :width 720
+  [[./ml-notes-figures/perceptron_uat_approximation.png]]
+
+*** Why It Matters (and What It Does Not Say)
+- *Why it is needed:*
+  - It proves that a neural network has enough *representational power* to model the true function $y = f(x)$, however non-linear, without hand-crafting features.
+  - It generalizes the XOR fix: a single perceptron cannot draw a non-linear boundary, but a wide or deep network can.
+  - It separates "can the network represent the answer?" (yes, by the theorem) from "can we learn the answer from data?" (a separate, harder question).
+- *What it does not say (limits):*
+  - It is an *existence* theorem, not a construction. It does not tell us how to find the weights.
+  - The required number of hidden units can be enormous (in the worst case exponential in $n$). "One hidden layer" is not the same as "practical".
+  - It says nothing about *generalization*. A network that fits the training data perfectly can still fail on unseen data (overfitting).
+  - It says nothing about *learnability*. Gradient descent may stall in a poor local minimum or need too much data and compute.
+- This is why deep learning uses depth, regularization, large datasets and GPUs: to turn the theorem's possibility into a practical result.
+
+** Perceptron vs. the Modern Neuron
+- The perceptron is one neuron with a step activation and a simple update rule.
+- The modern artificial neuron is the same weighted sum + bias, but with a differentiable activation and training by backpropagation.
+- *Getting it right depends on two things:*
+  1. *The weights:* they must be learned correctly. For a single perceptron the perceptron rule finds them only if the data is linearly separable; otherwise the update never converges.
+  2. *The activation function:* a single perceptron uses a non-differentiable step activation and needs its own update rule. For a multi-layer network the activation must be non-linear (to gain power from depth) and differentiable (for gradient-based learning by backpropagation).
+- Single perceptron = linear classifier. Multi-layer perceptron = universal approximator.

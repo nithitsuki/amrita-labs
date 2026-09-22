@@ -473,3 +473,49 @@ sock.close()
 + application data (payload)
 *** example checksum
 + add two 16 bit digits and return carry bit
+** RDT (reliable data transfer, Kurose 3.4, up to 2.1)
++ goal: reliable in-order delivery over an unreliable channel; only sender -> receiver data flow is modeled, control (ACK/NAK) flows back
++ notation: rdt_send(data), deliver_data(data), udt_send(pkt), rdt_rcv(pkt); checksum detects bit errors
++ stop-and-wait: sender sends one packet, then blocks waiting for the verdict
+*** RDT 1.0: perfectly reliable channel (no errors, no loss)
++ sender: on rdt_send(data), send packet; receiver: on arrival, deliver
+#+begin_example
+sender (one state)                 receiver (one state)
+[wait for call]                    [wait for packet]
+  | rdt_send(data)                   | rdt_rcv(pkt)
+  | / pkt=make_pkt(data);            | / extract(pkt,data);
+  |   udt_send(pkt)                  |   deliver_data(data)
+  +--> same state                    +--> same state
+#+end_example
+*** RDT 2.0: bit errors, no loss (checksum + ACK/NAK + retransmit)
++ receiver: good pkt -> deliver + ACK; bad pkt -> NAK, no deliver
++ sender: ACK -> send next; NAK -> resend same packet
+#+begin_example
+sender
+[wait for call] -- rdt_send(data) / sndpkt=make_pkt(data,checksum); udt_send(sndpkt) --> [wait for ACK/NAK]
+[wait for ACK/NAK] -- rdt_rcv(rcvpkt) && isACK(rcvpkt) --> [wait for call]
+[wait for ACK/NAK] -- rdt_rcv(rcvpkt) && isNAK(rcvpkt) / udt_send(sndpkt) --> [wait for ACK/NAK] (stay)
+
+receiver (one state)
+  | rdt_rcv(rcvpkt) && notcorrupt(rcvpkt) / extract, deliver_data, udt_send(ACK)
+  | rdt_rcv(rcvpkt) && corrupt(rcvpkt) / udt_send(NAK)
+  +--> same state
+#+end_example
++ fatal flaw: ACK/NAK itself can be corrupted; sender cannot tell what failed, and a blind resend creates a duplicate the receiver cannot detect -> need sequence numbers
+*** RDT 2.1: corrupted ACK/NAK fixed with 1-bit sequence numbers
++ alternating-bit protocol: data packets numbered 0,1,0,1...; ACK/NAK carries the seq it refers to
++ sender (4 states = wait-call-0, wait-ACK-0, wait-call-1, wait-ACK-1; seq-1 half mirrors seq-0):
+#+begin_example
+[wait call s] -- rdt_send(data) / sndpkt=make_pkt(data,s,checksum); udt_send(sndpkt) --> [wait ACK/NAK s]
+[wait ACK/NAK s] -- rdt_rcv(rcvpkt) && notcorrupt && isACK(rcvpkt,s) --> [wait call 1-s] (flip bit)
+[wait ACK/NAK s] -- rdt_rcv(rcvpkt) && (corrupt(rcvpkt) || isNAK(rcvpkt)) / udt_send(sndpkt) --> [wait ACK/NAK s] (resend)
+[wait ACK/NAK s] -- rdt_rcv(rcvpkt) && notcorrupt && isACK(rcvpkt,1-s) / udt_send(sndpkt) --> [wait ACK/NAK s] (wrong-seq ACK = resend)
+#+end_example
++ receiver (2 states = wait-0, wait-1):
+#+begin_example
+[wait s] -- rdt_rcv(rcvpkt) && notcorrupt && has_seq(rcvpkt,s) / extract, deliver_data, udt_send(ACK,s) --> [wait 1-s]
+[wait s] -- rdt_rcv(rcvpkt) && (corrupt(rcvpkt) || has_seq(rcvpkt,1-s)) / udt_send(ACK,1-s) --> [wait s] (duplicate: re-ACK last good, no deliver)
+#+end_example
++ effect: duplicates detected via seq mismatch and suppressed; corrupted feedback only causes a harmless extra retransmission
++ exam line: 1.0 = nothing; 2.0 = + ACK/NAK/retransmit, breaks on bad ACK; 2.1 = + 1-bit seq, fixes it
+*** RDT 2.2: a NAK-free protocol
