@@ -153,6 +153,62 @@ Same idea, and it explains the block-size method on the same page.
 attempt, not before. If you open it first you will recognise the questions
 in the exam and still not be able to reproduce the method.
 
+* Marks by network layer
+SUMMARY: The papers do not divide evenly across five layers. The link and network layers are the two biggest blocks, and the physical layer barely appears.
+
+I classified all 82 questions by the layer whose mechanism the answer has to
+explain. Where a question spans layers, I put it in the layer that carries the
+marks. The leftovers are architecture questions that belong to no single
+layer, so they get their own row rather than a fake assignment.
+
+| Layer         | Marks | Share | What it covers here                              |
+|---------------+-------+-------+--------------------------------------------------|
+| Application   |   106 | 24 %  | HTTP, DNS, mail, FTP, P2P, cookies, caching      |
+| Transport     |    95 | 21 %  | TCP, UDP, headers, seq and ack, GBN, SR, windows |
+| Network       |    81 | 18 %  | IPv4, IPv6, subnetting, NAT, DHCP, routing       |
+| Link          |    67 | 15 %  | Ethernet, ARP, CSMA/CD, parity, VLAN, 802.11     |
+| Physical      |    10 | 2 %   | access networks, DSL                             |
+| Cross-cutting |    91 | 20 %  | delays, switching, layering, device inventory    |
+|---------------+-------+-------+--------------------------------------------------|
+| total         |   450 | 100 % |                                                  |
+
+Three of the six papers are mid-sems that stop before the network and link
+layers, so the totals above understate those two. The three full papers are
+the guide to what you will actually sit.
+
+| Paper | App | Transport | Network | Link | Physical | Cross |
+|-------+-----+-----------+---------+------+----------+-------|
+| CNE1  |  20 |        15 |      25 |   20 |        5 |    15 |
+| CNE2  |  22 |        13 |      13 |   27 |        0 |    25 |
+| CNE5  |  15 |        20 |      25 |   20 |        5 |    15 |
+|-------+-----+-----------+---------+------+----------+-------|
+| mean  |  19 |        16 |      21 |   22 |        3 |    18 |
+
+** What this changes
+Ranked by marks in a full 100-mark paper, the order is:
+
+1. Link, about 22 marks.
+2. Network, about 21 marks.
+3. Application, about 19 marks.
+4. Architecture, about 18 marks.
+5. Transport, about 16 marks.
+6. Physical, about 3 marks.
+
+Two consequences.
+
+The physical layer is not worth your time. Two questions across six papers,
+both asking for a diagram of an access network. Ten marks out of 450.
+
+The link and network layers together are about 43 marks, and they are the two
+units your earlier notes never reached. That is where the remaining hours go.
+
+Note the correction against the two 2025 mid-sems. On those papers CO3 reached
+25 marks and looked like the heaviest unit. It is not, on a full paper. Those
+mid-sems had not yet covered the network and link layers, so the transport
+weight was inflated. Transport is still worth 16 to 21 marks and it is the most
+mechanical unit, so it stays first in the study order. It is just not the
+biggest.
+
 * The compressed pass
 SUMMARY: If the clock beats you, read only these topics. They cover about 43 of the 100 marks in a full paper. Ninety minutes in total.
 
