@@ -1,0 +1,1794 @@
+** Link layer services
+
+SUMMARY: The link layer wraps a network-layer datagram into a frame and moves it across one link to the directly connected node.
+KUROSE: 6.1 (link layer services and NIC implementation)
+EXAM: not asked as a standalone question in the 6 papers, but the services list earns marks inside the Ethernet and ARP answers.
+PRIORITY: extra
+
+*** The four core services
+
+1. Framing and link access. The sender wraps the datagram in a header and a
+   trailer. The header carries source and destination MAC addresses. If the
+   medium is shared, the protocol also decides when a node may transmit.
+2. Reliable delivery between adjacent nodes. A hop-by-hop acknowledgement and
+   retransmission scheme moves the frame over a lossy link. Wireless links
+   need this because their bit error rate is high.
+3. Error detection. The sender adds check bits. The receiver tests them and
+   discards a frame that fails. Signal attenuation and noise cause the errors.
+4. Error correction. The receiver locates and repairs a small number of flipped
+   bits without asking for a retransmission. Forward error correction does this.
+
+Two further services appear in the textbook.
+
+- Flow control. The receiver paces the sender so a fast sender cannot swamp a
+  slow receiver.
+- Half duplex and full duplex. In half duplex both ends may transmit but not at
+  the same moment. In full duplex both ends transmit at the same time.
+
+*** Which service runs where
+
+#+begin_example
+  SERVICE              PLACE IT RUNS            REASON
+  -------------------  -----------------------  -------------------------
+  framing              NIC hardware + firmware  bit-level work, per frame
+  link access (MAC)    NIC hardware             must react in microseconds
+  error detection      NIC hardware             CRC is a shift register
+  error correction     NIC hardware             Hamming code is gate logic
+  reliable delivery    NIC driver software      needs timers and buffers
+  flow control         NIC driver software      needs buffer state
+#+end_example
+
+The NIC holds the link and physical layers. The CPU and the driver handle the
+rest. The textbook calls the whole link layer a mix of hardware, software, and
+firmware.
+
+*** Link layer versus transport layer
+
+The link layer moves a datagram between two directly connected nodes, so its
+scope is one hop. The transport layer moves a segment between two end
+processes, so its scope is the whole end-to-end path.
+
+*** Trap: link reliability is not end-to-end reliability
+
+A reliable link protocol only repairs one hop. If the next hop drops the frame,
+the first hop still reports success. Only TCP gives end-to-end reliability.
+Never write "the link layer makes the transfer reliable" in an exam answer.
+
+*** Trap: a frame is not a packet
+
+A packet is the network-layer unit. A frame is the link-layer unit that carries
+that packet. Marks are lost when the two words are swapped.
+
+** Error detection: single parity
+
+SUMMARY: Single parity appends one bit so the total count of ones in the frame is always even or always odd.
+KUROSE: 6.2.1 (parity checking)
+EXAM: not asked alone. It is the baseline that the two-dimensional parity question compares against.
+PRIORITY: extra
+
+*** The idea
+
+The sender counts the ones in the data. It then chooses one extra bit so the
+total is even. The receiver counts again. An odd total proves that at least one
+bit flipped.
+
+*** WORKED EXAMPLE (numbers changed on purpose)
+
+Data is 9 bits. Use even parity.
+
+#+begin_example
+  bit index   1 2 3 4 5 6 7 8 9 | 10
+              ---------------------+----
+  data        0 1 1 1 0 1 1 0 1 |  ?
+  count of 1s in the data      = 6
+  even parity needs total even  -> parity bit = 0
+  frame sent  0 1 1 1 0 1 1 0 1 |  0
+#+end_example
+
+The receiver counts 6 ones and sees a parity bit of 0. Six is even, so the
+frame passes.
+
+Now flip bit 3. The data becomes 0 1 0 1 0 1 1 0 1. The count of ones is 5.
+Five is odd, so the frame fails and the receiver drops it.
+
+With odd parity the sender would have sent a parity bit of 1. The rule is the
+same, only the target total changes.
+
+*** The arithmetic form
+
+Let $d_1 \ldots d_n$ be the data bits and let $p$ be the parity bit.
+
+$$p = d_1 \oplus d_2 \oplus \cdots \oplus d_n \quad \text{(even parity)}$$
+
+The receiver recomputes the same XOR. A result of 0 means even, a result of 1
+means odd. Even parity passes when the XOR of all received bits, including $p$,
+is 0.
+
+*** The limitation
+
+Two flipped bits cancel. Flip bit 2 and bit 5 in the example. The count of ones
+stays at 6, so the parity check passes and the frame is delivered with two
+errors. Any even number of flips is invisible. Single parity also cannot say
+which bit is wrong, so it detects but never corrects.
+
+*** Trap: an even number of errors is invisible
+
+Examiners love the phrase "single parity detects all single bit errors". That
+is true. It is not true that parity detects all errors. Write the two-bit
+counter-example in the answer and the mark is safe.
+
+** Error detection: two-dimensional parity
+
+SUMMARY: Two-dimensional parity adds a parity bit to every row and every column, so the row and column that fail point at the bad bit.
+KUROSE: 6.2.1 (two-dimensional parity, Figure 6.5)
+EXAM: CNE1 Part A asks "explain two-dimensional parity with an example and say why it is preferred over single-dimensional parity".
+PRIORITY: core
+
+*** The procedure in five steps
+
+1. Write the data as a grid of rows and columns.
+2. Add one parity bit to the right of every row.
+3. Add one parity bit below every column.
+4. Add one parity bit for the parity bits. It sits in the corner.
+5. Send the grid row by row, or column by column.
+
+Use even parity throughout. The method works the same with odd parity, as long
+as every parity bit uses the same rule.
+
+*** The full grid, 5 rows by 4 columns of data
+
+#+begin_example
+            c1    c2    c3    c4  |  rp
+          +-----+-----+-----+-----+-----+
+    r1    |  1  |  0  |  1  |  1  |  1  |   row parity
+          +-----+-----+-----+-----+-----+
+    r2    |  0  |  1  |  1  |  0  |  0  |
+          +-----+-----+-----+-----+-----+
+    r3    |  1  |  1  |  0  |  0  |  0  |
+          +-----+-----+-----+-----+-----+
+    r4    |  0  |  0  |  1  |  1  |  0  |
+          +-----+-----+-----+-----+-----+
+    r5    |  1  |  0  |  0  |  1  |  0  |
+          +-----+-----+-----+-----+-----+
+    cp    |  1  |  0  |  1  |  1  |  1  |   <- corner bit
+          +-----+-----+-----+-----+-----+
+         col parity                      corner
+#+end_example
+
+Check each line of the grid.
+
+#+begin_example
+  row 1: 1 0 1 1 has 3 ones -> parity 1
+  row 2: 0 1 1 0 has 2 ones -> parity 0
+  row 3: 1 1 0 0 has 2 ones -> parity 0
+  row 4: 0 0 1 1 has 2 ones -> parity 0
+  row 5: 1 0 0 1 has 2 ones -> parity 0
+  col 1: 1 0 1 0 1 has 3 ones -> parity 1
+  col 2: 0 1 1 0 0 has 2 ones -> parity 0
+  col 3: 1 1 0 1 0 has 3 ones -> parity 1
+  col 4: 1 0 0 1 1 has 3 ones -> parity 1
+  corner: parity of row parities 1 0 0 0 0 = 1
+  corner: parity of col parities 1 0 1 1 = 1  (both agree)
+#+end_example
+
+Total bits sent are 6 rows x 5 columns = 30. The data is 20 bits, so the
+overhead is 10 bits.
+
+*** One flipped bit: the grid locates it
+
+The receiver gets the next grid. One data bit changed. A star marks it.
+
+#+begin_example
+            c1    c2    c3    c4  |  rp
+          +-----+-----+-----+-----+-----+
+    r1    |  1  |  0  |  1  |  1  |  1  |
+          +-----+-----+-----+-----+-----+
+    r2    |  0  |  1  |  1  |  0  |  0  |
+          +-----+-----+-----+-----+-----+
+    r3    |  1  |  0* |  0  |  0  |  0  |  <- row 3 fails
+          +-----+-----+-----+-----+-----+
+    r4    |  0  |  0  |  1  |  1  |  0  |
+          +-----+-----+-----+-----+-----+
+    r5    |  1  |  0  |  0  |  1  |  0  |
+          +-----+-----+-----+-----+-----+
+    cp    |  1  |  0  |  1  |  1  |  1  |
+          +-----+-----+-----+-----+-----+
+#+end_example
+
+#+begin_example
+  row 3 received: 1 0 0 0  has 1 one  -> odd -> row parity fails
+  col 2 received: 0 1 0 0 0 has 1 one -> odd -> col parity fails
+  intersection of row 3 and col 2 = the bad bit
+  flip it back to 1 -> data repaired, no retransmission
+#+end_example
+
+The receiver corrects the bit itself. One row and one column fail, and they
+cross at exactly one cell, so the position is unambiguous.
+
+*** Two flipped bits: detected but not correctable
+
+Flip r1c1 from 1 to 0 and flip r4c3 from 1 to 0.
+
+#+begin_example
+            c1    c2    c3    c4  |  rp
+          +-----+-----+-----+-----+-----+
+    r1    |  0* |  0  |  1  |  1  |  1  |  <- row 1 fails
+          +-----+-----+-----+-----+-----+
+    r2    |  0  |  1  |  1  |  0  |  0  |
+          +-----+-----+-----+-----+-----+
+    r3    |  1  |  1  |  0  |  0  |  0  |
+          +-----+-----+-----+-----+-----+
+    r4    |  0  |  0  |  0* |  1  |  0  |  <- row 4 fails
+          +-----+-----+-----+-----+-----+
+    r5    |  1  |  0  |  0  |  1  |  0  |
+          +-----+-----+-----+-----+-----+
+    cp    |  1  |  0  |  1  |  1  |  1  |
+          +-----+-----+-----+-----+-----+
+             c1 fails        c3 fails
+#+end_example
+
+#+begin_example
+  failing rows = {1, 4}      failing cols = {1, 3}
+  candidate cells = (1,1) (1,3) (4,1) (4,3)
+  two of these four are the real errors
+  the receiver cannot tell which two -> detected, not corrected
+  action: drop the frame and ask for a retransmission
+#+end_example
+
+This is the honest limit. Two-dimensional parity corrects only a single bit.
+It detects many more errors than it can repair.
+
+*** Why two dimensions beat one
+
+- Two-dimensional parity catches every error that changes an odd count in any
+  row or any column.
+- It corrects a single bit without a retransmission.
+- Single parity corrects nothing and misses every even number of flips.
+
+*** The burst error rule
+
+A burst is a run of consecutive corrupted bits. Two-dimensional parity
+detects any burst whose length is at most the number of columns.
+
+The reason is short. A burst of $j$ bits or less can spoil at most one full
+row, or two part rows. The corrupted bits then sit in different columns, so at
+least one column parity fails. A burst that covers two whole rows is $2j$ bits
+long and cancels every parity at once. That burst escapes.
+
+*** Trap: two errors in the same row cancel the row parity
+
+Flip r5c1 from 1 to 0 and r5c4 from 1 to 0. Both are in row 5.
+
+#+begin_example
+  row 5 becomes 0 0 0 0          -> 0 ones -> even -> row parity PASSES
+  col 1 becomes 1 0 1 0 0        -> 2 ones -> parity 0, sent 1 -> FAILS
+  col 4 becomes 1 0 0 1 0        -> 2 ones -> parity 0, sent 1 -> FAILS
+  result: two failing columns, no failing row
+  the receiver knows two bits are bad but cannot place them
+#+end_example
+
+Students write "the row parity catches it". It does not. An even number of
+flips in one row leaves that row parity correct. Only the column parities
+react, and they point at columns, not at cells.
+
+*** Trap: the corner bit does not find data errors
+
+The corner bit protects the parity bits themselves. A data error that the row
+and column parities already catch leaves the corner bit consistent. Do not
+claim that the corner bit locates the error.
+
+*** Comparison table
+
+#+begin_example
+  METHOD     DETECTS              OVERHEAD      CORRECTS   COST
+  ---------  -------------------  ------------  ---------  ------------
+  single     1 bit, and any odd   1 bit per     nothing    lowest
+  parity     number of bits       frame
+  ---------  -------------------  ------------  ---------  ------------
+  2D parity  any 1, 2, 3 bit      1 bit per     one bit    low, grid
+             error, burst <= cols row and col              buffer at RX
+  ---------  -------------------  ------------  ---------  ------------
+  checksum   most errors, misses  16 bits per   nothing    very low,
+             some patterns        segment                  software add
+  ---------  -------------------  ------------  ---------  ------------
+  CRC        all 1 bit, all 2     32 bits per   nothing    hardware
+             bit, all odd, burst  frame                    shift reg
+             shorter than G
+#+end_example
+
+** Internet checksum
+
+SUMMARY: The checksum adds the 16-bit words of a segment in one's complement and sends the complement of the sum.
+KUROSE: 6.2.2 (recap of Section 3.3)
+EXAM: asked indirectly. CNE4 gives a UDP segment in hex and asks whether it holds an error.
+PRIORITY: extra
+
+*** Three-line recap
+
+1. Split the segment into 16-bit words and add them with end-around carry.
+2. Take the one's complement of the sum and put it in the checksum field.
+3. The receiver adds every word including the checksum. A result of all ones
+   means no error was found.
+
+*** Why it is weak
+
+The checksum is cheap and lives in software. It misses some swapped words and
+some paired errors that cancel. A 16-bit checksum also catches far fewer errors
+than a 32-bit CRC. Full worked examples belong to the transport layer unit,
+where UDP and TCP use this field.
+
+*** Trap: a passing checksum is not proof
+
+The receiver can only say "no error detected". A rare error pattern still
+passes. Write "detected" and never "guaranteed correct".
+
+** CRC
+
+SUMMARY: CRC treats the frame as a polynomial and sends a remainder that makes the whole frame divide exactly by a shared generator.
+KUROSE: 6.2.3 (CRC, Figure 6.6 and the worked division)
+EXAM: not asked as a full question in the 6 papers. It appears as a one-mark part of the Ethernet FCS answer.
+PRIORITY: core
+
+*** The vocabulary
+
+- $D$ is the data bit string. Read it as one long binary number.
+- $G$ is the generator. It is a bit pattern of $r+1$ bits that both ends know.
+- $r$ is the degree of $G$, so $G$ has $r+1$ bits and the CRC adds $r$ bits.
+- $R$ is the remainder, and it becomes the check bits.
+
+All arithmetic is modulo 2. Addition and subtraction are the same operation,
+which is XOR. There are no carries.
+
+*** The rule
+
+The sender picks $R$ so that the combined string $D$ followed by $R$ is
+exactly divisible by $G$. The receiver divides the whole frame by $G$ and
+expects a zero remainder.
+
+$$R = \text{remainder}\left[\frac{D \cdot 2^{r}}{G}\right]$$
+
+Appending $r$ zeros is the same as multiplying $D$ by $2^r$.
+
+*** WORKED EXAMPLE (numbers changed on purpose)
+
+Data $D = 11010110$. Generator $G = 1011$.
+
+#+begin_example
+  step 0  G has 4 bits, so r = 4 - 1 = 3
+  step 1  append r = 3 zeros to D
+          D * 2^3 = 11010110000        (11 bits)
+  step 2  divide by G = 1011 with XOR, one bit per step
+#+end_example
+
+The long division, line by line. Each row XORs with the generator aligned
+under the leading 1 of the row above it.
+
+#+begin_example
+  D*2^3  1 1 0 1 0 1 1 0 0 0 0
+  G      1 0 1 1
+         -------
+           1 1 0 0
+           1 0 1 1
+           -------
+             1 1 1 1
+             1 0 1 1
+             -------
+               1 0 0 1
+               1 0 1 1
+               -------
+                   1 0 0 0
+                   1 0 1 1
+                   -------
+                       1 1 0 0
+                       1 0 1 1
+                       -------
+                           1 1 1   <- R = 111
+#+end_example
+
+Read the same work as a step table. The window is the live 4 bits.
+
+#+begin_example
+  STEP  WINDOW  MSB  XOR G  RESULT  PULL IN NEXT BIT
+    1    1101     1   1011    0110        0   -> 1100
+    2    1100     1   1011    0111        1   -> 1111
+    3    1111     1   1011    0100        1   -> 1001
+    4    1001     1   1011    0010        0   -> 0100
+    5    0100     0   0000    0100        0   -> 1000
+    6    1000     1   1011    0011        0   -> 0110
+    7    0110     0   0000    0110        0   -> 1100
+    8    1100     1   1011    0111       none -> 0111
+  remainder = low 3 bits = 111
+#+end_example
+
+#+begin_example
+  step 3  R = 111
+  step 4  transmit D followed by R
+          frame = 11010110 111
+  step 5  receiver divides 11010110111 by 1011
+          remainder = 000  ->  accept
+  step 6  if the remainder is not zero, drop the frame
+#+end_example
+
+Why the receiver gets zero: the frame equals $D \cdot 2^r \oplus R$, and that
+value is a whole multiple of $G$ by construction.
+
+*** What CRC catches
+
+- Every single bit error, because any single-bit error is $x^k$ and $G$ has
+  more than one term.
+- Every double bit error, as long as $G$ has more than one term.
+- Every odd number of bit errors, when $G(x)$ has $x+1$ as a factor.
+- Every burst error shorter than $r+1$ bits, because the burst degree is below
+  the degree of $G$.
+- A burst of $r+1$ bits or longer with probability $1 - 2^{-r}$.
+
+*** Trap: the check bits are r, not r plus one
+
+$G$ has $r+1$ bits but the CRC field has $r$ bits. With $G = 1011$ the field is
+3 bits, not 4. Also append exactly $r$ zeros, never $r+1$.
+
+*** Trap: CRC is not encryption and not correction
+
+CRC detects errors and never repairs them. It also uses a public generator, so
+it offers no security. Ethernet, 802.11, and many link protocols use CRC-32.
+** Multiple access: the taxonomy
+
+SUMMARY: Multiple access protocols split into channel partitioning, random access, and taking turns, and each class answers the same question in a different way.
+KUROSE: 6.3 (multiple access links and protocols, Figure 6.8)
+EXAM: CNE5 Part A asks "what are the broad categories of multiple access protocols", then asks for CSMA/CD.
+PRIORITY: core
+
+*** Why the problem exists
+
+One shared broadcast channel has one rate $R$. If two nodes transmit at the
+same moment, their signals mix and the receiver hears garbage. That event is a
+collision.
+
+A multiple access protocol is a distributed algorithm. It decides when each
+node may transmit. The nodes must agree using the shared channel itself,
+because no separate control channel exists.
+
+*** The clean tree
+
+#+begin_example
+                    +-------------------------------+
+                    |   MULTIPLE ACCESS PROTOCOLS   |
+                    +---------------+---------------+
+                                    |
+            +-----------------------+-----------------------+
+            |                       |                       |
+  +------------------+    +------------------+    +------------------+
+  |     CHANNEL      |    |      RANDOM      |    |      TAKING      |
+  |   PARTITIONING   |    |      ACCESS      |    |      TURNS       |
+  +---------+--------+    +---------+--------+    +---------+--------+
+            |                       |                       |
+  FDMA   fixed freq       ALOHA  send at once     POLLING master asks
+  TDMA   fixed slot       S-ALOHA slot start      TOKEN  pass in order
+  CDMA   unique code      CSMA   listen first
+                          CSMA/CD detect+abort
+                          CSMA/CA avoid, ACK
+#+end_example
+
+*** Channel partitioning
+
+The channel is cut into fixed pieces and each node owns one piece. There are
+no collisions, because no two nodes ever share a piece.
+
+#+begin_example
+  PROTOCOL  PIECE GIVEN TO EACH NODE        WASTE WHEN IDLE
+  --------  ------------------------------  ----------------
+  FDMA      one frequency band              band sits empty
+  TDMA      one time slot in each round     slot sits empty
+  CDMA      one unique code across all      code space unused
+            time and all frequency
+#+end_example
+
+- FDMA. The spectrum is divided into bands. Each station keeps its band for the
+  whole session.
+- TDMA. Time is divided into rounds. Each station gets one fixed slot per
+  round, and unused slots go idle.
+- CDMA. Every station uses the whole band all the time, and a code separates
+  the signals. The receiver correlates with the wanted code.
+
+The weakness is low load. A node still gets only $1/N$ of the channel even
+when every other node is silent.
+
+*** Random access
+
+The channel is not divided. Any node may transmit at full rate $R$. Collisions
+happen, and the protocol says how to detect and recover from them.
+
+#+begin_example
+  PROTOCOL     RULE IN ONE LINE
+  -----------  ------------------------------------------------
+  ALOHA        transmit the moment a frame arrives
+  S-ALOHA      transmit only at the start of the next slot
+  CSMA         listen first, transmit only if the channel is idle
+  CSMA/CD      CSMA plus abort as soon as a collision is heard
+  CSMA/CA      CSMA plus avoid collisions and ACK every frame
+#+end_example
+
+Random access is efficient at low load, because one busy node can use the
+whole channel. At high load the collision overhead grows.
+
+*** Taking turns
+
+Nodes transmit in an agreed order, so collisions disappear. A node with more
+data may hold the channel longer.
+
+- Polling. A master node invites each station in turn. The master is a single
+  point of failure, and the polls add delay. Bluetooth uses polling.
+- Token passing. A special token frame travels from node to node in a ring.
+  Only the token holder may transmit. A lost token stalls the ring. Token ring
+  and FDDI use this method.
+
+*** Trap: "random access" does not mean random order forever
+
+Random access means there is no schedule before transmission. The protocol
+still has rules, and those rules are what the question wants.
+
+*** Trap: do not put CSMA/CD under CSMA as a child
+
+CSMA/CD and CSMA/CA are variants of CSMA, not sub-parts of it. Draw them as
+siblings on the third level of the tree, or as three separate leaves.
+
+** ALOHA and slotted ALOHA
+
+SUMMARY: ALOHA sends whenever a frame arrives and peaks at 18 percent efficiency, while slotted ALOHA sends only at slot starts and doubles that to 37 percent.
+KUROSE: 6.3.2 (slotted ALOHA and pure ALOHA)
+EXAM: not asked as a full question. It appears as a comparison line inside the multiple access answer.
+PRIORITY: core
+
+*** Pure ALOHA
+
+A node transmits the instant a frame arrives. There is no clock and no
+listening. If two frames overlap by even one bit, both are destroyed.
+
+A frame sent at $t_0$ is safe only if no other node starts in the window
+$[t_0-1, t_0+1]$. The 1 in that window is one frame transmission time.
+
+#+begin_example
+  time -->
+             t0-1            t0            t0+1
+               |              |              |
+        node i |              [===== i =====]|
+               |              |              |
+        node j |   [==== j =====]            |      overlaps the start
+               |              |              |
+        node k |              |   [==== k =====]    overlaps the end
+               |              |              |
+               |<--------- 2 frame times -------->|
+               |              |              |
+#+end_example
+
+Frame j overlaps the first bit of frame i, so frame i dies. Frame k overlaps
+the last bit, so frame i dies again. The window is twice the frame time.
+
+*** Slotted ALOHA
+
+Time is cut into slots of one frame time. Every node has the same clock. A node
+with a new frame waits for the next slot boundary and then sends.
+
+#+begin_example
+  slot        k-1          k           k+1
+          +-----------+-----------+-----------+
+  node i  |   other   |  frame i  |   other   |
+          +-----------+-----------+-----------+
+                      |<--------->|
+                      vulnerable window = 1 slot
+#+end_example
+
+Only a node that picks the same slot can collide. A node that starts one slot
+earlier is already finished, because a frame fits exactly in a slot.
+
+#+begin_example
+  pure ALOHA     vulnerable window = 2 frame times  ->  18 percent
+  slotted ALOHA  vulnerable window = 1 frame time   ->  37 percent
+#+end_example
+
+*** Why slotted is exactly double
+
+The vulnerable window halves. Halving the window halves the collision
+probability, so the success probability doubles. The algebra gives the same
+result.
+
+For $N$ nodes that each transmit in a slot with probability $p$, the chance
+that exactly one succeeds is $Np(1-p)^{N-1}$. The maximum over $p$ tends to
+$1/e$ as $N$ grows.
+
+$$P_{\text{success}} = Np(1-p)^{N-1}, \qquad \max = \frac{1}{e} \approx 0.37$$
+
+Pure ALOHA keeps a factor of two in the exponent, which yields
+$1/(2e) \approx 0.18$.
+
+*** The trade
+
+- Slotted ALOHA needs clock synchronisation across all nodes. Pure ALOHA needs
+  none.
+- Slotted ALOHA still wastes empty slots and collision slots.
+- Both are simple and fully decentralised.
+
+*** Trap: 18 percent is the best case, not the normal case
+
+Both figures assume many nodes with many frames always ready. With light load
+the real efficiency is higher. With heavy load it is far lower.
+
+** CSMA and the collision problem
+
+SUMMARY: CSMA makes a node listen before it transmits, but propagation delay lets two nodes both hear an idle channel and collide anyway.
+KUROSE: 6.3.2 (CSMA, Figure 6.12)
+EXAM: not asked alone. The collision window is the idea behind the CSMA/CD answer.
+PRIORITY: core
+
+*** The rule
+
+1. Sense the channel.
+2. If the channel is idle, transmit the whole frame.
+3. If the channel is busy, defer and sense again later.
+
+This is the "do not interrupt" rule of a polite conversation. Sensing costs
+nothing when the medium is short and wired.
+
+*** Why collisions still happen
+
+The signal takes time $t_{\text{prop}}$ to cross the link. A node at the far
+end has not yet heard a transmission that started a moment ago. It senses an
+idle channel and starts too. Both nodes are then transmitting, and the frames
+overlap somewhere in the middle.
+
+The vulnerability window is exactly one propagation delay. A node can start
+just before the first bit arrives and still see an idle channel.
+
+*** The worst case in space and time
+
+Node A sits at one end, node B at the other. A starts at $t = 0$. B senses
+idle at $t = t_{\text{prop}} - \epsilon$ and starts. The two signals meet near
+the middle.
+
+#+begin_example
+  ^distance  B
+d |           **
+  |           **           B senses an idle channel
+  |          *  *          and sends at t = tprop - e
+  |         *    *
+  |       **      **       the two fronts meet here
+  |      *          *      so a collision happens
+  |     *            *
+  |    *              *    the collision wave reaches
+0 | A *                *   A at t = 2*tprop - e
+  +---------------------------------------------------------------------
+     0        tprop        2*tprop        time
+#+end_example
+
+The vertical axis is distance along the cable. The horizontal axis is time.
+A sits at distance 0 and B sits at distance $d$. Each star line is the front
+of one transmission. The two fronts cross just below B, because B starts so
+late that A's frame has almost arrived.
+
+The same event as a two-node sequence. This form is easier to copy into an
+answer sheet.
+
+#+begin_example
+   A (left end)                          B (right end)
+        |                                     |
+  t=0   |---- first bit -------------------->|  arrives at tprop
+        |                                     |
+        |          propagation = tprop        |
+        |                                     |
+ tprop  |                                     |--- B senses idle
+   -e   |                                     |    and transmits
+        |<-------- collision signal ----------|
+        |                                     |
+ 2tprop |  A is still sending, so A sees      |
+        |  the collision at 2*tprop - e       |
+#+end_example
+
+*** What the collision costs
+
+Without collision detection the whole frame time is wasted. Both nodes send
+every bit of a doomed frame. The waste grows with the frame length and with
+the propagation delay.
+
+*** Trap: carrier sense is not collision detection
+
+Carrier sense listens before sending. Collision detection listens while
+sending. CSMA has the first and not the second. Write both names in the answer
+and the examiner sees that you know the difference.
+
+*** Trap: a longer cable makes collisions more likely, not less
+
+A longer link means a larger propagation delay, so the window in which a node
+wrongly senses idle is wider. Keep that direction straight.
+
+** CSMA/CD
+
+SUMMARY: CSMA/CD senses before sending, listens while sending, aborts on a collision, and retries after a random backoff.
+KUROSE: 6.3.2 (CSMA/CD) and 6.4.2 (Ethernet MAC)
+EXAM: CNE2 Part B asks "explain the medium access method CSMA/CD used in Ethernet in detail". CNE5 pairs it with the multiple access taxonomy.
+PRIORITY: core
+
+*** The algorithm, numbered
+
+1. The network layer hands a datagram to the adapter. The adapter builds the
+   frame.
+2. Sense the channel.
+3. If the channel is idle, start transmitting at once.
+4. If the channel is busy, wait until it becomes idle, then transmit.
+5. Keep listening to the channel while transmitting.
+6. If the whole frame goes out with no collision, the frame is done.
+7. If the adapter hears another signal, a collision is in progress. Stop the
+   frame at once.
+8. Send a jam signal of 32 bits, so every other adapter notices the collision.
+9. Enter binary exponential backoff and choose a random wait.
+10. After the wait, return to step 2 and try again.
+
+The jam signal matters. A short collision burst can be missed by a distant
+node. The 48-bit jam makes the collision long enough for every node to see it.
+
+*** Why the frame must be long enough
+
+The sender must still be transmitting when the collision signal returns.
+Otherwise it finishes the frame, believes it succeeded, and never retries.
+
+#+begin_example
+  t = 0          A starts the frame
+  t = tprop      the first bit reaches B
+  t = tprop - e  B may start, in the worst case
+  t = 2tprop - e the collision reaches A
+  so A must still be sending at t = 2*tprop
+  therefore  t_trans >= 2 * tprop
+             L / R  >= 2 * tprop
+             L      >= 2 * tprop * R
+#+end_example
+
+The round trip time $2 t_{\text{prop}}$ sets the minimum frame size. It does
+not depend on the data rate alone, because a faster link sends fewer bits in
+the same time.
+
+*** The standard Ethernet numbers
+
+#+begin_example
+  parameter                value            where it comes from
+  -----------------------  ---------------  ----------------------
+  minimum frame            64 bytes         L >= 2*tprop*R
+  slot time                512 bit times    = 64 bytes * 8
+  slot time at 10 Mbps     51.2 microseconds  512 / 10,000,000
+  maximum collision domain 2500 m           5 segments, 4 repeaters, 10BASE5
+  propagation speed        2 x 10^8 m/s     about 2/3 of light
+#+end_example
+
+Check the numbers. A 2500 m segment gives $t_{\text{prop}} = 12.5$ microseconds
+and $2 t_{\text{prop}} = 25$ microseconds. At 10 Mbps that is 250 bits. The
+standard chose 512 bit times to cover repeater delay and margin.
+
+*** Binary exponential backoff
+
+After the $m$-th collision in a row, the adapter picks an integer $K$ at random
+from a growing set.
+
+#+begin_example
+  K  in  {0, 1, 2, ..., 2^m - 1}
+  wait   = K * 512 bit times
+  m      = min(number of collisions, 10)
+  limit  = 16 attempts, then the frame is dropped and an error is reported
+#+end_example
+
+#+begin_example
+  collision 1  K in 0..1       wait 0, or 512 bit times
+  collision 2  K in 0..3       wait up to 1536 bit times
+  collision 3  K in 0..7       wait up to 3584 bit times
+  collision 10 K in 0..1023    wait up to 523,776 bit times
+  collision 16 frame discarded, upper layer may retry
+#+end_example
+
+The set grows only to $2^{10}$, so the maximum wait stops doubling after ten
+collisions. That cap stops a badly loaded LAN from freezing for seconds.
+
+*** The efficiency formula
+
+$$\text{efficiency} = \frac{1}{1 + 5\,\dfrac{t_{\text{prop}}}{t_{\text{trans}}}}$$
+
+The factor 5 comes from the analysis of the contention interval. When
+$t_{\text{prop}}$ is small compared with $t_{\text{trans}}$, the efficiency
+approaches 1.
+
+*** WORKED EXAMPLE (numbers changed on purpose)
+
+A LAN has a 2000 m cable, a signal speed of $2 \times 10^8$ m/s, and a rate of
+100 Mbps. Find the minimum frame size.
+
+#+begin_example
+  step 1  tprop = length / speed
+                = 2000 / (2 x 10^8)
+                = 10 microseconds
+  step 2  round trip = 2 * tprop = 20 microseconds
+  step 3  L = 2 * tprop * R
+            = 20 x 10^-6 s * 100 x 10^6 bit/s
+            = 2000 bits
+  step 4  convert to bytes: 2000 / 8 = 250 bytes
+  answer  minimum frame = 250 bytes = 2000 bits
+#+end_example
+
+Now find the efficiency of the same LAN when a frame takes 100 microseconds to
+transmit.
+
+#+begin_example
+  step 1  a = tprop / ttrans = 10 / 100 = 0.1
+  step 2  efficiency = 1 / (1 + 5 * 0.1)
+                    = 1 / 1.5
+                    = 0.667
+  answer  efficiency = 66.7 percent
+#+end_example
+
+The same link at 1 Gbps would need a 2500 byte minimum frame at that length.
+Ethernet avoided that by shortening the segment or by using carrier extension.
+
+*** Trap: the 64 byte minimum includes the header
+
+The 64 bytes count the whole frame from the destination address to the FCS. The
+preamble is outside that count. Payload alone is not the frame.
+
+*** Trap: backoff is measured in bit times, not seconds
+
+512 bit times is 51.2 microseconds only at 10 Mbps. At 100 Mbps the same 512
+bit times take 5.12 microseconds. Convert with the actual rate.
+
+** CSMA/CA and why wireless needs it
+
+SUMMARY: Wireless cannot detect collisions and suffers hidden terminals, so 802.11 avoids collisions with RTS and CTS and acknowledges every frame.
+KUROSE: 7.3.2 (802.11 MAC, CSMA/CA)
+EXAM: CNE2 Part A asks "what is the hidden terminal problem in Wi-Fi and how do you overcome it".
+PRIORITY: core
+
+*** Reason one: collision detection fails
+
+A radio cannot listen while it transmits well enough to spot a collision. The
+received signal from a distant node is far weaker than the node's own
+transmitted signal. The local signal drowns the incoming one.
+
+Wired Ethernet measures voltage on a wire and sees a collision at once. A radio
+sees a huge local signal and nothing else. So 802.11 detects collisions only by
+the absence of an ACK.
+
+*** Reason two: the hidden terminal problem
+
+Two nodes can both reach the access point and still not hear each other. Each
+one senses an idle channel while the other is transmitting.
+
+#+begin_example
+         A                    B (AP)               C
+         o--------------------o--------------------o
+         |                    |                    |
+         |<- range of A ----->|<- range of C ----->|
+         |                    |                    |
+   A cannot hear C        the AP relays          C cannot hear A
+#+end_example
+
+#+begin_example
+  time -->
+  A   |==== frame to B ====|
+  C   |           |==== frame to B ====|
+  B   |           XXXXXXXXXXX  both frames collide
+#+end_example
+
+A and C are hidden from each other. Carrier sense tells each of them that the
+channel is free, yet both are wrong. The access point hears noise and loses
+both frames.
+
+*** How RTS and CTS solve it
+
+A station reserves the channel with a short control exchange before it sends
+data. The reservation is heard by the hidden node, which then keeps quiet.
+
+#+begin_example
+   A                B (AP)                 C
+   |                  |                    |
+   |------ RTS ------->                    |
+   |                  |                    |
+   <----------------- CTS ----------------->
+   |                  |                    |
+   |====== DATA ======>                    |
+   |                  |                    |
+   <------ ACK -------|                    |
+   |                  |                    |
+#+end_example
+
+B sends one CTS frame. A and C both hear it, because radio reaches every
+station in range. The RTS names the total time needed. The CTS repeats that
+time and reaches the hidden node. C does not hear the RTS but does hear the
+CTS, so C defers for the reserved period. The hidden terminal problem
+disappears.
+
+The RTS and CTS frames are short. A collision between two RTS frames wastes
+little time compared with a full data frame.
+
+*** The ACK after every frame
+
+The receiver sends an ACK after it checks the frame. If the sender sees no ACK,
+it assumes a collision or a bit error and retransmits. This link-layer ARQ
+covers the high bit error rate of radio.
+
+#+begin_example
+  SIFS          short interframe space, the gap before CTS and before ACK
+  DIFS          distributed interframe space, a longer gap before data
+  backoff       random count of idle slots, counted down while idle
+#+end_example
+
+- SIFS is the shortest gap. Only the frame that must answer at once uses it.
+- DIFS is longer than SIFS. A station waits one DIFS before it may contend.
+- The backoff counter is chosen at random from the contention window and
+  counts down only while the channel stays idle.
+
+*** Trap: CSMA/CA stands for collision avoidance, not detection
+
+The C in CSMA/CA is avoidance. The station tries to prevent the collision,
+because it cannot see one. Never write "CA detects the collision".
+
+*** Trap: RTS and CTS are optional
+
+A small frame can skip RTS and CTS, because the reservation would cost more
+than the frame. The ACK is not optional.
+** Ethernet
+
+SUMMARY: Ethernet is the dominant wired LAN standard, and its frame carries 6-byte MAC addresses, a type field, a payload, and a CRC-32 trailer.
+KUROSE: 6.4.2 (Ethernet, frame format, CSMA/CD)
+EXAM: CNE1 Part A asks "draw the Ethernet frame structure and explain all the fields in detail".
+PRIORITY: core
+
+*** The standard and the rate history
+
+Ethernet is IEEE 802.3. It started at 10 Mbps and moved to 100 Mbps, 1 Gbps,
+10 Gbps, 40 Gbps, and 100 Gbps. The frame format has stayed the same across all
+of those rates, which is why the standard survived.
+
+*** The frame format
+
+#+begin_example
+ bytes  |  7   |  1   |  6   |  6   |  2   | 46 to 1500 |  4   |
+        +------+------+------+------+------+------------+------+
+        | PRE  | SFD  | DST  | SRC  | TYPE |  PAYLOAD   | FCS  |
+        +------+------+------+------+------+------------+------+
+        | 0xAA | 0xAB | MAC  | MAC  | 0800 |    data    |CRC-32|
+        +------+------+------+------+------+------------+------+
+#+end_example
+
+A bit view of the first two fields. Each cell is one byte, so each cell holds
+8 bits. The preamble is 56 alternating bits.
+
+#+begin_example
+ bit   1       9       17      25      33      41      49      57
+      +------+------+------+------+------+------+------+--------+
+      |101010|101010|101010|101010|101010|101010|101010|10101011|
+      +------+------+------+------+------+------+------+--------+
+       preamble, 7 bytes of 10101010                    SFD, 1 byte
+#+end_example
+
+Field by field.
+
+1. Preamble, 7 bytes. It is 56 bits of alternating 1 and 0. The receiver uses
+   it to lock its clock onto the sender's bit rate.
+2. Start frame delimiter, 1 byte, value 10101011. The last two bits break the
+   pattern and mark the first bit of the frame.
+3. Destination MAC address, 6 bytes. The adapter compares it with its own
+   address, the broadcast address, or a joined multicast group.
+4. Source MAC address, 6 bytes. The receiver keeps it for replies and the
+   switch learns from it.
+5. Type, 2 bytes. It names the network-layer protocol inside the payload. The
+   value 0x0800 means IPv4.
+6. Payload, 46 to 1500 bytes. It holds one IP datagram. The maximum is the
+   MTU of 1500 bytes. A short datagram is padded to 46 bytes.
+7. FCS, 4 bytes. It is a CRC-32 over the frame, and the receiver drops the
+   frame when the check fails.
+
+*** Size limits
+
+#+begin_example
+  preamble + SFD            8 bytes   not counted in the frame size
+  smallest frame           64 bytes   header 18 + payload 46
+  largest frame          1518 bytes   18 + 1500 payload
+  minimum payload          46 bytes   padding fills the gap
+  MTU                    1500 bytes   largest IP datagram
+#+end_example
+
+The 64-byte minimum comes straight from CSMA/CD. A shorter frame could finish
+before the collision signal returns, so the sender would miss the collision.
+
+*** Connectionless and unreliable
+
+Ethernet sends the frame and keeps no state about the receiver. There is no
+handshake before the frame and no ACK after it. If the FCS fails, the receiver
+drops the frame in silence. Recovery is left to TCP at the transport layer.
+
+*** Type field versus length field
+
+The 2-byte field has two meanings, told apart by the value.
+
+- A value of 1536 (0x0600) or more is a type. It names the upper protocol.
+- A value of 1500 or less is a length. It gives the payload size in bytes.
+- The range between 1501 and 1535 is undefined and never used.
+
+The type form won in practice, because a receiver needs to know the protocol
+more than it needs the length.
+
+*** Trap: the preamble does not count toward 64 bytes
+
+The preamble and SFD are 8 bytes of physical-layer signalling. They are not
+part of the frame that the FCS protects. The frame is 64 bytes from the
+destination address to the end of the FCS. Many students add 8 and write 72.
+
+*** Trap: the minimum payload is 46, not 64
+
+The 64-byte minimum applies to the whole frame. After 18 bytes of header and
+trailer, the payload floor is 46 bytes. A 20-byte TCP ACK therefore travels in
+a padded frame.
+
+*** Trap: Ethernet does not retransmit
+
+A dropped frame is gone. Ethernet has no timers and no ACK. Write "unreliable"
+and let TCP do the repair.
+
+** MAC addresses
+
+SUMMARY: A MAC address is a flat 48-bit identifier burned into the adapter, and it names an interface on one link rather than a host anywhere in the world.
+KUROSE: 6.4.1 (link layer addressing)
+EXAM: not asked alone. It is a required part of the Ethernet and ARP answers.
+PRIORITY: core
+
+*** The shape
+
+#+begin_example
+ 48 bits, written as 6 hex pairs
+ +---------------------------+---------------------------+
+ |  OUI, 24 bits             |  device part, 24 bits     |
+ |  assigned to the vendor   |  assigned by the vendor   |
+ +---------------------------+---------------------------+
+ example   00:1A:2B : 3C:4D:5E
+           \______/   \_____/
+            vendor     device
+#+end_example
+
+The first 24 bits form the organizationally unique identifier. The IEEE gives
+that block to one manufacturer. The manufacturer then assigns the last 24 bits
+so that no two of its adapters share an address.
+
+*** Broadcast and multicast
+
+- The broadcast address is =FF:FF:FF:FF:FF:FF=. Every adapter on the link
+  accepts a frame sent to it. ARP requests use this address.
+- A multicast address has the low bit of the first byte set. Only adapters
+  that joined that group accept the frame.
+
+*** Flat versus hierarchical
+
+A MAC address is flat. It carries no location and no subnet information. An IP
+address is hierarchical, because the prefix names the network and the suffix
+names the host.
+
+A flat address is good for a LAN. The adapter can filter frames without any
+configuration. A flat address is useless for routing, because a router cannot
+summarise a direction from it.
+
+*** Why MAC addresses are not routable
+
+A router forwards by looking at the destination network prefix. A MAC address
+has no prefix, so a router cannot say where that address lives. Addresses also
+change at every hop, because each link uses its own frames. Only the IP address
+stays the same from source to destination.
+
+*** Trap: a MAC address does not identify a person or a host
+
+One host can hold several adapters, each with its own MAC address. A virtual
+machine gets more. The MAC address identifies an interface on a link.
+
+** ARP
+
+SUMMARY: ARP finds the MAC address that belongs to an IP address on the local link, and it does so with a broadcast question and a unicast answer.
+KUROSE: 6.4.1 (ARP, Figure 6.10)
+EXAM: CNE2 Part C asks "explain ARP in detail". CNE5 Part B asks "why is ARP needed and what are the steps". CNE1 asks how a host reaches an unknown host on the same LAN.
+PRIORITY: core
+
+*** The problem
+
+IP delivers a datagram to a host. The frame that carries it needs a MAC address
+for the next hop on the local link. IP knows the next-hop IP address but not
+the MAC address. ARP bridges that gap.
+
+*** The cache
+
+Every node keeps an ARP table in memory. Each entry holds an IP address, a MAC
+address, and a time to live of about 20 minutes.
+
+#+begin_example
+  IP address       MAC address          TTL
+  ---------------  -------------------  --------
+  192.168.1.1      00:1A:2B:00:00:01    18 min
+  192.168.1.20     00:1A:2B:00:00:0B    19 min
+  192.168.1.35     00:1A:2B:00:00:23    20 min
+#+end_example
+
+The cache avoids a broadcast for every frame. The TTL handles a changed adapter
+and a reassigned address.
+
+*** The four steps
+
+1. The sender looks up the next-hop IP address in its ARP table.
+2. On a hit, it builds the frame with that MAC address and sends it.
+3. On a miss, it broadcasts an ARP request with destination MAC
+   FF:FF:FF:FF:FF:FF. The request asks who owns the target IP address.
+4. The target sees its own IP address in the request. It replies by unicast
+   with its MAC address.
+5. The sender stores the pair in its cache and sends the waiting frame.
+
+The target also caches the sender's pair from the request. That saves a second
+exchange on the reply path.
+
+*** The exchange on one link
+
+#+begin_example
+   Host A  192.168.1.10/24            Host B  192.168.1.20/24
+   MAC 00:1A:2B:00:00:0A              MAC 00:1A:2B:00:00:0B
+        |                                    |
+        |  ARP request, broadcast            |
+        |  DST MAC = FF:FF:FF:FF:FF:FF       |
+        |  SRC MAC = 00:1A:2B:00:00:0A       |
+        |  "who has 192.168.1.20?"           |
+        |----------------------------------->|
+        |                                    |
+        |        (every other host drops it) |
+        |                                    |
+        |  ARP reply, unicast                |
+        |  DST MAC = 00:1A:2B:00:00:0A       |
+        |  SRC MAC = 00:1A:2B:00:00:0B       |
+        |  "192.168.1.20 is at ...:0B"       |
+        |<-----------------------------------|
+        |                                    |
+        |  data frame, unicast               |
+        |  DST MAC = 00:1A:2B:00:00:0B       |
+        |  IP DST  = 192.168.1.20            |
+        |===================================>|
+#+end_example
+
+The ARP message sits inside an Ethernet frame with its own type value of
+0x0806. A host that is not the target silently discards the request.
+
+*** The same subnet and a different subnet
+
+This is the part that most answers get wrong. ARP only ever resolves an address
+on the local link.
+
+#+begin_example
+  CASE 1  destination is on the same subnet
+          A ARPs for 192.168.1.20 and gets B's MAC
+          frame goes straight to B
+
+  CASE 2  destination is on another subnet
+          A 192.168.1.10 wants 8.8.8.8
+          A ARPs for the DEFAULT GATEWAY 192.168.1.1
+          A never ARPs for 8.8.8.8
+          frame goes to the router, IP destination stays 8.8.8.8
+#+end_example
+
+#+begin_example
+   Host A              switch              router R         internet
+  192.168.1.10                           192.168.1.1        8.8.8.8
+       |                  |                   |                 |
+       |-- ARP who has 192.168.1.1? --------->|                 |
+       |<- .1 is at BB:BB:BB:BB:BB:BB ------->|                 |
+       |                  |                   |                 |
+       |== frame DST=BB, IP DST=8.8.8.8 =====>|                 |
+       |                  |                   |== new frame ===>|
+#+end_example
+
+The rule is one line. ARP resolves the next hop, never the final destination.
+
+*** Two neighbours of ARP
+
+- Gratuitous ARP. A host broadcasts an ARP reply about its own address, so
+  every neighbour refreshes a stale cache entry.
+- Proxy ARP. A router answers an ARP request for a host on another subnet, so
+  the sender believes the host is local.
+- ARP spoofing. An attacker sends a false ARP reply and steals another host's
+  traffic, because ARP has no authentication.
+
+*** The exam-ready answer to "why is ARP needed"
+
+A frame must carry a destination MAC address, but the application only knows
+an IP address. ARP maps that IP address to the MAC address of the next hop on
+the local link. Without ARP the datagram cannot be placed inside a frame.
+
+*** Trap: ARP asks about the gateway, not the web server
+
+The question "how does A reach 8.8.8.8" has a two-part answer. A ARPs for the
+default gateway, and the gateway repeats ARP on the next link. Many answers
+wrongly show A broadcasting for 8.8.8.8.
+
+*** Trap: the ARP request is broadcast, the reply is unicast
+
+The request must be broadcast because the sender does not know who owns the
+address. The reply is unicast because the target learned the sender's MAC
+address from the request.
+
+*** Trap: ARP is not a network-layer protocol
+
+ARP sits at the boundary. It carries a link-layer frame and resolves a
+network-layer address. Kurose places it in the link layer, and so should you.
+
+** Switches, hubs, and routers
+
+SUMMARY: A hub repeats bits to every port, a switch forwards frames by MAC address inside one broadcast domain, and a router forwards packets by IP address between networks.
+KUROSE: 6.4.3 (link layer switches) and 6.4.4 (VLANs)
+EXAM: CNE2 Part A asks for six network devices. CNE2 asks for a LAN design for ten machines.
+PRIORITY: core
+
+*** The comparison
+
+| Device | Layer | Collision domains | Broadcast domains | Forwarding decision | Typical use |
+|--------|-------|-------------------|-------------------|---------------------|-------------|
+| Hub | 1 | one shared | one | none, repeats every bit | legacy small LAN |
+| Switch | 2 | one per port | one | destination MAC address | office LAN |
+| Router | 3 | one per port | one per port | destination IP prefix | between networks |
+
+A hub is a repeater with several ports. Every port shares one collision
+domain, so only one station may transmit at a time. A switch gives each port
+its own collision domain, so ports can transmit at the same time. A router
+breaks both the collision domain and the broadcast domain.
+
+*** The self-learning switch
+
+A switch builds its table by itself. No configuration is needed.
+
+#+begin_example
+  MAC address         port    age
+  ------------------  ------  -----
+  00:1A:2B:00:00:0A     1     12 s
+  00:1A:2B:00:00:0B     3     40 s
+  00:1A:2B:00:00:23     3     08 s
+#+end_example
+
+1. Learning. The switch reads the source MAC address of every arriving frame.
+   It records that address against the port that the frame came from.
+2. Forwarding a known unicast. The destination is in the table, so the switch
+   sends the frame out of exactly one port.
+3. Flooding an unknown unicast. The destination is not in the table, so the
+   switch copies the frame to every port except the one it arrived on.
+4. Filtering. The destination port equals the source port, so the switch drops
+   the frame. The two hosts already share that segment.
+5. Ageing. An entry that stays unused for a few minutes is deleted, so a moved
+   host is relearned.
+
+Broadcast and multicast frames are always flooded. That is why one switch is
+one broadcast domain.
+
+*** Store and forward versus cut through
+
+- Store and forward. The switch buffers the whole frame and checks the FCS
+  before it forwards. It drops corrupt frames and supports links of different
+  speeds. The cost is one full frame of latency.
+- Cut through. The switch reads the destination address, 6 bytes in, and
+  starts forwarding at once. Latency is a few microseconds. It forwards
+  corrupt frames because it never checks the FCS.
+
+*** Why a switch removes collisions but keeps broadcasts
+
+Each port is its own collision domain, and the switch buffers frames. Two ports
+can therefore send at the same moment without a collision, and CSMA/CD is not
+needed. A broadcast frame still leaves every port, because the switch has no
+reason to block it. All ports stay in one broadcast domain.
+
+Virtual LANs fix the broadcast problem. They split one physical switch into
+several logical LANs, each with its own broadcast domain.
+
+*** Trap: a switch does not separate broadcast domains
+
+Only a router or a VLAN boundary does that. A switch with twenty ports still
+has one broadcast domain, and one ARP broadcast reaches all twenty ports.
+
+*** Trap: a hub is not a layer 2 device
+
+A hub is a physical-layer repeater. It has no MAC table and no addresses. Put
+it in layer 1 in the table and the examiner sees the difference.
+
+** VLAN and trunking
+
+SUMMARY: A VLAN groups switch ports into separate logical LANs, and a trunk carries many VLANs over one link with an 802.1Q tag.
+KUROSE: 6.4.4 (VLANs, Figure 6.25)
+EXAM: CNE5 Part A asks "explain the concept of VLAN and the advantage of having a trunking protocol".
+PRIORITY: core
+
+*** The problem
+
+One physical switch is one broadcast domain. Every ARP request, every DHCP
+discovery, and every broadcast frame reaches every port. A group that needs
+isolation must buy a second switch, which costs money and ports.
+
+*** What a VLAN does
+
+A VLAN groups a set of ports into a logical LAN at layer 2. Ports in different
+VLANs behave as if they sat on different physical switches. A frame from VLAN
+10 never reaches a port in VLAN 20.
+
+#+begin_example
+  one 8-port switch, three VLANs
+  +--------------------------------------------------+
+  |  port 1  port 2 | port 3  port 4 | port 5  port 6|
+  |  \_____________/  \_____________/  \___________/ |
+  |     VLAN 10          VLAN 20          VLAN 30    |
+  |     faculty          students         guests     |
+  +--------------------------------------------------+
+                     port 7 and 8 = trunk to next switch
+#+end_example
+
+*** Access ports and trunk ports
+
+- An access port belongs to exactly one VLAN. It connects an ordinary host and
+  carries untagged frames.
+- A trunk port carries frames for many VLANs. It connects two switches or a
+  switch and a router.
+- A voice VLAN can share a port with a data VLAN, so one wall socket serves a
+  phone and a PC.
+
+*** The 802.1Q tag
+
+The switch inserts a 4-byte tag after the source MAC address. The tag holds the
+VLAN identifier.
+
+#+begin_example
+ bytes  |  6   |  6   |  4   |  2   | 46-1500 |  4   |
+        +------+------+------+------+---------+------+
+        | DST  | SRC  | TAG  | TYPE | PAYLOAD | FCS  |
+        +------+------+------+------+---------+------+
+        | MAC  | MAC  |802.1Q| 0800 |  data   |CRC-32|
+        +------+------+------+------+---------+------+
+                       ^ inserted here, after the source MAC
+#+end_example
+
+#+begin_example
+   2 bytes TPID              2 bytes TCI
+ +------------------+--------+------+--------------------+
+ |     0x8100       | Pri    | CFI  |      VLAN ID       |
+ |  "tag follows"   | 3 bits | 1 b  |      12 bits       |
+ +------------------+--------+------+--------------------+
+                      ^          ^            ^
+                      priority   format       up to 4096 VLANs
+#+end_example
+
+- TPID is 0x8100 and marks the frame as tagged.
+- Priority is 3 bits for quality of service.
+- CFI is 1 bit and marks a canonical MAC format.
+- VLAN ID is 12 bits, so the range is 0 to 4095. VLAN 1 is the default and
+  VLANs 1002 to 1005 are reserved.
+
+The tag adds 4 bytes, so a tagged frame can reach 1522 bytes.
+
+*** Why a trunk is needed
+
+Two switches must carry the same VLANs between them. Without a trunk, each
+VLAN needs its own cable between the switches. With a trunk, one link carries
+every VLAN and the tag says which one a frame belongs to.
+
+#+begin_example
+   switch 1                              switch 2
+  +----------+                        +----------+
+  | VLAN 10  |=== tagged frames =====>| VLAN 10  |
+  | VLAN 20  |     one link           | VLAN 20  |
+  | VLAN 30  |                        | VLAN 30  |
+  +----------+                        +----------+
+#+end_example
+
+*** Inter-VLAN routing
+
+A frame cannot cross from VLAN 10 to VLAN 20 on its own, because the two are
+separate broadcast domains. A router or a layer 3 switch must forward the
+packet. The usual design is one router port per VLAN, or a single trunk to the
+router with one sub-interface per VLAN.
+
+*** Advantages of VLANs
+
+- Broadcast control. Each VLAN is its own broadcast domain, so broadcasts stay
+  small.
+- Security. Sensitive hosts sit in a VLAN that other groups cannot reach.
+- Flexibility. A port moves to another VLAN with a command, not a cable.
+- Cost. One switch serves several logical LANs, so fewer switches are needed.
+- Easier moves. A user who changes office keeps the same VLAN membership.
+- Performance. Smaller broadcast domains mean less wasted bandwidth.
+
+*** The advantage of a trunking protocol
+
+A trunk carries every VLAN over one link, so the cabling stays small. The tag
+identifies the VLAN of each frame, so the receiving switch keeps the separation.
+One link therefore does the work of many, and the two switches agree on which
+VLAN a frame belongs to.
+
+VTP is the VLAN Trunking Protocol. It is a Cisco protocol that advertises the
+VLAN database to other switches, so an administrator creates a VLAN once.
+VTP has a well-known weakness. A switch with a higher revision number can
+overwrite the VLAN database of the whole domain.
+
+*** Trap: a VLAN is not a subnet by definition
+
+A common design maps one VLAN to one IP subnet, but the two are independent. A
+VLAN is a layer 2 broadcast domain. A subnet is a layer 3 address range. Say
+"usually one to one" and not "always".
+
+*** Trap: the tag goes after the source address
+
+The 802.1Q tag sits between the source MAC and the type field. It does not go
+at the front of the frame. Place it at the front and the layout mark is lost.
+
+*** Trap: a trunk does not route
+
+A trunk extends a VLAN to another switch. It does not join two VLANs. Moving
+between VLANs always needs a layer 3 device.
+
+** 802.11 wireless LAN
+
+SUMMARY: An 802.11 network is a set of stations around an access point, and its frame carries up to four address fields because the frame crosses the wireless link and the distribution system.
+KUROSE: 7.3 (802.11 architecture, MAC, and frame format)
+EXAM: CNE2 Part A asks "draw the frame format of 802.11" and asks about the hidden terminal problem. Both are short-mark questions.
+PRIORITY: core
+
+*** The architecture
+
+#+begin_example
+              +---------------------------------+
+              |       distribution system       |
+              |         (the wired LAN)         |
+              +---------+---------------+------+
+                        |               |
+                  +-----------+   +-----------+
+                  |    AP 1   |   |    AP 2   |
+                  +-----------+   +-----------+
+                        |               |
+                 +-------------+ +-------------+
+                 |    BSS 1    | |    BSS 2    |
+                 |    o    o   | |    o    o   |
+                 |        o    | |        o    |
+                 +-------------+ +-------------+
+                   SSID lab        SSID lab
+#+end_example
+
+- Station. A device with a wireless adapter. It is the client.
+- Access point. A station that bridges the wireless link to the wired LAN.
+- Basic service set. One access point plus the stations that associate with
+  it. It is the wireless cell.
+- BSSID. The MAC address of the access point. It names one cell.
+- SSID. A human-readable network name, up to 32 bytes. Several access points
+  can share one SSID.
+- Distribution system. The wired network that joins the access points.
+- Ad hoc network. Stations talk directly with no access point. There is no
+  distribution system.
+
+*** Scanning
+
+A station must find a network before it can join.
+
+- Passive scanning. The station listens on each channel for a beacon frame.
+  Access points send a beacon about ten times per second.
+- Active scanning. The station broadcasts a probe request on each channel. Any
+  access point in range answers with a probe response.
+
+After the scan the station picks a network, authenticates, and associates. It
+then usually runs DHCP to get an IP address.
+
+*** The frame format
+
+#+begin_example
+bytes |  2   |  2   |  6   |  6   |  6   |  2   |  6   |  0-2312 |  4   |
+      +------+------+------+------+------+------+------+---------+------+
+      |  FC  | DUR  |  A1  |  A2  |  A3  | SEQ  |  A4  | PAYLOAD | FCS  |
+      +------+------+------+------+------+------+------+---------+------+
+      |      |      | MAC  | MAC  | MAC  |      | MAC  |   data  |CRC-32|
+      +------+------+------+------+------+------+------+---------+------+
+       24 byte header, plus 6 bytes when A4 is present
+#+end_example
+
+1. Frame control, 2 bytes. It holds the protocol version, the type, the
+   subtype, and the To DS and From DS flags that decide the address meaning.
+2. Duration, 2 bytes. It reserves the channel for the exchange.
+3. Address 1, 6 bytes. It is always the receiver of this wireless hop.
+4. Address 2, 6 bytes. It is always the transmitter of this wireless hop.
+5. Address 3, 6 bytes. It holds the address of the other end, which is the
+   router or the destination host.
+6. Sequence control, 2 bytes. It numbers frames and detects duplicates.
+7. Address 4, 6 bytes. It appears only when a frame travels from one access
+   point to another over the distribution system.
+8. Payload, 0 to 2312 bytes. It holds the IP datagram.
+9. FCS, 4 bytes. It is a CRC-32 over the frame.
+
+*** The four address fields, case by case
+
+| Case | A1 receiver | A2 transmitter | A3 | A4 |
+|------|-------------|----------------|----|----|
+| Host to AP | MAC of the AP | MAC of the host | MAC of the router | absent |
+| AP to host | MAC of the host | MAC of the AP | MAC of the router | absent |
+| AP to AP over the DS | MAC of the next AP | MAC of this AP | MAC of the router | MAC of the original host |
+
+The rule that saves the answer: A1 is always the wireless receiver and A2 is
+always the wireless transmitter. A3 carries the address that the wireless hop
+cannot see. A4 is needed only when the frame crosses two wireless hops.
+
+#+begin_example
+  host ---- wireless ----> AP ---- wired ----> router
+  A2 = host                A3 = router
+  A1 = AP
+
+  the wired link needs a frame with DST = router, SRC = AP
+  A3 carries the router address across the wireless hop
+#+end_example
+
+*** Trap: the common case has three addresses
+
+Most frames are host to AP or AP to host. Those use A1, A2, and A3 and leave A4
+empty. Draw A4 as a dashed box and label it "AP to AP only". A frame with four
+addresses drawn in every case looks wrong.
+
+*** Trap: the SSID and the BSSID are different things
+
+The SSID is a name that people read. The BSSID is the MAC address of one access
+point. Two access points can share one SSID and still have different BSSIDs.
+
+** Network topologies for wireless and wired
+
+SUMMARY: Bus, star, ring, and mesh differ in cost, fault tolerance, and ease of growth, and wireless adds the infrastructure and ad hoc forms.
+KUROSE: 6.4 and 7.3 (LAN topology background)
+EXAM: CNE2 Part A asks "what are the network topologies in wireless communication" for 3 marks.
+PRIORITY: core
+
+*** The wired shapes
+
+#+begin_example
+   BUS                 STAR                RING
+  --+--+--+--         o   o   o          +--o--+
+    |  |  |            \  |  /           |     |
+    o  o  o             \ | /            o     o
+                   o----- HUB -----o      |     |
+                          |              +--o--+
+                          o
+#+end_example
+
+| Topology | Shape | One advantage | One disadvantage |
+|----------|-------|---------------|------------------|
+| Bus | one shared cable | cheapest cabling | one break kills the LAN |
+| Star | every node to a hub or switch | easy fault isolation | the centre is a single point of failure |
+| Ring | nodes in a closed loop | predictable access | one break stops the ring |
+| Mesh | every node linked to many | high redundancy | high cabling cost |
+| Hybrid | star plus bus or ring | scales by area | complex to manage |
+
+*** The wireless shapes
+
+- Infrastructure mode. Every station talks through an access point. The access
+  point joins the wired LAN. This is the normal Wi-Fi office or home network.
+- Ad hoc mode. Stations talk directly with no access point. The set is called
+  an independent basic service set. It suits a quick meeting or a rescue site.
+- Mesh wireless. Access points relay for each other, so coverage grows without
+  a cable to every point.
+
+*** Trap: a star topology is not the same as a physical bus
+
+A star has one central device and one cable per node. A bus shares one cable.
+The logical view of a modern switched LAN is a star even when the cabling
+follows the building.
+
+** Network devices inventory
+
+SUMMARY: The standard device list runs from the repeater at layer 1 to the gateway at layer 7, and each device forwards a different unit.
+KUROSE: 6.4 (interconnecting devices)
+EXAM: CNE2 Part A asks "list any six network devices found in computer networks" for 3 marks.
+PRIORITY: core
+
+*** Nine devices in one line each
+
+1. Repeater. It regenerates a weak signal at layer 1 and extends the cable
+   length. It forwards every bit.
+2. Hub. It is a multi-port repeater. It copies every incoming bit to all other
+   ports and shares one collision domain.
+3. Bridge. It joins two LAN segments at layer 2 and forwards by MAC address. A
+   switch is a multi-port bridge.
+4. Switch. It forwards frames by destination MAC address and gives every port
+   its own collision domain.
+5. Router. It forwards packets by destination IP prefix and joins different
+   networks.
+6. Gateway. It connects two networks that use different protocols and can
+   translate all the way up to the application layer.
+7. Access point. It bridges a wireless LAN to a wired LAN at layer 2.
+8. Firewall. It filters traffic by address, port, and state, and it enforces a
+   security policy.
+9. Modem. It converts digital data to a signal that suits the access line and
+   back again.
+
+Any six of these answer the question. Pick one line each and stop.
+
+*** Trap: a modem is not a router
+
+A modem changes the signal form. A router chooses a path. A home box often
+holds both plus a switch and an access point, which is why the words get mixed.
+
+** Drills
+
+SUMMARY: Five drills cover the two calculation topics and the two diagram topics that the papers repeat.
+KUROSE: 6.2, 6.3, 6.4, and 7.3
+EXAM: these drill shapes match CNE1, CNE2, and CNE5.
+PRIORITY: core
+
+*** Drill 1: two-dimensional parity with two errors
+
+Data grid is 4 rows by 4 columns. Use even parity.
+
+#+begin_example
+    1 1 0 0
+    0 1 1 1
+    1 0 1 0
+    0 0 1 1
+#+end_example
+
+(a) Build the full grid with row parity, column parity, and the corner bit.
+(b) The receiver gets the grid below. Find the failing rows and columns, list
+every candidate cell, and say whether the receiver can correct the frame.
+
+#+begin_example
+    1 1 0 0  | 0
+    0 1 0 1  | 1
+    1 0 1 0  | 0
+    1 0 1 1  | 0
+    ---------+--
+    0 0 1 0  | 1
+#+end_example
+
+*** Drill 2: CRC division
+
+Data $D = 10110110$. Generator $G = 1101$.
+
+(a) State $r$, the number of check bits.
+(b) Divide and find $R$.
+(c) Write the transmitted frame.
+(d) State the remainder that the receiver must see.
+
+*** Drill 3: minimum frame size
+
+A LAN runs at 1 Gbps over a 500 m cable. The signal speed is $2 \times 10^8$
+m/s.
+
+(a) Find $t_{\text{prop}}$.
+(b) Find the minimum frame size in bits and in bytes.
+(c) Explain in one sentence why a shorter frame would break CSMA/CD.
+
+*** Drill 4: ARP with an off-subnet destination
+
+Host A is 192.168.1.10/24 with MAC =AA:AA:AA:AA:AA:AA=. The default gateway is
+192.168.1.1 with MAC =BB:BB:BB:BB:BB:BB=. Host A wants to send a datagram to
+8.8.8.8.
+
+(a) Which IP address does A put in the ARP request?
+(b) What are the destination MAC and the source MAC of that request?
+(c) What are the destination MAC and the source MAC of the data frame?
+(d) What is the destination IP address of the data frame?
+
+*** Drill 5: 802.11 address fields
+
+A laptop sends a frame to a web server on the wired LAN. The frame goes through
+one access point and then a router. Name the value in A1, A2, A3, and A4.
+
+** Drill answers
+
+SUMMARY: These are the worked answers to the five drills, with the reasoning that earns the method marks.
+KUROSE: 6.2, 6.3, 6.4, and 7.3
+EXAM: use these as templates for the CNE1 parity question and the CNE5 ARP question.
+PRIORITY: core
+
+*** Answer 1
+
+Row parities from the data.
+
+#+begin_example
+  row 1: 1 1 0 0  -> 2 ones -> 0
+  row 2: 0 1 1 1  -> 3 ones -> 1
+  row 3: 1 0 1 0  -> 2 ones -> 0
+  row 4: 0 0 1 1  -> 2 ones -> 0
+  col 1: 1 0 1 0  -> 2 ones -> 0
+  col 2: 1 1 0 0  -> 2 ones -> 0
+  col 3: 0 1 1 1  -> 3 ones -> 1
+  col 4: 0 1 0 1  -> 2 ones -> 0
+  corner: parity of row parities 0 1 0 0 -> 1
+  corner: parity of col parities 0 0 1 0 -> 1  (agree)
+#+end_example
+
+#+begin_example
+        c1  c2  c3  c4 | rp
+      +---+---+---+---+---+
+  r1  | 1 | 1 | 0 | 0 | 0 |
+      +---+---+---+---+---+
+  r2  | 0 | 1 | 1 | 1 | 1 |
+      +---+---+---+---+---+
+  r3  | 1 | 0 | 1 | 0 | 0 |
+      +---+---+---+---+---+
+  r4  | 0 | 0 | 1 | 1 | 0 |
+      +---+---+---+---+---+
+  cp  | 0 | 0 | 1 | 0 | 1 |
+      +---+---+---+---+---+
+#+end_example
+
+(b) Compare the received grid with the sent grid.
+
+#+begin_example
+  row 2 received: 0 1 0 1 -> 2 ones -> parity 0, got 1  FAIL
+  row 4 received: 1 0 1 1 -> 3 ones -> parity 1, got 0  FAIL
+  col 1 received: 1 0 1 1 -> 3 ones -> parity 1, got 0  FAIL
+  col 3 received: 0 1 0 1 -> 2 ones -> parity 0, got 1  FAIL
+  failing rows = {2, 4}, failing cols = {1, 3}
+  candidates = (2,1) (2,3) (4,1) (4,3)
+  the real errors are (2,3) and (4,1)
+  two errors cannot be placed -> detect only, then retransmit
+#+end_example
+
+The frame is detected and not corrected. Two-dimensional parity corrects only
+one bit.
+
+*** Answer 2
+
+#+begin_example
+  (a) G = 1101 has 4 bits, so r = 3. Check bits = 3.
+  (b) D * 2^3 = 10110110 000 = 10110110000
+#+end_example
+
+#+begin_example
+  D*2^3  1 0 1 1 0 1 1 0 0 0 0
+  G      1 1 0 1
+         -------
+           1 1 0 0
+           1 1 0 1
+           -------
+                 1 1 1 0
+                 1 1 0 1
+                 -------
+                     1 1 0 0
+                     1 1 0 1
+                     -------
+                         0 1 0   <- R
+#+end_example
+
+#+begin_example
+  (b) R = 010
+  (c) transmitted frame = 10110110 010
+  (d) the receiver divides by 1101 and must see remainder 000
+#+end_example
+
+Check the answer. Dividing 10110110010 by 1101 gives a zero remainder.
+
+*** Answer 3
+
+#+begin_example
+  (a) tprop = 500 / (2 x 10^8) = 2.5 microseconds
+  (b) 2 * tprop = 5 microseconds
+      L = 5 x 10^-6 * 1 x 10^9 = 5000 bits
+      L = 5000 / 8 = 625 bytes
+  (c) a shorter frame would finish before the collision signal returned
+#+end_example
+
+Note how the faster rate raises the minimum frame size at a fixed length. That
+is why gigabit Ethernet shortened the segment or used carrier extension.
+
+*** Answer 4
+
+#+begin_example
+  (a) A asks for 192.168.1.1, the default gateway
+  (b) request: DST MAC = FF:FF:FF:FF:FF:FF (broadcast)
+               SRC MAC = AA:AA:AA:AA:AA:AA
+  (c) data frame: DST MAC = BB:BB:BB:BB:BB:BB (the router)
+                  SRC MAC = AA:AA:AA:AA:AA:AA
+  (d) destination IP = 8.8.8.8, unchanged end to end
+#+end_example
+
+The frame reaches the router. The router then builds a new frame for the next
+link with new MAC addresses and the same destination IP address.
+
+*** Answer 5
+
+#+begin_example
+  A1 = MAC of the access point      (wireless receiver)
+  A2 = MAC of the laptop            (wireless transmitter)
+  A3 = MAC of the router            (the wired next hop)
+  A4 = absent                       (one wireless hop only)
+#+end_example
+
+A4 appears only when a frame crosses from one access point to another over the
+distribution system.

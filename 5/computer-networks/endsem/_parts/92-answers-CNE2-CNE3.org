@@ -1,0 +1,1389 @@
+** CNE2 answers
+
+*** CNE2 Q1  Six network devices  [3]
+
+**** Answer
+
+1. Network interface card (NIC). It connects a host to the network medium. Each NIC holds a burned-in MAC address.
+2. Repeater. It regenerates a weak signal and extends the cable length. It works at the physical layer.
+3. Hub. It is a multiport repeater. It copies every incoming frame to all other ports.
+4. Bridge. It joins two LAN segments. It filters frames by MAC address.
+5. Switch. It forwards a frame only to the port that holds the destination MAC address.
+6. Router. It forwards packets between networks. It selects the path by the destination IP address.
+
+These extra devices also count.
+
+7. Modem. It converts digital signals to analog signals and back.
+8. Gateway. It joins two networks that use different protocol suites.
+9. Firewall. It filters traffic by a rule set.
+10. Access point. It connects wireless hosts to the wired LAN.
+
+#+begin_example
+        Internet
+           |
+        [router]
+           |
+        [switch] -------- [access point] ))) laptop
+        /   |   \
+     [PC] [PC] [PC]
+#+end_example
+
+MARKS: 0.5 for each device name with a correct one-line function, for six devices.
+
+WATCH: A bare list of names scores about half. Add the function and the layer of each device.
+
+*** CNE2 Q2  Why circuit switching is preferred  [3]
+
+**** Answer
+
+Circuit switching reserves resources before the call starts. The network keeps a fixed rate and a fixed path for the whole call. Real-time traffic needs this guarantee.
+
+1. Reserved bandwidth. Each call gets a fixed rate. No other user can take that capacity.
+2. Constant delay. The bits follow one path with no queueing at switches. The delay stays almost flat.
+3. No jitter and no congestion loss. Voice and video need a steady stream. Circuit switching gives that stream.
+
+#+begin_example
+  Circuit switching            Packet switching
+  -----------------            ----------------
+  path fixed at setup          each packet routed
+  rate reserved                rate shared
+  delay constant               delay variable
+  no queueing loss             buffer overflow loss
+  idle capacity wasted         capacity reused
+#+end_example
+
+The telephone network uses circuit switching for these reasons. Packet switching is better for bursty data. It shares the link and needs no call setup.
+
+MARKS: 1 for each of the three reasons, with the real-time argument.
+
+WATCH: The question asks why circuit switching wins. Do not spend the answer on the cost advantage of packet switching.
+
+*** CNE2 Q3  Time to send L bits from A to B  [3]
+
+**** Answer
+
+The total time has two parts on each link. They are the transmission time and the propagation time.
+
+For one direct link between A and B:
+
+#+begin_example
+  t = L/R + d/s
+
+  L/R  = transmission time, seconds
+  d/s  = propagation time, seconds
+  L    = packet size, bits
+  R    = link rate, bits per second
+  d    = length of one link, metres
+  s    = propagation speed, metres per second
+#+end_example
+
+For a path with N links, the router stores the whole packet before it forwards the packet. So each link adds one transmission time and one propagation time.
+
+#+begin_example
+  t = N x (L/R) + N x (d/s)
+    = N x (L/R + d/s)
+
+  N = number of links on the path
+  N - 1 routers sit between A and B
+#+end_example
+
+Here d means the distance between two adjacent nodes, not the whole path. If every link has the same length d, the N-link formula above holds.
+
+#+begin_example
+  Example: L = 1000 bits, R = 1 Mbps, d = 1000 m, s = 2e8 m/s
+
+  L/R = 1000 bits / 1000000 bps = 1 ms
+  d/s = 1000 m / 200000000 m/s  = 5 us
+  t   = 1 ms + 5 us             = 1.005 ms   (one link)
+
+  For N = 2 links:
+  t   = 2 x 1 ms + 2 x 5 us     = 2.01 ms
+#+end_example
+
+MARKS: 1 for the one-link formula, 1 for the N-link store-and-forward form, 1 for the meaning of d.
+
+WATCH: Do not add processing delay or queueing delay. The question tells you to ignore them. Do not use d as the total path length.
+
+*** CNE2 Q4  FTP port numbers  [3]
+
+**** Answer
+
+FTP uses two well-known ports. It needs one channel for commands and one channel for file data.
+
+1. Port 21, the control connection. The client opens this connection first. It carries the FTP commands and the replies, such as USER, PASS, RETR and QUIT.
+2. Port 20, the data connection. The server opens this connection in active mode. It carries the file content and the directory listings.
+
+#+begin_example
+  client                                server
+    |                                     |
+    |------ TCP connect to port 21 ------>|   control
+    |<----- 220 service ready ------------|
+    |------ USER, PASS, RETR ------------>|
+    |<----- 150, then 226 ----------------|
+    |                                     |
+    |<===== data on port 20 ==============|   data
+#+end_example
+
+Port 21 stays open for the whole session. Port 20 opens for each file transfer in active mode. In passive mode the server sends a random high port number to the client.
+
+MARKS: 1.5 for port 21 with its control role, 1.5 for port 20 with its data role.
+
+WATCH: The two port numbers are easy to swap. Port 21 is control and port 20 is data.
+
+*** CNE2 Q5  Addresses that identify a TCP/IP conversation  [3]
+
+**** Answer
+
+One IP address and one port number identify one process. A full conversation needs four values. This set is the four-tuple.
+
+1. Source IP address. Example: 192.168.1.10
+2. Source port number. Example: 49152, a temporary port chosen by the client.
+3. Destination IP address. Example: 93.184.216.34
+4. Destination port number. Example: 80 for a web server.
+
+#+begin_example
+  (192.168.1.10 : 49152)  ->  (93.184.216.34 : 80)
+   source IP      source       destination IP   destination
+                  port                          port
+#+end_example
+
+The socket pair is the two IP addresses plus the two port numbers. The link layer also uses the MAC address of each interface. The MAC address identifies the interface on the local link only.
+
+MARKS: 2 for the four values, 1 for a correct worked example.
+
+WATCH: An IP address alone is not enough. Many processes share one host, so the port number is also needed.
+
+*** CNE2 Q6  Two services of the network layer  [3]
+
+**** Answer
+
+The network layer moves a datagram from a source host to a destination host across many networks. Two functions do this work.
+
+1. Forwarding. The router takes an arriving packet and moves it to the correct output port. It uses the destination address and the forwarding table. This is a local action inside one router.
+2. Routing. The network computes the end-to-end path for each destination. Routing protocols build the forwarding tables. This is a global action across many routers.
+
+#+begin_example
+        routing algorithm
+               |
+               v
+     +-------------------+
+     | forwarding table  |
+     +-------------------+
+               |
+  packet --> [router] --> next hop
+              forwarding
+#+end_example
+
+The layer also offers connection setup in some architectures, such as ATM. The Internet layer is best effort. It gives no guarantee of delivery, order or delay.
+
+MARKS: 1.5 for forwarding with its local scope, 1.5 for routing with its global scope.
+
+WATCH: Reliable delivery, flow control and congestion control belong to the transport layer. Do not list them here.
+
+*** CNE2 Q7  Hidden terminal problem  [3]
+
+**** Answer
+
+The hidden terminal problem appears when two senders cannot hear each other. Both senders can still reach the same access point. The carrier sense test then fails.
+
+#+begin_example
+        A                 B                 C
+     (sender)        (access point)      (sender)
+        |                 |                 |
+        |<---- range ---->|                 |
+        |                 |<---- range ---->|
+        |                 |                 |
+        |<--------- out of range ---------->|
+
+     A and C both reach B.  A and C cannot hear each other.
+#+end_example
+
+A senses the channel as idle and starts to send. C also senses the channel as idle and starts to send. Both signals arrive at B together. The frames collide at B and B loses both frames.
+
+The sender learns about the loss only from a missing ACK. It then wastes the whole frame time. This problem is serious because the collision happens at the receiver, not at the sender.
+
+The fix is the RTS/CTS handshake in CSMA/CA.
+
+1. A sends a short Request to Send frame. The frame names the time it needs.
+2. B replies with a Clear to Send frame. All nodes in range of B hear this frame.
+3. C hears the CTS frame and stays silent for the reserved time.
+4. A sends the data frame. B sends an ACK frame.
+
+#+begin_example
+     A          B          C
+     |--RTS---->|          |
+     |          |--CTS---->|   C defers
+     |--DATA-------------->|
+     |<---------ACK--------|
+#+end_example
+
+MARKS: 1 for the problem statement with a diagram, 1 for the collision at the receiver, 1 for RTS/CTS.
+
+WATCH: Do not describe the exposed terminal problem. In the hidden terminal case the two senders cannot hear each other.
+
+*** CNE2 Q8  Purpose of the TCP ACK field  [3]
+
+**** Answer
+
+The acknowledgment field is 32 bits wide in the TCP header. It tells the sender which byte the receiver expects next.
+
+1. It carries a cumulative acknowledgment. A value of 1000 means that the receiver has all bytes up to 999 and now waits for byte 1000.
+2. It drives retransmission. The sender keeps a timer for the oldest unacknowledged byte. A missing ACK causes a retransmission.
+3. It slides the send window. A valid ACK moves the window base forward and frees buffer space.
+
+#+begin_example
+  byte stream:   ... 996 997 998 999 | 1000 1001 ...
+                                      ^
+                                      next byte expected
+
+  ACK field = 1000
+#+end_example
+
+The field is valid only when the ACK flag is set in the header. A data segment from B to A can carry the ACK value for A's data at the same time. This is piggybacking.
+
+MARKS: 1 for the field size and meaning, 1 for cumulative operation, 1 for its role in retransmission and window movement.
+
+WATCH: The field does not hold the sequence number of the last byte received. It holds the next byte expected, so it is one more.
+
+*** CNE2 Q9  Wireless network topologies  [3]
+
+**** Answer
+
+Wireless LANs use four common topologies.
+
+1. Infrastructure basic service set (BSS). One access point controls a set of stations. All traffic goes through the access point. This is the normal Wi-Fi hotspot.
+2. Extended service set (ESS). Several access points join through a distribution system. They share one network name. A station can move between them.
+3. Ad hoc or independent BSS. The stations talk to each other directly. There is no access point and no wired backbone.
+4. Mesh. The access points relay traffic for each other. This extends coverage without a cable to every node.
+
+#+begin_example
+  Infrastructure (BSS)          Ad hoc (IBSS)
+  --------------------          -------------
+     o   o   o                  o --- o
+      \  |  /                    \   /
+      [ AP ]                      \ /
+        |                          o
+      wired LAN
+
+  ESS:  [AP 1] --- [AP 2] --- [AP 3]   one SSID
+#+end_example
+
+MARKS: 1 for infrastructure mode, 1 for ad hoc mode, 1 for ESS or mesh with a diagram.
+
+WATCH: Star, bus, ring and mesh are wired topologies. Answer with the wireless sets, not the cable layouts.
+
+*** CNE2 Q10  802.11 frame format  [3]
+
+**** Answer
+
+#+begin_example
++----------+----------+-----------+-----------+-----------+
+|  Frame   | Duration | Address 1 | Address 2 | Address 3 |
+| Control  |   2 B    |    6 B    |    6 B    |    6 B    |
+|   2 B    |          | receiver  | sender    |  filter   |
++----------+----------+-----------+-----------+-----------+
+| Seq Ctrl | Address 4|        Payload        |    FCS    |
+|   2 B    |   6 B    |    0 to 2312 bytes    |    4 B    |
+|          | (AP-AP)  |                       |  CRC-32   |
++----------+----------+-----------------------+-----------+
+#+end_example
+
+1. Frame control, 2 bytes. It holds the protocol version, the type, the subtype, the To DS and From DS bits, the retry bit, the power management bit and the protected frame bit.
+2. Duration, 2 bytes. It reserves the channel for the frame and its ACK.
+3. Address 1, 2 and 3, 6 bytes each. Address 1 is the receiver. Address 2 is the transmitter. Address 3 carries the remaining source or destination address for the access point.
+4. Sequence control, 2 bytes. It holds a 12-bit sequence number and a 4-bit fragment number. It detects duplicate frames.
+5. Address 4, 6 bytes. It appears only when both To DS and From DS are set.
+6. Payload, 0 to 2312 bytes. It holds the IP datagram.
+7. FCS, 4 bytes. It is a CRC-32 checksum for error detection.
+
+The header is 24 bytes without address 4 and 30 bytes with it. The 802.11 frame has four address fields. The Ethernet frame has only two.
+
+MARKS: 1 for the field layout, 1 for the sizes, 1 for the role of the address fields.
+
+WATCH: Do not draw the Ethernet frame. Ethernet has a preamble and two addresses. 802.11 has four address fields and a duration field.
+
+*** CNE2 Q11  Peer-to-peer and client-server requirements  [6]
+
+**** Answer
+
+#+begin_example
+   Client-server                    Peer-to-peer
+   -------------                    ------------
+   [server]  always on             o --- o --- o
+     |  \                            \   |   /
+     |   \                            \  |  /
+   [c1] [c2] [c3]                     [mesh]
+#+end_example
+
+Network requirements.
+
+| Requirement | Client-server | Peer-to-peer |
+|-------------+---------------+-------------|
+| Uplink | High at the server only | High at every peer |
+| Downlink | High at each client | Similar to the uplink |
+| Availability | Server runs all the time | Peers join and leave |
+| Address | Server needs a fixed IP | Peers can change address |
+| Bottleneck | One central link | No central link |
+| Scaling | Add servers and bandwidth | New peers add capacity |
+
+System requirements.
+
+| Requirement | Client-server | Peer-to-peer |
+|-------------+---------------+-------------|
+| Hardware | Large server, disk array | Ordinary PCs |
+| Software | Server OS and service | Peer application only |
+| Administration | Central and simple | Distributed and hard |
+| Security | One point to protect | Every peer is a risk |
+| Failure | Server loss stops service | Service survives churn |
+| Cost | High fixed cost | Low entry cost |
+
+1. A client-server system needs one always-on host with a permanent address. The server must carry all the upload traffic. The system cost grows with the number of clients.
+2. A peer-to-peer system needs no always-on server. Each peer downloads and uploads at the same time. The capacity grows as peers join.
+3. A peer-to-peer system needs symmetric access links. A client-server system works with asymmetric links, because clients mostly download.
+
+BitTorrent is the standard peer-to-peer example. The web is the standard client-server example.
+
+MARKS: 3 for the network requirements, 3 for the system requirements, with a comparison table.
+
+WATCH: The question asks for both network and system requirements. A single list of advantages loses half the marks.
+
+*** CNE2 Q12  LAN for a browsing centre  [6]
+
+**** Answer
+
+The centre has ten machines and one broadband line. A star topology with a switch is the correct design.
+
+Devices.
+
+1. Broadband modem or ONT. The ISP line ends here. It converts the ISP signal to Ethernet.
+2. Router. It shares the single public address with NAT. It runs DHCP for the ten machines. It also acts as the firewall.
+3. Layer-2 switch with 16 or 24 ports. Every machine gets a dedicated 1 Gbps port. The switch learns MAC addresses and forwards frames only to the correct port.
+4. NIC in each machine. A gigabit Ethernet card gives a wired link to the switch.
+5. Access point. It serves customer laptops and phones without a cable.
+6. UPS. It keeps the switch, router and modem alive during a power cut.
+
+#+begin_example
+                     ISP
+                      |
+                 [ broadband ]
+                 [ modem/ONT ]
+                      |
+                  [ router ]
+                   /        \
+            [ switch ]    [ AP ] ))) phones
+           /  |  |  \
+        [PC][PC][PC][PC] ... ten machines
+
+        star topology, Cat6 UTP to each PC
+#+end_example
+
+Medium.
+
+1. Cat6 UTP cable for the ten machines. It carries 1 Gbps up to 100 metres. It is cheap and easy to terminate. A browsing centre needs this speed for downloads.
+2. Wi-Fi 802.11ac for customer devices. It avoids a cable to every laptop and phone.
+3. Fibre or copper from the ISP to the modem. The ISP decides this medium.
+
+Justification.
+
+1. A switch gives full duplex and no collisions. A hub would share one 100 Mbps domain among ten machines.
+2. A star topology makes one cable fault local. A bus topology would stop the whole LAN.
+3. NAT and DHCP remove manual address work for the owner.
+
+Addressing plan.
+
+#+begin_example
+  network     192.168.1.0/24
+  router      192.168.1.1
+  DHCP pool   192.168.1.10 to 192.168.1.100
+  DNS         from the ISP by DHCP
+#+end_example
+
+MARKS: 2 for the device list with a reason for each, 2 for the medium with a reason, 1 for the topology diagram, 1 for the addressing plan.
+
+WATCH: The question asks you to justify each choice. A list of devices with no reason scores low. Do not forget the broadband modem and the router.
+
+*** CNE2 Q13  Protocols when a user joins a Wi-Fi zone  [6]
+
+**** Answer
+
+The laptop first joins the wireless LAN. It then needs an address, a name lookup and a web transfer. Each step uses a different protocol.
+
+| Layer | Protocol | Role in this session |
+|-------+----------+----------------------|
+| Application | DHCP | Gets an IP address, mask, gateway and DNS server |
+| Application | DNS | Resolves the server name to an IP address |
+| Application | HTTP | Requests the file from the web server |
+| Transport | UDP | Carries DHCP and DNS messages |
+| Transport | TCP | Carries the HTTP request and the file |
+| Network | IP | Routes the datagram to the server |
+| Link | 802.11 | Carries the frame over the radio link |
+| Link | Ethernet | Carries the frame on the server LAN |
+| Link | ARP | Finds the MAC address of the gateway |
+| Physical | Radio, UTP | Moves the bits on each medium |
+
+The order of events.
+
+1. The laptop scans the channels and finds the access point. It sends an association request and receives an association response.
+2. The laptop sends a DHCP Discover message as a broadcast. The DHCP server replies with an offer, a request and an ACK. The laptop now has an address and the gateway address.
+3. The laptop sends an ARP request for the MAC address of the default gateway. The gateway replies with its MAC address.
+4. The laptop sends a DNS query to the DNS server over UDP port 53. The reply gives the IP address of the data server.
+5. The laptop opens a TCP connection to the server on port 80 or 443. The three-way handshake sets up the connection.
+6. The browser sends an HTTP GET request. The server sends the response with the file.
+7. Each router forwards the packet by the destination IP address. Each link uses its own frame format.
+
+#+begin_example
+  laptop        AP        router        DNS        web server
+    |            |           |           |             |
+    |--assoc---->|           |           |             |
+    |--DHCP----------------->|           |             |
+    |<-----------------------|           |             |
+    |--ARP------>|           |           |             |
+    |--DNS------------------------------>|             |
+    |<-----------------------------------|             |
+    |--TCP SYN---------------------------|------------>|
+    |<-----------------------------------|-------------|
+    |--HTTP GET--------------------------|------------>|
+    |<-----------------------------------|----file-----|
+#+end_example
+
+MARKS: 1 per layer with the correct protocols, 1 for the DHCP and association steps in the right order.
+
+WATCH: DHCP comes before DNS and HTTP. Without an IP address the laptop cannot send either message. Do not forget ARP.
+
+*** CNE2 Q14  Two pipelining protocols  [6]
+
+**** Answer
+
+Pipelining lets the sender keep several frames in flight. The sender does not wait for each ACK before it sends the next frame. Go-Back-N and Selective Repeat are the two standard protocols.
+
+Go-Back-N.
+
+1. The sender keeps a window of up to N consecutive unacknowledged frames.
+2. The receiver sends only cumulative ACKs. ACK n means that every frame up to n has arrived.
+3. The receiver discards an out-of-order frame. It re-sends the ACK of the last in-order frame.
+4. The sender keeps one timer for the oldest frame. On a timeout it re-sends that frame and all later frames in the window.
+
+#+begin_example
+  sender (N = 4)                    receiver
+    |                                  |
+    |---- pkt 0 ---------------------->|  deliver 0, ACK 0
+    |---- pkt 1 ---- X lost            |
+    |---- pkt 2 ---------------------->|  discard 2, ACK 0
+    |---- pkt 3 ---------------------->|  discard 3, ACK 0
+    |<--- ACK 0 -----------------------|
+    |    timeout on pkt 1              |
+    |---- pkt 1 (retx) --------------->|  deliver 1, ACK 1
+    |---- pkt 2 (retx) --------------->|  deliver 2, ACK 2
+    |---- pkt 3 (retx) --------------->|  deliver 3, ACK 3
+#+end_example
+
+Selective Repeat.
+
+1. The sender keeps a window of up to N frames, as in Go-Back-N.
+2. The receiver acknowledges each correct frame separately. It buffers an out-of-order frame.
+3. The sender keeps one timer for each unacknowledged frame. On a timeout it re-sends only that frame.
+4. The receiver delivers the frames in order once the missing frame arrives.
+
+#+begin_example
+  sender (N = 4)                    receiver
+    |                                  |
+    |---- pkt 0 ---------------------->|  deliver 0, ACK 0
+    |---- pkt 1 ---- X lost            |
+    |---- pkt 2 ---------------------->|  buffer 2, ACK 2
+    |---- pkt 3 ---------------------->|  buffer 3, ACK 3
+    |    timeout on pkt 1 only         |
+    |---- pkt 1 (retx) --------------->|  deliver 1,2,3, ACK 1
+#+end_example
+
+| Point | Go-Back-N | Selective Repeat |
+|-------+-----------+------------------|
+| Receiver buffer | None | One frame per gap |
+| ACK style | Cumulative | Individual |
+| Retransmission | Whole window | One frame |
+| Timers | One | One per frame |
+| Wasted bandwidth | High on loss | Low on loss |
+| Complexity | Low | High |
+
+Selective Repeat wastes less bandwidth on a lossy link. Go-Back-N is simpler and needs less memory.
+
+MARKS: 3 for Go-Back-N with a diagram, 3 for Selective Repeat with a diagram and the comparison.
+
+WATCH: The two receiver rules are the key difference. Go-Back-N discards and re-ACKs. Selective Repeat buffers and ACKs each frame.
+
+*** CNE2 Q15  CSMA/CD  [6]
+
+**** Answer
+
+CSMA/CD means carrier sense multiple access with collision detection. Ethernet uses it on a shared channel.
+
+The name has three parts.
+
+1. Carrier sense. A station listens before it sends. If the channel is busy, the station waits.
+2. Multiple access. All stations share one channel. There is no central controller.
+3. Collision detection. A station listens while it sends. It compares the signal it sends with the signal on the cable.
+
+#+begin_example
+  frame ready
+      |
+      v
+  +-----------------+   busy   +-------------------+
+  | sense channel   |--------->| wait until idle   |
+  +-----------------+          +-------------------+
+      | idle                          |
+      v                               |
+  +-----------------+                 |
+  | transmit frame  |<----------------+
+  +-----------------+
+      |
+      v
+  collision during send? -- yes --> send jam, abort
+      |                                   |
+      | no                                v
+      v                            binary backoff
+   frame done                         |
+                                     back to sense
+#+end_example
+
+The algorithm.
+
+1. The adapter gets a datagram from the network layer and builds a frame.
+2. It senses the channel. If the channel is idle, it starts to transmit. If the channel is busy, it waits until the channel becomes idle.
+3. It keeps listening during the transmission. If it hears a different signal, a collision has occurred.
+4. On a collision it aborts the frame and sends a 32-bit jam signal. The jam signal makes sure that all stations detect the collision.
+5. It then runs the binary exponential backoff.
+6. After m collisions it picks a random integer K from 0 to 2^m - 1. It waits K x 512 bit times and returns to step 2.
+7. A successful transmission resets m to zero.
+
+#+begin_example
+  after 1st collision: K in {0, 1}          wait 0 or 512 bit times
+  after 2nd collision: K in {0, 1, 2, 3}
+  after 10th collision: K in {0 ... 1023}
+  after 16th collision: report an error
+#+end_example
+
+A collision must be detected before the sender finishes the frame. So the frame must be long enough. For 10 Mbps Ethernet the minimum frame is 64 bytes and the slot time is 512 bit times, which is 51.2 microseconds.
+
+#+begin_example
+  Efficiency = 1 / (1 + 5 x (Tprop / Ttrans))
+
+  Tprop  = worst-case propagation delay
+  Ttrans = time to send one frame
+#+end_example
+
+CSMA/CD works well when the propagation delay is small compared with the frame time. It fails on wireless links, because a radio cannot listen while it transmits. Wi-Fi uses CSMA/CA instead.
+
+MARKS: 3 for the algorithm steps, 2 for the backoff procedure, 1 for the efficiency or the minimum frame size.
+
+WATCH: Do not write the CSMA/CA steps. CSMA/CD detects a collision during the transmission. CSMA/CA avoids the collision before it happens.
+
+*** CNE2 Q16  IPv4 and IPv6 headers  [10]
+
+**** Answer
+
+IPv4 header, 20 bytes without options.
+
+#+begin_example
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|Version|  IHL  |Type of Service|          Total Length         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|         Identification        |Flags|      Fragment Offset    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|  Time to Live |    Protocol   |         Header Checksum       |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       Source Address                          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                    Destination Address                        |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                    Options (0 to 40 bytes)                    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                             Data                              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#+end_example
+
+IPv6 header, 40 bytes fixed.
+
+#+begin_example
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|Version| Traffic Class |               Flow Label              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|         Payload Length        |  Next Header  |   Hop Limit   |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                                                               +
+|                                                               |
++                         Source Address                        +
+|                          (128 bits)                           |
++                                                               +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                                                               +
+|                                                               |
++                      Destination Address                      +
+|                          (128 bits)                           |
++                                                               +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                             Data                              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#+end_example
+
+| Feature | IPv4 | IPv6 |
+|---------+------+------|
+| Address size | 32 bits | 128 bits |
+| Header size | 20 to 60 bytes | 40 bytes fixed |
+| Header checksum | Yes | No |
+| Fragmentation | Router and host | Host only |
+| Options | In the header | Extension headers |
+| Header fields | 13 | 8 |
+| Flow label | None | 20 bits |
+| Address notation | Dotted decimal | Hexadecimal with colons |
+| Configuration | Manual or DHCP | Manual, DHCP or stateless |
+| Broadcast | Yes | Replaced by multicast |
+
+The IPv6 header removes five fields. It drops the header checksum, the fragmentation fields, the identification field and the options field. It adds the flow label.
+
+Recommendation.
+
+I recommend IPv6 for a new communication.
+
+1. The 128-bit address space ends the address shortage. NAT is no longer needed.
+2. The fixed 40-byte header makes router processing faster. The header has a simple alignment.
+3. There is no header checksum. The link layer and the transport layer already detect errors, so this work is redundant.
+4. Routers do not fragment. The source host learns the path MTU and fragments the packet itself.
+5. The flow label allows per-flow treatment without deep packet inspection.
+6. Address autoconfiguration works without a DHCP server.
+7. IPv6 was designed with IPsec in mind.
+
+The migration uses dual stack and tunnelling. An IPv6 packet can travel inside an IPv4 packet across an IPv4-only region. For an existing IPv4 network, dual stack is the practical first step.
+
+MARKS: 3 for the IPv4 header, 3 for the IPv6 header, 2 for the comparison, 2 for the recommendation with reasons.
+
+WATCH: The IPv6 header has no checksum and no fragmentation fields. Do not copy the IPv4 fields into the IPv6 diagram.
+
+*** CNE2 Q17  Mail from user A to user B  [10]
+
+**** Answer
+
+#+begin_example
+  Alice            Alice's mail           Bob's mail            Bob
+  (UA)             server                 server                (UA)
+   |                  |                      |                    |
+   | 1 compose        |                      |                    |
+   |--2 SMTP/TCP 25-->|                      |                    |
+   |                  |--3 SMTP/TCP 25------>|                    |
+   |                  |                      | 4 store in mailbox |
+   |                  |                      |<--5 IMAP or HTTP---|
+   |                  |                      |                    |
+   |                  |     6 DNS MX query   |                    |
+   |                  |--------------------->|                    |
+#+end_example
+
+The three components are the user agent, the mail server and SMTP.
+
+1. Alice writes the message in her user agent. She gives the address bob@someschool.edu.
+2. The user agent sends the message to Alice's mail server over SMTP. SMTP runs over TCP on port 25. The message goes into the outgoing queue.
+3. The SMTP client on Alice's server asks DNS for the mail exchanger record of the domain someschool.edu. DNS returns the name of Bob's mail server.
+4. The SMTP client opens a TCP connection to Bob's mail server on port 25.
+5. The two servers exchange SMTP commands and replies.
+
+#+begin_example
+  S: 220 mail.someschool.edu
+  C: EHLO mail.abc.com
+  S: 250 OK
+  C: MAIL FROM:<alice@abc.com>
+  S: 250 OK
+  C: RCPT TO:<bob@someschool.edu>
+  S: 250 OK
+  C: DATA
+  S: 354 send the message, end with a dot
+  C: ... message body ...
+  C: .
+  S: 250 message accepted
+  C: QUIT
+  S: 221 bye
+#+end_example
+
+6. Bob's server stores the message in Bob's mailbox. SMTP is a push protocol. The sending server starts the transfer.
+7. Bob opens his user agent. It fetches the message with IMAP over TCP port 143, or POP3 over port 110, or HTTP for webmail.
+
+#+begin_example
+  Layer         Protocol              Port
+  ------------  --------------------  ----
+  Application   SMTP (send)           25
+  Application   IMAP (retrieve)       143
+  Application   DNS (MX lookup)       53
+  Transport     TCP                   -
+  Network       IP                    -
+  Link          Ethernet or Wi-Fi     -
+#+end_example
+
+SMTP carries only 7-bit ASCII text. MIME encodes an attachment as base64 text and adds a content type header. The receiving user agent decodes the attachment back to the original file.
+
+MARKS: 4 for the diagram and steps, 4 for the protocols and ports, 2 for DNS and retrieval.
+
+WATCH: SMTP sends the mail. It does not retrieve the mail. The last hop to Bob uses IMAP, POP3 or HTTP. Do not forget the DNS MX lookup.
+
+*** CNE2 Q18  ARP and the UDP header  [10]
+
+**** Answer
+
+**(a) Address Resolution Protocol**
+
+A host knows the IP address of the next hop. It needs the MAC address to build the link-layer frame. ARP finds that MAC address.
+
+ARP works inside one LAN. It uses three steps.
+
+1. The sender looks in its ARP table for the target IP address.
+2. On a miss it broadcasts an ARP request. The request asks "who has IP address X, tell MAC address Y".
+3. The owner of the address replies with a unicast ARP reply. It gives its MAC address.
+4. The sender stores the pair in the ARP table with a timeout of about 20 minutes.
+
+#+begin_example
+  Host A  192.168.1.5                Host B  192.168.1.9
+  MAC 00:11:22:33:44:55              MAC 66:77:88:99:AA:BB
+        |                                   |
+        | 1 ARP request, broadcast          |
+        |   who has 192.168.1.9?            |
+        |---------------------------------->|
+        |                                   |
+        | 2 ARP reply, unicast              |
+        |   192.168.1.9 is at 66:77:88:99   |
+        |<----------------------------------|
+        |                                   |
+        | 3 frame to 66:77:88:99:AA:BB      |
+        |---------------------------------->|
+#+end_example
+
+The ARP packet is 28 bytes. It holds the hardware type, the protocol type, the hardware length, the protocol length, the operation code, the sender MAC, the sender IP, the target MAC and the target IP.
+
+Two cases matter.
+
+1. Same subnet. The host ARPs for the destination IP address directly.
+2. Different subnet. The host ARPs for the default gateway. The frame goes to the gateway MAC, and the IP packet keeps the final destination IP.
+
+#+begin_example
+  A --- LAN 1 --- R1 --- LAN 2 --- B
+
+  A sends to B:  dest IP = B, dest MAC = R1 (LAN 1 side)
+  R1 sends to B: dest IP = B, dest MAC = B
+#+end_example
+
+ARP has no authentication. A host can answer for another address. This is ARP spoofing. A static entry or dynamic ARP inspection reduces the risk.
+
+**(b) UDP header**
+
+The UDP header is 8 bytes long. It has four fields of 16 bits each.
+
+#+begin_example
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|          Source Port          |       Destination Port        |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|            Length             |           Checksum            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          Application Data                     |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+#+end_example
+
+1. Source port, 16 bits. It identifies the sending process. It is optional, and it is set to zero when no reply is needed.
+2. Destination port, 16 bits. It identifies the receiving process.
+3. Length, 16 bits. It gives the size of the whole UDP datagram, header and data. The minimum is 8 bytes.
+4. Checksum, 16 bits. It detects bit errors in the header and the data.
+
+The checksum also covers a pseudo-header. The pseudo-header holds the source IP address, the destination IP address, a zero byte, the protocol number 17 and the UDP length. The receiver rebuilds the pseudo-header from the IP header. This test catches a packet delivered to the wrong host.
+
+UDP gives no reliability, no flow control and no congestion control. It has a small header and no connection setup.
+
+MARKS: 3 for ARP steps, 2 for the subnet cases, 1 for ARP security, 3 for UDP fields, 1 for the pseudo-header.
+
+WATCH: ARP is a broadcast request and a unicast reply. For a remote destination the host ARPs for the gateway, not for the final host.
+
+*** CNE2 Q19  TCP/IP and ISO-OSI layers  [10]
+
+**** Answer
+
+#+begin_example
+      OSI (7 layers)                TCP/IP (5 layers)
+ +----------------------+      +----------------------+
+ | 7  Application       |      |                      |
+ +----------------------+      |  5  Application      |
+ | 6  Presentation      |      |                      |
+ +----------------------+      +----------------------+
+ | 5  Session           |      |  4  Transport        |
+ +----------------------+      +----------------------+
+ | 4  Transport         |      |  3  Internet         |
+ +----------------------+      +----------------------+
+ | 3  Network           |      |  2  Link             |
+ +----------------------+      +----------------------+
+ | 2  Data Link         |      |  1  Physical         |
+ +----------------------+      +----------------------+
+ | 1  Physical          |
+ +----------------------+
+#+end_example
+
+The OSI model has seven layers. The TCP/IP model has five layers in the modern form. The original TCP/IP model had four layers, because it merged the link and physical layers.
+
+The functions.
+
+1. Physical. It moves bits over a medium. It defines the voltage, the connector and the data rate.
+2. Data link. It moves a frame between adjacent nodes. It handles framing, error detection and medium access.
+3. Network. It routes a packet from source to destination across networks. IP, ICMP and the routing protocols work here.
+4. Transport. It gives process-to-process delivery. TCP and UDP work here.
+5. Session. It opens, manages and closes a dialogue between two hosts.
+6. Presentation. It handles the data format, compression and encryption.
+7. Application. It gives the user services such as mail, web and file transfer.
+
+The comparison.
+
+| Point | OSI | TCP/IP |
+|-------+-----+--------|
+| Layers | 7 | 5 |
+| Origin | Reference model first | Protocols first |
+| Session and presentation | Separate layers | Inside the application layer |
+| Upper layers | General purpose | Application specific |
+| Status | De jure standard | De facto standard |
+| Use | Teaching and design | The real Internet |
+| Network layer | Connection and connectionless | Connectionless only |
+
+1. OSI separates the session and the presentation work. TCP/IP leaves that work to the application. HTTP, MIME and TLS do it in the application layer.
+2. OSI is protocol independent. It describes what each layer must do. TCP/IP describes the protocols that the Internet uses.
+3. OSI has a connection-oriented network layer. TCP/IP offers only the connectionless IP service. Reliability belongs to TCP.
+4. Both models use layering, encapsulation and a peer-to-peer dialogue between equal layers.
+5. Both models place the transport and the network layers in the same position. The lower layers map almost one to one.
+
+The OSI model is a better teaching tool, because it separates the concerns. The TCP/IP model is the model of the working Internet.
+
+MARKS: 3 for the two stacks with a correct mapping, 4 for the layer functions, 3 for the comparison points.
+
+WATCH: The TCP/IP model does not have a session layer or a presentation layer. Do not draw seven TCP/IP boxes.
+
+** CNE3 answers
+
+*** CNE3 Q1a  End systems and the edge router  [5]
+
+**** Answer
+
+An end system is any device that runs a network application. It sits at the edge of the Internet. A desktop, a laptop, a phone, a camera and a web server are all end systems. The textbook also calls them hosts.
+
+An end system does two jobs. It is the source of the data or the sink of the data. The packet switches in the core only forward the data. They do not run the user application.
+
+The access network connects the end system to the first router on the path. That first router is the edge router. The access network can use a wired link or a wireless link.
+
+#+begin_example
+   +-------------+
+   |   laptop    |   end system
+   +-------------+
+          |  802.11 radio link
+          v
+   +-------------+
+   | Wi-Fi router|   part of the access network
+   +-------------+
+          |  Ethernet
+          v
+   +-------------+
+   |    modem    |
+   +-------------+
+          |  fibre
+          v
+   +-------------+
+   | edge router |   first router in the ISP
+   +-------------+
+          |
+          v
+       Internet core
+#+end_example
+
+The three common access networks.
+
+1. Residential access. A DSL modem or a cable modem connects the home to the ISP. The home router adds Wi-Fi inside the home.
+2. Institutional access. An Ethernet switch in a building connects the hosts. A router then links the building to the ISP.
+3. Mobile access. A base station or an access point connects the device over a radio link. A cellular network or a Wi-Fi network carries the traffic.
+
+#+begin_example
+   end system ---- access network ---- edge router ---- core
+      host          link and media       first hop
+#+end_example
+
+MARKS: 2 for the end system definition, 2 for the diagram, 1 for the edge router role.
+
+WATCH: A router inside the core is not an end system. The edge router is the first router, not the last one.
+
+*** CNE3 Q1b  Conditional GET  [5]
+
+**** Answer
+
+A browser keeps a copy of each object that it downloads. On the next visit the copy may still be current. Conditional GET lets the browser ask the server about the copy. The server then sends the object only when the object has changed.
+
+The message exchange.
+
+1. The browser sends a GET request with the header line If-Modified-Since and the date of its copy.
+2. The server compares that date with the last modification time of the object.
+3. If the object is unchanged, the server sends 304 Not Modified. This response has no body.
+4. If the object has changed, the server sends 200 OK with the new object.
+
+#+begin_example
+  Case 1: browser copy is current
+
+  client                                server
+    |-- GET /a.html --------------------->|
+    |   If-modified-since: 01 Mar 2026    |
+    |<-- 304 Not Modified ----------------|
+    |    (no body, about 200 bytes)       |
+
+  Case 2: object changed on the server
+
+  client                                server
+    |-- GET /a.html --------------------->|
+    |   If-modified-since: 01 Mar 2026    |
+    |<-- 200 OK, <new object> ------------|
+#+end_example
+
+The saving.
+
+The access link is usually the bottleneck. It is slower than the LAN inside the institution. Without conditional GET the whole object crosses the access link again.
+
+#+begin_example
+  Object size   = 100 kB = 800000 bits
+  Access link   = 1 Mbps
+  Full transfer = 800000 bits / 1000000 bps = 0.8 s
+
+  304 response  = 200 bytes = 1600 bits
+  304 transfer  = 1600 bits / 1000000 bps = 1.6 ms
+
+  Saving per hit = 0.8 s - 1.6 ms = about 0.798 s
+#+end_example
+
+So a cache hit with a 304 response uses about 0.2 percent of the link time of a full transfer. The browser still shows the current object, because the copy is valid.
+
+The server needs the Last-Modified header for this test. Many servers also send an ETag and use If-None-Match.
+
+MARKS: 2 for the need, 2 for the message exchange with the 304 reply, 1 for the bandwidth saving on the access link.
+
+WATCH: A 304 response has no body. If you draw a body in the 304 reply you lose the point.
+
+*** CNE3 Q2  Five layers of TCP/IP  [3]
+
+**** Answer
+
+| Layer | Main protocol | Other protocols |
+|-------+---------------+-----------------|
+| 5 Application | HTTP | SMTP, DNS, FTP, IMAP |
+| 4 Transport | TCP | UDP, QUIC |
+| 3 Network | IP | ICMP, OSPF, BGP |
+| 2 Link | Ethernet | 802.11, PPP, ARP |
+| 1 Physical | The medium | Copper, fibre, radio |
+
+1. Application. It supports the user application. HTTP, SMTP, DNS and FTP live here.
+2. Transport. It gives process-to-process delivery. TCP and UDP live here.
+3. Network. It routes a datagram from host to host. IP and ICMP live here.
+4. Link. It moves a frame between adjacent nodes. Ethernet and 802.11 live here.
+5. Physical. It moves the bits on the medium.
+
+MARKS: 0.5 for each layer with a correct protocol, 0.5 for the correct order.
+
+WATCH: Do not put IP in the transport layer. Do not put TCP in the network layer.
+
+*** CNE3 Q3  Two TCP segments  [3]
+
+**** Answer
+
+**(i) Data in the first segment**
+
+The sequence number counts bytes, not segments. The first segment starts at byte 90. The second segment starts at byte 110.
+
+#+begin_example
+  first segment:  starts at 90
+  second segment: starts at 110
+
+  data in first segment = 110 - 90 = 20 bytes
+#+end_example
+
+So the first segment carries 20 bytes of data. Its sequence number field holds 90. Its last data byte is byte 109.
+
+**(ii) Acknowledgment number when the first segment is lost**
+
+Host B receives the second segment with sequence number 110. Host B has a gap in its byte stream. It has no bytes from 90 to 109. TCP uses cumulative acknowledgments, so B reports the next byte it expects.
+
+#+begin_example
+  bytes received at B: 110 ... (but 90 to 109 are missing)
+
+  next byte expected = 90
+  ACK number         = 90
+#+end_example
+
+So Host B sends an acknowledgment with the number 90. This is a duplicate ACK, because B already expects byte 90. When the missing segment arrives, B acknowledges the next gap.
+
+MARKS: 1 for 20 bytes with the subtraction, 1 for ACK 90, 1 for the reason that 90 is the next byte expected.
+
+WATCH: The ACK number is not 110. TCP acknowledges the next byte in order, not the last byte that arrived.
+
+*** CNE3 Q4  Alex and the online shopping  [4]
+
+**** Answer
+
+Alex should order through a site that keeps its content in a nearby web cache. Large shops use a content distribution network (CDN) for this purpose. The page then loads from a server near his office, not from a distant origin server.
+
+#+begin_example
+   Alex's PC
+       |
+       |  HTTP GET over the office LAN
+       v
+  +-------------+    miss    +------------------+
+  | proxy cache |----------->| origin shop site |
+  | near office |<-----------| (far away)       |
+  +-------------+   object   +------------------+
+       |
+       |  hit: object arrives in a few ms
+       v
+   Alex's PC
+#+end_example
+
+The steps.
+
+1. Alex opens the shopping site during a short break. The browser sends the GET request to the local cache.
+2. If the cache holds the object, the cache returns the object at once. The delay is a few milliseconds on the LAN.
+3. If the cache does not hold the object, the cache fetches it from the origin. It stores a copy for the next request.
+4. On the next visit the browser sends If-Modified-Since. The cache replies 304 Not Modified when the object is unchanged. This saves the download.
+5. Alex adds the items to the cart and pays. The order messages go to the shop server through the same path.
+6. He picks a fast delivery option, so the order arrives before his vacation.
+
+The gain. The access link is the bottleneck, and the cache sits on the near side of that link. Most objects then travel only over the fast LAN. Alex finishes the order in one short break instead of one long wait.
+
+MARKS: 2 for the cache idea with a diagram, 1 for hit and miss, 1 for the link saving.
+
+WATCH: The answer must name a network mechanism. Do not write only "order early and choose fast delivery".
+
+*** CNE3 Q5  How web caching reduces delay  [5]
+
+**** Answer
+
+A web cache is a proxy server between the clients and the origin server. The browser sends every HTTP request to the cache.
+
+1. On a hit the cache holds a fresh copy. The cache returns the object at once.
+2. On a miss the cache asks the origin server. It stores the reply and then sends the reply to the client.
+
+#+begin_example
+   client --- fast LAN --- [web cache] --- access link --- Internet
+                                  |
+                             origin server
+#+end_example
+
+Why the delay falls.
+
+1. The cache is close to the client. The round-trip time is a few milliseconds, not a few hundred milliseconds.
+2. The object travels over the fast LAN, not over the slow access link.
+3. The cache cuts the traffic on the access link. Link utilisation falls, so the queueing delay falls too.
+
+#+begin_example
+  Access link 1.54 Mbps, RTT to origin 2 s, object 100 kbit
+  Request rate 15 per second, so 1.50 Mbps of traffic
+  Utilisation = 1.50 / 1.54 = 0.97   (very high)
+
+  With a cache hit rate of 0.4:
+  link load   = 0.6 x 1.50 Mbps = 0.90 Mbps
+  utilisation = 0.90 / 1.54 = 0.58   (low)
+
+  delay = 0.6 x 2.01 s + 0.4 x 0.001 s = about 1.2 s
+#+end_example
+
+The delay does not fall for every object. It falls only for the objects that the cache can serve.
+
+1. A miss still goes to the origin server. The delay is the full Internet delay.
+2. A stale copy must be validated or replaced, so that object still costs a trip.
+3. A dynamic object, such as a shopping cart or a bank statement, cannot be cached.
+4. A personalised page differs for each user, so a shared cache cannot serve it.
+5. An object marked no-store must not be cached at all.
+
+So caching helps the popular, static and shared objects. The long tail and the private objects gain little.
+
+MARKS: 2 for the mechanism, 2 for the delay argument with numbers, 1 for the limits on which objects benefit.
+
+WATCH: The second part of the question carries marks. You must say that only some objects benefit, and give the reasons.
+
+*** CNE3 Q6  Downloading files from email  [5]
+
+**** Answer
+
+Application layer protocol: IMAP, or HTTP for a webmail account.
+
+1. The file sits as an attachment in the mailbox on the mail server.
+2. IMAP over TCP port 143 lets the client fetch the message and the attachment. It keeps the message on the server.
+3. POP3 over port 110 is the other option. HTTP over port 80 or 443 works when the student uses webmail in a browser.
+4. SMTP is not the right choice here. SMTP moves mail between servers. It does not retrieve mail for a user.
+
+Transport layer protocol: TCP.
+
+1. The attachment must arrive with no lost byte and in the correct order.
+2. TCP gives a reliable, ordered byte stream. UDP gives neither.
+3. TCP adds flow control and congestion control. A large download then does not flood the receiver or the network.
+
+The services that TCP provides for a reliable download.
+
+1. Reliable transfer. A lost segment is detected and retransmitted.
+2. Ordered delivery. The bytes reach the application in the order they were sent.
+3. Error detection. A checksum catches a corrupted segment.
+4. Flow control. The receiver advertises a window, so a slow client is not overrun.
+5. Congestion control. The sender slows down when the network is congested.
+6. Connection orientation. The three-way handshake sets up the transfer and the close sequence ends it.
+
+MARKS: 1 for IMAP or HTTP with a reason, 1 for TCP with a reason, 1 for at least four transport services.
+
+WATCH: SMTP sends mail. It does not download mail. Do not answer SMTP for the retrieval step.
+
+*** CNE3 Q7  Pipelining and utilisation  [5]
+
+**** Answer
+
+Pipelining means that the sender keeps several packets in flight at the same time. The sender does not stop and wait for each acknowledgment. It sends the next packet before the ACK of the previous packet returns.
+
+Without pipelining the sender uses stop-and-wait. One packet crosses the link, then the sender waits for one full round trip. The link stays idle during that wait.
+
+With a window of N packets the sender fills the wait with more packets. Utilisation rises by a factor of N, up to the link limit.
+
+#+begin_example
+  Stop and wait
+
+  sender  |== pkt 1 ==|            |== pkt 2 ==|
+  link    |...........| idle ......|...........|
+                         ^ one RTT
+
+  Pipelining, 3 packets
+
+  sender  |== 1 ==|== 2 ==|== 3 ==|
+  link    |== 1 ==|== 2 ==|== 3 ==|   no idle time
+#+end_example
+
+The formula.
+
+#+begin_example
+  U_sender = (N x L/R) / (RTT + L/R)
+
+  L   = packet size, bits
+  R   = link rate, bits per second
+  N   = window size, packets
+  RTT = round-trip time, seconds
+#+end_example
+
+The worked example.
+
+#+begin_example
+  Given:
+    L   = 1500 bytes = 12000 bits
+    R   = 1 Mbps = 1000000 bps
+    RTT = 48 ms = 0.048 s
+
+  Step 1  Transmission time of one packet
+    Tt = L / R
+       = 12000 bits / 1000000 bps
+       = 12 ms
+
+  Step 2  Size of the pipe in packets
+    pipe = RTT / Tt
+         = 48 ms / 12 ms
+         = 4 packets
+
+  Step 3  Stop-and-wait window, N = 1
+    U = 1 x 12 ms / (12 ms + 48 ms)
+      = 12 ms / 60 ms
+      = 0.20
+      = 20 %
+
+  Step 4  N = 4, the pipe size
+    U = 4 x 12 ms / 60 ms
+      = 48 ms / 60 ms
+      = 0.80
+      = 80 %
+
+  Step 5  N = 5, one more than the pipe
+    U = 5 x 12 ms / 60 ms
+      = 60 ms / 60 ms
+      = 1.00
+      = 100 %
+#+end_example
+
+The pipe holds four packets over one round trip. A window of four packets keeps the link busy for 48 of the 60 milliseconds. A window of five packets covers the whole round trip, so the link never goes idle. Utilisation then reaches 100 percent.
+
+The same link carries 20 percent of its capacity under stop-and-wait and 100 percent under a window of five packets. The utilisation rises by a factor of five. The link rate never changes.
+
+So the statement holds. Pipelining does not make the link faster. It removes the idle time that stop-and-wait leaves on the link.
+
+MARKS: 2 for the definition, 2 for the diagram and the formula, 1 for the worked example.
+
+WATCH: Pipelining raises utilisation, not the link rate. Do not claim that the bandwidth increases.
+
+*** CNE3 Q8  Go-Back-N on a satellite link  [5]
+
+**** Answer
+
+#+begin_example
+  Given:
+    R  = 20 kbps = 20000 bps
+    Tp = 400 ms one way
+    L  = 100 bytes = 100 x 8 = 800 bits
+    N  = 10 frames
+
+  Step 1  Transmission time of one frame
+    Tt = L / R
+       = 800 bits / 20000 bps
+       = 0.040 s
+       = 40 ms
+
+  Step 2  One propagation round
+    2 x Tp = 2 x 400 ms = 800 ms
+
+  Step 3  Time to push the whole window
+    N x Tt = 10 x 40 ms = 400 ms
+
+  Step 4  Compare the window with the pipe
+    pipe in frames = 2 x Tp / Tt
+                   = 800 ms / 40 ms
+                   = 20 frames
+    window = 10 frames
+    10 < 20, so the window cannot fill the pipe
+    The sender stalls before the first ACK returns
+
+  Step 5  Cycle time
+    T_cycle = Tt + 2Tp = 840 ms
+    The cycle starts when frame 1 starts to leave
+    The ACK of frame 1 returns at Tt + 2Tp
+    That ACK opens the next window
+
+  Step 6  Data delivered in one cycle
+    10 frames x 800 bits = 8000 bits
+
+  Step 7  Achievable rate
+    rate = data per cycle / cycle time
+         = 8000 bits / 0.840 s
+         = 9524 bps
+         = 9.52 kbps
+
+  Step 8  Utilisation
+    U = N x Tt / (Tt + 2Tp)
+      = 400 ms / 840 ms
+      = 0.476
+      = 47.6 %
+#+end_example
+
+The maximum data rate is about 9.5 kbps. The link stays idle for more than half of every cycle. The window of 10 frames is smaller than the pipe of 20 frames.
+
+#+begin_example
+  pipe in frames = RTT / Tt = 800 ms / 40 ms = 20 frames
+
+  N = 10  <  20   so the link is half used
+  N = 20  fills the pipe with data
+  N = 21  also covers the frame on the wire
+#+end_example
+
+The window must be at least 20 frames for full utilisation. A window of 21 frames also covers the frame that is leaving the sender. A larger window adds no speed once the pipe is full.
+
+Why this cycle. The sender finishes the tenth frame at 400 ms. The first ACK arrives at 840 ms. The sender then starts the next window. So one cycle carries ten frames in 840 ms. The last frame belongs to the ten transmissions already. A cycle of 10 x 40 ms + 800 ms = 1200 ms waits for the ACK of frame 10. That cycle counts the last transmission twice.
+
+MARKS: 2 for the times, 2 for the cycle and the rate, 1 for the utilisation.
+
+WATCH: Do not add an extra transmission time to the cycle. The standard formula is U = N / (1 + 2a) with a = Tp / Tt = 10.
+
+*** CNE3 Q9  Go-Back-N and Selective Repeat  [5]
+
+**** Answer
+
+Both protocols use a window and both allow several frames in flight. They differ in what the receiver does with an out-of-order frame.
+
+Go-Back-N.
+
+1. The receiver accepts only the next in-order frame.
+2. It discards an out-of-order frame.
+3. It sends a cumulative ACK for the last in-order frame.
+4. The sender re-sends the lost frame and every frame after it.
+
+#+begin_example
+  sender (N = 4)                   receiver
+    |                                 |
+    |---- pkt 0 --------------------->|  deliver 0, ACK 0
+    |---- pkt 1 ---- X lost           |
+    |---- pkt 2 --------------------->|  discard 2, ACK 0
+    |---- pkt 3 --------------------->|  discard 3, ACK 0
+    |<--- ACK 0 ----------------------|
+    |    timeout on pkt 1             |
+    |---- pkt 1 (retx) -------------->|  deliver 1, ACK 1
+    |---- pkt 2 (retx) -------------->|  deliver 2, ACK 2
+    |---- pkt 3 (retx) -------------->|  deliver 3, ACK 3
+#+end_example
+
+Selective Repeat.
+
+1. The receiver accepts and buffers an out-of-order frame.
+2. It sends an individual ACK for every correct frame.
+3. The sender re-sends only the frame that timed out.
+4. The receiver delivers the buffered frames in order when the gap fills.
+
+#+begin_example
+  sender (N = 4)                   receiver
+    |                                 |
+    |---- pkt 0 --------------------->|  deliver 0, ACK 0
+    |---- pkt 1 ---- X lost           |
+    |---- pkt 2 --------------------->|  buffer 2, ACK 2
+    |---- pkt 3 --------------------->|  buffer 3, ACK 3
+    |    timeout on pkt 1 only        |
+    |---- pkt 1 (retx) -------------->|  deliver 1,2,3, ACK 1
+#+end_example
+
+| Point | Go-Back-N | Selective Repeat |
+|-------+-----------+------------------|
+| Receiver buffer | None | One slot per gap |
+| ACK | Cumulative | Individual |
+| Loss recovery | Whole window | One frame only |
+| Timers at sender | One | One per frame |
+| Bandwidth on loss | Wasted | Saved |
+| Sender and receiver window | Receive window of 1 | Same size as the send window |
+| Complexity | Simple | Complex |
+
+Go-Back-N is simpler and needs less memory at the receiver. Selective Repeat saves bandwidth when the link loses frames. Selective Repeat needs a window of at most half the sequence space, so old and new frames cannot be confused.
+
+MARKS: 2 for the Go-Back-N diagram, 2 for the Selective Repeat diagram, 1 for the comparison.
+
+WATCH: The receiver rule is the whole difference. Go-Back-N discards, Selective Repeat buffers.
+
+*** CNE3 Q10  IPv4 classes and special addresses  [5]
+
+**** Answer
+
+The first octet decides the class. The class decides the default mask and the number of hosts.
+
+| Class | First octet | Default mask | Use |
+|-------+-------------+--------------+-----|
+| A | 1 to 126 | /8 | Very large networks |
+| B | 128 to 191 | /16 | Medium networks |
+| C | 192 to 223 | /24 | Small networks |
+| D | 224 to 239 | None | Multicast groups |
+| E | 240 to 255 | None | Research and experimental |
+
+#+begin_example
+  Class A  0xxxxxxx  host host host   /8    126 networks
+  Class B  10xxxxxx  net  host host   /16   16384 networks
+  Class C  110xxxxx  net  net  host   /24   2 million networks
+  Class D  1110xxxx  multicast group
+  Class E  1111xxxx  reserved
+#+end_example
+
+Class A gives 16 million hosts per network. Class B gives 65534 hosts. Class C gives 254 hosts.
+
+The special categories.
+
+1. 0.0.0.0. It means this host on this network. A DHCP client uses it as a source before it has an address.
+2. 127.0.0.0/8. It is the loopback range. 127.0.0.1 always names the local host.
+3. 255.255.255.255. It is the limited broadcast address for the local subnet.
+4. Private addresses. They are 10.0.0.0/8, 172.16.0.0/12 and 192.168.0.0/16. They are not routed on the Internet.
+5. 169.254.0.0/16. It is the link-local range. A host uses it when DHCP fails.
+6. Network address. All host bits are zero. It names the subnet, not a host.
+7. Directed broadcast. All host bits are one. It reaches every host in that subnet.
+8. 224.0.0.0/4. It is the multicast range. 224.0.0.1 reaches all hosts on the subnet.
+
+MARKS: 1.5 for the five classes with their ranges, 1.5 for four special addresses with the meaning.
+
+WATCH: Class D is multicast, not a host range. 127.0.0.1 is loopback, not a normal host address.

@@ -1,0 +1,355 @@
+** Network performance parameters
+SUMMARY: Twelve measurable quantities describe how well a network moves data, and each has a unit and a formula.
+KUROSE: 1.4.1 to 1.4.4
+EXAM: CNE1 Part A Q1 asks this word for word for 5 marks. Write it as a numbered list with units.
+PRIORITY: core
+
+The question wants one short paragraph per parameter. Open with the four groups: rate, time, loss, derived.
+
+| Parameter | One-line meaning | Unit | Formula |
+|-----------+------------------+------+---------|
+| Bandwidth | most bits a link can carry each second | bit/s | none, it is the link rate R |
+| Throughput | bits actually delivered end to end | bit/s | min of all link rates, or F/T |
+| Latency | total time one packet spends on the path | s | sum of the four delays |
+| Processing delay | time to check the header and pick the output link | s | d_proc |
+| Queuing delay | time spent waiting in the output buffer | s | d_queue, grows with La/R |
+| Transmission delay | time to push all L bits onto the link | s | L/R |
+| Propagation delay | time for one bit to cross the medium | s | d/s |
+| Jitter | variation in delay between successive packets | s | spread of delay values |
+| Packet loss rate | fraction of packets dropped at a full buffer | percent | lost / sent x 100 |
+| Bandwidth-delay product | bits that fit in the pipe at one instant | bit | R x d_prop |
+| Utilisation | fraction of link capacity in use | ratio | arrival rate / R |
+| Goodput | useful application bits delivered each second | bit/s | useful bits / T |
+
+*** The numbers to quote
+- Bandwidth is a property of the link. Throughput is what the user sees.
+- Latency is per node. End-to-end delay sums latency over every node on the path.
+- Goodput is below throughput because headers and retransmissions carry no payload.
+
+*** Trap
+Bandwidth is not throughput. A 100 Mbit/s link can give 40 Mbit/s of throughput.
+Marks are lost when the answer treats the two words as synonyms.
+
+*** Trap
+Jitter is not delay. Delay is how late a packet is. Jitter is how much that lateness changes.
+
+** The four delays
+SUMMARY: Nodal delay is the sum of processing, queuing, transmission and propagation delays.
+KUROSE: 1.4.1 to 1.4.3
+EXAM: CNE4 Q3 asks which delay congestion affects. CNE5 Q1 asks transmission versus propagation. CNE4 Q4 is a full numerical.
+PRIORITY: core
+
+#+begin_example
+  source ---> [ router A ] ---> [ router B ] ---> destination
+                 |  |  |
+                 |  |  +-- propagation: bit crosses the wire, d/s
+                 |  +----- transmission: bits pushed onto link, L/R
+                 +-------- processing then queuing at the output port
+#+end_example
+
+| Delay | Cause | Formula | Typical size | Grows with load |
+|-------+-------+---------+--------------+-----------------|
+| Processing | header check, route lookup, error test | d_proc | microseconds | no |
+| Queuing | packet waits for a busy output link | d_queue | 0 to many ms | yes |
+| Transmission | all L bits pushed onto the link | L/R | microseconds to ms | no |
+| Propagation | one bit travels distance d at speed s | d/s | ms over long links | no |
+
+d_nodal = d_proc + d_queue + d_trans + d_prop
+
+WORKED EXAMPLE (numbers changed on purpose)
+Given
+
+- packet length L = 2000 bytes = 16 000 bit
+- link rate R = 8 Mbit/s = 8 000 000 bit/s
+- link length d = 1200 km = 1 200 000 m
+- propagation speed s = 2.4 x 10^8 m/s
+- processing delay = 0.4 ms
+- queuing delay = 1.6 ms
+
+Step 1, transmission delay
+d_trans = L / R = 16 000 bit / 8 000 000 bit/s = 2 ms
+
+Step 2, propagation delay
+d_prop = d / s = 1 200 000 m / 240 000 000 m/s = 5 ms
+
+Step 3, total nodal delay
+d_nodal = 0.4 ms + 1.6 ms + 2 ms + 5 ms = 9 ms
+
+Step 4, the same packet over three equal links, no queuing
+d_end = 3 x (0.4 + 2 + 5) ms = 22.2 ms
+
+*** Traffic intensity La/R
+L is the packet size in bits, a is the average arrival rate in packets per second, R is the link rate.
+
+- La/R is the ratio of bits arriving to bits the link can serve.
+- La/R near 0 means an idle link and almost no queuing delay.
+- La/R near 1 means a loaded link and a long, variable queuing delay.
+- La/R above 1 means work arrives faster than service, so the queue grows without limit.
+- A real buffer is finite, so the queue stops growing and packets are dropped instead.
+
+*** Store and forward
+A router must receive the whole packet before it forwards any bit.
+One packet over N links therefore costs N x L/R, ignoring the other three delays.
+This is why the answer for two routers and three links multiplies by three.
+
+*** Trap
+Transmission delay depends on packet size and link rate only. It does not depend on distance.
+Propagation delay depends on distance and medium speed only. It does not depend on packet size.
+A big packet on a short fast link can have a large transmission delay and a small propagation delay.
+
+*** Trap
+People call propagation delay "the speed of the link". All links propagate near 2 x 10^8 m/s.
+The link rate R changes transmission delay. It does not change propagation speed.
+
+** Throughput and the bottleneck link
+SUMMARY: End-to-end throughput equals the rate of the slowest link on the path.
+KUROSE: 1.4.4
+EXAM: CNE4 Q3 links queuing delay to congestion. CNE3 Q1b calls the access link the bandwidth bottleneck.
+PRIORITY: core
+
+- Instantaneous throughput is the rate at one moment, in bit/s.
+- Average throughput over a file of F bits in T seconds is F/T.
+- For a path with link rates R1 to RN, throughput is min(R1, R2, ..., RN).
+- The slowest link is the bottleneck link. It sets the rate for the whole path.
+- In the modern internet the core is fast, so the access link is usually the bottleneck.
+
+#+begin_example
+ server --6 Mbit/s-- router --40 Mbit/s-- router --4 Mbit/s-- client
+                       the 4 Mbit/s access link is the bottleneck
+#+end_example
+
+WORKED EXAMPLE (numbers changed on purpose)
+Given
+
+- server access link 6 Mbit/s
+- core link 40 Mbit/s
+- client access link 4 Mbit/s
+- file size F = 24 Mbit
+
+Step 1, end-to-end throughput
+throughput = min(6, 40, 4) = 4 Mbit/s
+
+Step 2, transfer time
+T = F / throughput = 24 Mbit / 4 Mbit/s = 6 s
+
+Step 3, four downloads share the client link fairly
+each rate = 4 Mbit/s / 4 = 1 Mbit/s
+T = 24 Mbit / 1 Mbit/s = 24 s
+
+*** Bandwidth-delay product
+The product R x d_prop is the number of bits in flight when the pipe is full. Use R x RTT only when the question asks how many frames fill a sliding window.
+It is the capacity of the pipe, measured in bits, not a time.
+A link of 4 Mbit/s with a 90 ms round trip holds 360 000 bit. That is 45 kbyte.
+A sender needs this much unacknowledged data to keep the link busy.
+
+*** Trap
+Throughput cannot exceed the bottleneck rate, however fast the other links are.
+Adding a 10 Gbit/s core link to a 4 Mbit/s access link changes nothing for that user.
+
+*** Trap
+The bandwidth-delay product is bits, not seconds and not bytes per second. It uses the one-way delay, so a 1 Mbit/s link with 50 ms one way has a BDP of 50 000 bit.
+Write the unit as bit, then convert to kbyte only if the question asks for it.
+
+** Circuit switching versus packet switching
+SUMMARY: Circuit switching reserves a fixed rate per call, packet switching shares links on demand.
+KUROSE: 1.3.1 and 1.3.2
+EXAM: CNE2 Q2 asks a short comparison. CNE4 Q1 is a 5-mark Swiggy scenario. CNE6 Q2 asks how packet switching improves efficiency.
+PRIORITY: core
+
+| Point | Circuit switching | Packet switching |
+|-------+-------------------+------------------|
+| Resource | reserved for the whole call | used on demand |
+| Setup | required before any data | none |
+| Delay | fixed and predictable | variable, queuing adds delay |
+| Idle capacity | wasted, nobody else can use it | shared with other flows |
+| Congestion | blocked call at setup time | queuing and packet loss |
+| Header overhead | none per packet | header in every packet |
+| Best for | voice, constant rate streams | bursty data, web, file transfer |
+| Example | telephone network | the internet |
+
+- FDM splits the link into frequency bands, and each call keeps one band.
+- TDM splits time into frames of slots, and each call keeps one slot per frame.
+- Both give a fixed rate per call and waste the band or slot during silence.
+- Statistical multiplexing means packet flows share the link only when they have data.
+- Bursty users therefore fit many more flows on the same link.
+
+WORKED EXAMPLE (numbers changed on purpose)
+Given
+
+- link rate 500 Mbit/s
+- each user needs 25 Mbit/s while active
+- each user is active 10 percent of the time
+
+Step 1, circuit switching
+users = 500 Mbit/s / 25 Mbit/s = 20 users
+
+Step 2, packet switching, average load per user
+average = 25 Mbit/s x 0.1 = 2.5 Mbit/s
+
+Step 3, packet switching, users at average load
+users = 500 / 2.5 = 200 users
+
+Step 4, safety check with 60 users
+mean active users = 60 x 0.1 = 6
+the chance of more than 20 active at once is below one in a million
+
+*** Second numerical, TDM circuit
+8000 frames per second, 12 slots per frame, 8 bits per slot.
+Rate per circuit = 8000 x 8 = 64 000 bit/s = 64 kbit/s.
+A file of 1 200 000 bit takes 1 200 000 / 64 000 = 18.75 s.
+Add 300 ms of setup time, so the total is 19.05 s.
+
+*** Store and forward cost
+With no queuing, one packet over N links takes N x L/R.
+The delay does not depend on the number of circuits, only on the rate given to the caller.
+
+*** Trap
+CNE2 Q2 says circuit switching is "more popular". That is not true today.
+Answer it as "why circuit switching suited voice traffic", then state the packet switching advantage.
+
+*** Trap
+Circuit switching is not faster in general. It is only more predictable.
+A packet-switched path can beat it when the reserved circuit would sit idle.
+
+** The layered models
+SUMMARY: Layering splits network work into levels, and each level uses the service of the level below.
+KUROSE: 1.5.1, 1.5.2, 1.5.3
+EXAM: CNE1 Q11 maps protocols to layers for FTP. CNE2 Q19 compares TCP/IP with OSI. CNE3 Q2 lists five layers. CNE4 Q2 explains encapsulation.
+PRIORITY: core
+
+| TCP/IP layer | Job in one line | Protocols | PDU |
+|--------------+-----------------+-----------+-----|
+| Application | supports network applications | HTTP, FTP, SMTP, DNS, DHCP | message |
+| Transport | delivers process to process | TCP, UDP | segment |
+| Network | moves datagrams host to host | IP, ICMP | datagram |
+| Link | moves a frame over one hop | Ethernet, 802.11, ARP | frame |
+| Physical | moves bits on the medium | medium dependent | bit |
+
+| OSI layer | TCP/IP layer | Note |
+|-----------+--------------+------|
+| Application | Application | user services |
+| Presentation | Application | encoding, compression, encryption |
+| Session | Application | dialogue control |
+| Transport | Transport | same job |
+| Network | Network | same job |
+| Data link | Link | same job |
+| Physical | Physical | same job |
+
+TCP/IP has five layers. OSI has seven. OSI adds presentation and session.
+
+#+begin_example
+ sender                            receiver
+ app     M                         M      app
+ trans   Ht M                      Ht M   trans
+ net     Hn Ht M                   Hn Ht M  net
+ link    Hl Hn Ht M                Hl Hn Ht M link
+ phys    10110100101...            10110100101... phys
+#+end_example
+
+Message, segment, datagram, frame, bits. Each header serves the peer layer at the far end.
+
+*** Devices and layers
+- Hosts run all five layers.
+- Routers run layers one to three, so they read IP addresses.
+- Link switches run layers one and two, so they read MAC addresses only.
+- A switch never looks inside an IP header.
+
+*** FTP mapped for the 10-mark answer
+- Application, FTP commands and file data.
+- Transport, TCP on port 21 for control and port 20 for data.
+- Network, IP for addressing and routing.
+- Link, Ethernet or another LAN frame.
+- Physical, the copper or fibre carrying the bits.
+Say one line per layer, then draw the encapsulation diagram.
+
+*** Trap
+ARP is a link-layer protocol, not a network-layer protocol.
+ARP resolves an IP address to a MAC address inside one LAN, so it works one hop at a time.
+It carries a layer-3 address, which is why many students place it at layer 3.
+
+*** Trap
+Encapsulation adds a header at every layer going down, never going up.
+The receiver strips headers going up. The payload itself never changes.
+
+** Access networks and physical media
+SUMMARY: The access network is the first hop from the subscriber to the ISP.
+KUROSE: 1.2.1 and 1.2.2
+EXAM: CNE1 Q2 asks two access networks with a diagram for 5 marks. CNE5 Q2 asks DSL with a diagram and asks about equal rates.
+PRIORITY: core
+
+| Access type | Medium | Downstream and upstream | Key equipment | Shared or dedicated |
+|-------------+--------+-------------------------+---------------+---------------------|
+| DSL | existing telephone line | 24 to 52 Mbit/s down, 3.5 to 16 up | DSL modem, DSLAM | dedicated |
+| Cable | hybrid fibre coax | 40 Mbit/s to 1.2 Gbit/s down, 30 to 100 up | cable modem, CMTS | shared |
+| FTTH | optical fibre | up to 1 Gbit/s and beyond | ONT at home, OLT at CO | shared at the splitter |
+| WiFi | radio, 802.11 | 11, 54, 450 Mbit/s | access point | shared |
+| Cellular | radio, 4G or 5G | tens of Mbit/s, 5G higher | base station | shared |
+| Enterprise | twisted pair plus WiFi | 100 Mbit/s to 10 Gbit/s | Ethernet switch | switched |
+
+DSL uses FDM on one line. Voice sits at 0 to 4 kHz, upstream at 4 to 50 kHz, downstream at 50 kHz to 1 MHz.
+DSL is asymmetric because the downstream band is wider.
+A splitter at home separates voice from data.
+The DSLAM at the central office converts the analog signals back to digital.
+
+Cable uses HFC, so fibre runs to a neighbourhood node and coax runs to the home.
+A CMTS at the headend plays the role that the DSLAM plays for DSL.
+Homes share the coax, so a busy neighbourhood sees lower rates.
+DOCSIS is the standard for data over cable.
+
+#+begin_example
+ home                                  central office
+ +--------+    twisted pair     +-------+      +-----+
+ | PC     |=====================| DSLAM |======| ISP |
+ | DSL    |  0-4 kHz voice      +-------+      +-----+
+ | modem  |  4-50 kHz upstream
+ +--------+  50 kHz-1 MHz down
+     |
+  splitter ---- telephone
+#+end_example
+
+FTTH uses a passive optical network. An ONT at each home feeds a splitter, and one fibre runs to the OLT.
+The splitter is passive, so it needs no power. Downstream frames are copied to every home on the splitter.
+
+*** Guided versus unguided
+| Media | Type | Rate | Key property |
+|-------+------+------+--------------|
+| Twisted pair | guided | 100 Mbit/s to 10 Gbit/s | cheap, short distance, needs twisting |
+| Coaxial cable | guided | hundreds of Mbit/s per channel | shared medium, many channels |
+| Optical fibre | guided | tens to hundreds of Gbit/s | immune to noise, low loss, hard to tap |
+| Terrestrial radio | unguided | up to hundreds of Mbit/s | mobility, suffers fading |
+| Satellite | unguided | up to 100 Mbit/s | 270 ms delay when geostationary |
+
+*** Trap
+DSL is dedicated and cable is shared. That is the single most asked contrast.
+State it in one line, then give the equipment name for each.
+
+*** Trap
+"Asymmetric" means the two directions differ, not that the link is slow.
+DSL is asymmetric because video download needs more rate than the upstream request.
+
+** The structure of the internet
+SUMMARY: Access ISPs, regional ISPs, tier-1 ISPs and content providers form an economic hierarchy.
+KUROSE: 1.3.3
+EXAM: not asked in the 6 papers. Keep it as background for the packet switching answer.
+PRIORITY: extra
+
+- An access ISP connects end users, using DSL, cable, fibre or radio.
+- A regional ISP aggregates many access ISPs inside one area.
+- A tier-1 ISP has national and global reach, and pays no one for transit.
+- Tier-1 ISPs peer with each other, so their customers can reach each other without payment.
+- An IXP is a shared facility where many ISPs peer in one place.
+- A content provider network, such as Google, connects its data centres and peers directly with access ISPs.
+
+#+begin_example
+      tier-1 A  <----- peering ----->  tier-1 B
+          |  \                          /  |
+          |   \-------- IXP -----------/   |
+     regional ISP                  content provider net
+        /      \                        /
+  access ISP  access ISP          access ISP
+      |            |                   |
+    homes     enterprise            mobile users
+#+end_example
+
+Payment flows upward. The access ISP pays the regional ISP, and the regional ISP pays the tier-1 ISP.
+Multi-homing means one ISP buys transit from two providers for redundancy.

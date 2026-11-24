@@ -1,0 +1,808 @@
+** CNE4 answers
+*** Q1 Food delivery traffic: circuit switching or packet switching [5]
+**** Answer
+Packet switching is the correct choice for Swiggy and Zomato.
+
+An order flow has three properties that decide the answer.
+1. Messages are small. A tracking update is a few hundred bytes.
+2. Traffic is bursty. A city link is idle between meal peaks.
+3. Each order lasts seconds, not hours.
+
+A circuit-switched network reserves capacity for the whole session. That reservation has three costs here.
+1. Setup time. The call waits for the reservation before the first byte moves.
+2. Idle capacity. A reserved circuit for a 200-byte update wastes the rest of the rate.
+3. Fixed rate. A slow client still holds a full circuit.
+
+| Point | Circuit switching | Packet switching |
+|---------+---------------------+---------------------|
+| Resource use | Reserved for the call | Shared on demand |
+| Setup | Needed before data | None |
+| Delay | Constant after setup | Variable with load |
+| Bursty traffic | Poor fit | Good fit |
+| Link efficiency | Low when idle | High |
+| Cost | High | Low |
+| Best for | Steady voice | Bursty data |
+
+Swiggy needs thousands of short sessions across cities. Packet switching lets one link carry order confirmations, menu images and tracking updates together. A silent user holds no capacity, so the link serves more orders. The company pays for one shared network, not for one path per order.
+
+Packet switching also matches the Internet. The order app already speaks HTTP over TCP over IP. A circuit-switched core would need a gateway at every edge.
+
+Keep one exception. Live delivery tracking and voice support benefit from a priority queue. Packet switching supports that with DiffServ classes.
+
+MARKS: choice 1, comparison 3, justification 1.
+WATCH: Use the terms statistical multiplexing and setup delay. Do not claim that packet switching is better for steady real-time voice.
+
+*** Q2 Encapsulation from Bengaluru to Chennai [5]
+**** Answer
+Data moves down the stack in Bengaluru. Each layer adds a header. The header belongs to the peer layer in Chennai.
+
+1. Application. HTTP or SMTP creates the message M.
+2. Transport. TCP adds Ht with the source port, the destination port and a checksum. The result is a segment.
+3. Network. IP adds Hn with the source address, the destination address and the TTL. The result is a datagram.
+4. Link. Ethernet adds Hl with the source MAC address and the destination MAC address. It also adds a trailer T with the frame check sequence. The result is a frame.
+5. Physical. The frame becomes a stream of bits on the fibre.
+
+#+begin_example
+   BENGALURU (sender)                  CHENNAI (receiver)
+   +-------------------+              +-------------------+
+   | application   M   |              |   M   application |
+   | transport  Ht M   |              |  Ht M  transport  |
+   | network Hn Ht M   |  datagram    | Hn Ht M  network  |
+   | link Hl Hn Ht M T |  frame       | Hl Hn Ht M T link |
+   | physical   bits   |=============>| bits   physical   |
+   +-------------------+              +-------------------+
+                    fibre link, about 350 km
+#+end_example
+
+The header of each layer carries information for the same layer at the far end. The transport header helps the receiver pick the right process. The network header helps every router pick the next hop. The link header helps the next node accept the frame.
+
+At each router the frame is removed and rebuilt. The datagram inside it stays the same. The link header and the trailer change on every hop. The IP header changes only in the TTL field and its checksum. The TCP header and the message do not change from end to end.
+
+In Chennai the process runs in reverse. This is decapsulation. The link layer checks the frame check sequence and passes the datagram up. The network layer checks the destination address and passes the segment up. The transport layer checks the port and the checksum and passes the message to the application.
+
+MARKS: five layers 3, diagram 1, header contents 1.
+WATCH: State that the link header changes at every hop. A plain router forwards on the IP address and does not read the TCP port.
+
+*** Q3 Delays during peak shopping hours [4]
+**** Answer
+Three delays add to the page load time. Only one of them reacts to congestion.
+
+Propagation delay. This is the time for one bit to cross the medium, d / s. Distance and medium fix the value. A user in the same city sees a small value at every hour. So this delay cannot explain a peak-hour complaint.
+
+Transmission delay. This is the time to push the packet onto the link, L / R. Packet size and link rate fix the value. A slow mobile link makes this large. The value still does not change at 8 pm.
+
+Queuing delay. This is the time that a packet waits in a router buffer for the output link. It grows when the arrival rate approaches the link rate. This is the peak-hour cause.
+
+#+begin_example
+   queuing
+   delay
+     |                       /
+     |                    /
+     |               /
+     |________/
+     +--------------------------> arrival rate / link rate
+        0.0        0.7   0.9  1.0
+#+end_example
+
+During a sale, many users pull the same product images. The arrival rate at the server and at the access router rises. The output queue grows. Queuing delay rises from microseconds to hundreds of milliseconds. When a buffer is full, the router drops packets. TCP retransmits the lost segments, and the retransmission adds more load. The page then stalls on the first missing object.
+
+So queuing delay is the delay most affected by network congestion. Propagation delay and transmission delay stay constant under load. Only queuing delay is a function of traffic intensity.
+
+MARKS: three delays 3, congestion answer 1.
+WATCH: The answer is queuing delay. A long path adds propagation delay at every hour, so it cannot explain a peak-hour complaint.
+
+*** Q4 Delhi to London link: delay budget [4]
+**** Answer
+(i) Transmission delay of one packet.
+
+#+begin_example
+   L = 1000 bytes
+   L = 1000 x 8 bits = 8000 bits
+   R = 1 Mbps = 1 000 000 bits per second
+   dtrans = L / R
+   dtrans = 8000 bits / 1 000 000 bits per second
+   dtrans = 0.008 s = 8 ms
+#+end_example
+
+(ii) Propagation delay across the link.
+
+#+begin_example
+   d = 10 000 km
+   d = 10 000 x 1000 m = 1.0 x 10^7 m
+   s = 2.5 x 10^8 m per second
+   dprop = d / s
+   dprop = 1.0 x 10^7 m / 2.5 x 10^8 m per second
+   dprop = 0.04 s = 40 ms
+#+end_example
+
+(iii) Total processing delay across the two routers.
+
+#+begin_example
+   dproc per router = 2 ms
+   routers = 2
+   dproc total = 2 x 2 ms = 4 ms
+#+end_example
+
+(iv) The most significant delay.
+
+#+begin_example
+   dtotal = dtrans + dprop + dproc
+   dtotal = 8 ms + 40 ms + 4 ms = 52 ms
+   share of propagation = 40 ms / 52 ms
+   share of propagation = 0.77 = 77 percent
+   share of transmission = 8 ms / 52 ms = 15 percent
+   share of processing   = 4 ms / 52 ms = 8 percent
+#+end_example
+
+Propagation delay is the most significant. The link is long and thin. It is 10 000 km long and only 1 Mbps wide. A bit spends 40 ms in flight and only 8 ms on the wire. Propagation is five times the transmission delay.
+
+The cause is the ratio of distance to rate. At 1 Mbps, 8000 bits enter the wire in 8 ms. The signal then needs 40 ms to cross the fibre. A faster link would not help much. At 10 Mbps the transmission delay falls to 0.8 ms, but the 40 ms of flight stays. Only a shorter path, or a medium closer to the speed of light, reduces the dominant term.
+
+Note. If the two routers also store and forward over 1 Mbps links, add 2 x 8 ms. The one-way total then becomes 68 ms, and propagation still dominates.
+
+MARKS: part i 1, part ii 1, part iii 1, part iv 1.
+WATCH: Convert 1000 bytes to 8000 bits and 10 000 km to 1.0 x 10^7 m. Carry the unit on every line.
+
+*** Q5 Client-server or peer-to-peer [4]
+**** Answer
+For large-scale file distribution, use peer-to-peer.
+
+Scalability.
+1. Client-server. One server serves every client. Adding users adds load on one link. Scaling means more servers, more bandwidth and more cost.
+2. Peer-to-peer. Each new peer brings upload capacity as well as demand. The slides call this self-scalability.
+
+Reliability.
+1. Client-server. One always-on host with a permanent address. The design is simple and predictable. The server is also a single point of failure.
+2. Peer-to-peer. No central copy of the data, so no single point of failure for the file. Peers join and leave at will. Churn makes management complex.
+
+Resource sharing.
+1. Client-server. Storage, CPU and bandwidth sit in one place. Access control is easy.
+2. Peer-to-peer. Storage, CPU and bandwidth come from the peers. The operator pays little, and the peers pay in upload quota.
+
+Examples. Web browsing and email use client-server. BitTorrent uses peer-to-peer.
+
+Recommendation. Use peer-to-peer for large-scale file distribution. In client-server the server sends one copy per user, so the distribution time grows with the number of users. In peer-to-peer the peers exchange chunks, so the upload capacity grows with the user count. A popular file then spreads faster as more users join.
+
+Add one condition. Use a small central index for discovery, and keep the file transfer between peers. This hybrid design keeps the search simple and the bandwidth cheap. For a small catalogue with strict access control, plain client-server is simpler.
+
+MARKS: three axes 2, examples 1, recommendation 1.
+WATCH: The recommendation is peer-to-peer. Justify it with upload capacity and distribution time, not only with cost.
+
+*** Q6 HTTP response message [4]
+**** Answer
+This is a response message from a server to a client. It has a status line, six header lines, a blank line and a body.
+
+1. Status line, HTTP/1.1 200 OK. The version is HTTP/1.1. The status code is 200. The reason phrase is OK. Code 200 means that the request succeeded and the object follows.
+2. Connection: close. The server closes the TCP connection after this response. The connection is non-persistent. A persistent connection would say keep-alive.
+3. Date. The date and time when the server created and sent the response. Caches and logs use this value.
+4. Server. The server software and the host system. Here it is Apache 1.4.1 on Unix.
+5. Last-Modified. The time when the object last changed on the server. A client copies this value into a later If-modified-since header.
+6. Content-Length. The body is 3106 bytes. The client can detect a short read or a truncated transfer.
+7. Content-Type. The body is HTML text. The browser renders it and does not download it as a file.
+
+#+begin_example
+   HTTP/1.1 200 OK              <- status line
+   Connection: close            <- header lines
+   Date: ...
+   Server: ...
+   Last-Modified: ...
+   Content-Length: 3106
+   Content-Type: text/html
+                                <- blank line ends the header
+   (data data data data ...)    <- entity body, 3106 bytes
+#+end_example
+
+The blank line after the last header ends the header section. The bytes after it are the entity body. Header lines are ASCII text and end with a carriage return and a line feed. The body can be binary.
+
+This message has no ETag and no Cache-Control. So the client can only use Last-Modified for a conditional GET.
+
+MARKS: status line 1, header fields 2, structure and body 1.
+WATCH: Read Connection: close as non-persistent. Do not call it a request message.
+
+*** Q7 Conditional GET on a news homepage [4]
+**** Answer
+(i) How the method works.
+1. First request. The browser sends a plain GET for the homepage.
+2. The server returns 200 OK with the full page and a Last-Modified header.
+3. The browser stores the page in its cache with that date.
+4. Later refresh. The browser sends GET with If-modified-since and that date.
+5. The server compares the date with the modification time of the object.
+6. If the object is unchanged, the server returns 304 Not Modified with an empty body.
+7. If the object changed, the server returns 200 OK with the new body and a new Last-Modified.
+
+#+begin_example
+   browser                              BBC server
+      |  GET /  ------------------------>  |
+      |  <---------- 200 OK, Last-Modified |
+      |  (page stored with that date)      |
+      |                                    |
+      |  GET /                             |
+      |  If-modified-since: <date> ------> |
+      |  <---------- 304 Not Modified      |
+      |  (cached copy is used)             |
+#+end_example
+
+(ii) The headers involved.
+1. If-modified-since, in the request. It carries the date of the cached copy.
+2. Last-Modified, in the response. It carries the date of the current object.
+3. The status code 304, in the response. It reports an unchanged object.
+4. Date, in the response. It gives the time of the reply.
+5. ETag, when present. It matches an exact version, not only a date.
+
+(iii) How it reduces data transfer.
+1. A 304 reply is a few hundred bytes of header. The homepage can be 300 kB.
+2. No image, script or style object is sent again.
+3. The exchange costs one RTT and no transmission delay for the body.
+4. The server saves upload bandwidth, and the client saves download quota.
+5. A slow link feels fast, because the browser paints from its local copy.
+
+MARKS: mechanism 2, headers 1, saving 1.
+WATCH: The reply is 304, not 200. A 304 carries no body.
+
+*** Q8 IMAP and POP3 on a slow link [4]
+**** Answer
+(i) The roles of the two protocols.
+
+Both are mail access protocols. They move mail from the receiver's mail server to the user agent. SMTP does the delivery between servers. IMAP and POP3 do the retrieval by the user.
+
+1. POP3. The client opens a TCP connection on port 110. It authorises, downloads the messages, and usually deletes them from the server. The mailbox then lives on one device.
+2. IMAP. The client opens a TCP connection on port 143. The messages stay on the server in folders. The client can fetch headers only, set flags, search on the server, and keep several devices in sync.
+
+(ii) The better choice for a slow unstable link.
+
+IMAP is more efficient here.
+1. Partial fetch. The client downloads headers first, so the inbox appears after a few kilobytes.
+2. On-demand body. The user downloads only the message that they open.
+3. No re-download after a drop. The server keeps the read state, so the client resumes where it stopped.
+4. Server-side search. The client does not pull the whole mailbox to find one mail.
+5. One mailbox on many devices. No duplicate copies and no quota waste.
+
+Caveat. POP3 with leave-a-copy gives a local archive for offline reading. The first sync still costs the full mailbox, and a dropped connection restarts the transfer.
+
+MARKS: roles 2, choice 1, justification 1.
+WATCH: Do not say that POP3 wins only because it stores mail locally. The question is about a slow link, so partial fetch and resume decide it.
+
+*** Q9 Recursive and iterative DNS queries [4]
+**** Answer
+Both query types start at the same place. The host asks its local DNS server. The difference is who does the walking.
+
+Recursive query.
+1. The host sends the query to the local DNS server and asks for recursion.
+2. The local server sends the full query to a root server.
+3. The root server does not return a referral. It forwards the query onward.
+4. The TLD server forwards the query to the authoritative server.
+5. The answer travels back along the same chain.
+
+In a recursive query, each server that receives the query takes responsibility for the final answer. The reply is the answer or an error. The load sits on the upper levels of the hierarchy.
+
+Iterative query.
+1. The host sends the query to the local DNS server.
+2. The local server asks a root server.
+3. The root server replies with a referral. It names the TLD server for the domain.
+4. The local server asks the TLD server.
+5. The TLD server replies with a referral. It names the authoritative server.
+6. The local server asks the authoritative server.
+7. The authoritative server replies with the address.
+8. The local server caches the record and returns it to the host.
+
+In an iterative query, the contacted server returns the best information that it holds. The reply is a referral or the final answer.
+
+#+begin_example
+   RECURSIVE                        ITERATIVE
+   host -> local   full query       host -> local   full query
+   local -> root   full query       local -> root   ask
+   root -> local   answer           root -> local   referral to TLD
+   (root does the rest)             local -> TLD    ask
+                                    TLD -> local    referral to auth
+                                    local -> auth   ask
+                                    auth -> local   answer
+#+end_example
+
+The response behaviour differs in one clear way. A recursive server returns the final answer. An iterative server returns a referral to the next server, or the answer when it holds the record itself.
+
+Examples. A host at Amrita asks for www.bbc.com. In recursive mode the local server returns the address after the whole chain finishes. In iterative mode the local server itself walks root, then the .com TLD, then the bbc.com authoritative server.
+
+The real Internet mixes the two. The host to local server step is recursive. The local server to the root, TLD and authoritative servers uses iterative queries.
+
+MARKS: recursive 1.5, iterative 1.5, response difference 0.5, examples 0.5.
+WATCH: The referral is the mark-earning word for the iterative case. Do not say that the root server always returns the address.
+
+*** Q10 UDP checksum verification [4]
+**** Answer
+The 12 bytes form six 16-bit words. The last word is the checksum field.
+
+#+begin_example
+   w1  0000 0000 0101 0000  = 0050
+   w2  0000 0000 0001 1001  = 0019
+   w3  0000 0000 0001 0100  = 0014
+   w4  0110 0110 0110 0110  = 6666
+   w5  0101 0101 0101 0101  = 5555
+   w6  1000 1111 0000 1100  = 8F0C   checksum word
+#+end_example
+
+The receiver sums all six words with the one's complement sum. A carry out of the top bit wraps around and adds to the low bit.
+
+#+begin_example
+   0050 + 0019 = 0069
+   0069 + 0014 = 007D
+   007D + 6666 = 66E3
+   66E3 + 5555 = BC38
+   BC38 + 8F0C = 1 4B44       carry out 1
+   wrap: 4B44 + 0001 = 4B45
+#+end_example
+
+Verdict. The result must be FFFF for a clean segment. The result is 4B45. The one's complement of 4B45 is B4BA, not 0000. So the receiver detects an error in this segment.
+
+A second check gives the same verdict. Words w1 to w5 sum to BC38. Their complement is 43C7. A correct sender would place 43C7 in the checksum field. The segment carries 8F0C, so the value is wrong.
+
+#+begin_example
+   sum of w1..w5      = BC38
+   expected checksum  = complement of BC38 = 43C7
+   received checksum  = 8F0C
+   43C7 is not equal to 8F0C   ->  error
+#+end_example
+
+Note. The Internet checksum is a weak check. A pair of compensating bit errors can still pass. Here the sum is not FFFF, so an error is certain.
+
+MARKS: word split 1, summation with wrap 2, verdict 1.
+WATCH: Add the carry back. Do not stop at 1 4B44.
+
+*** Q11 Subnetting 192 devices across five blocks [8]
+**** Answer
+Sizing rule. Usable hosts = 2^h - 2, where h is the host-bit count. Add 2 for the network address and the broadcast address, then round up to a power of two.
+
+#+begin_example
+   block  devices  +2   power of 2  host bits  prefix
+   Q      90       92   128         7          /25
+   P      60       62   64          6          /26
+   S      20       22   32          5          /27
+   T      14       16   16          4          /28
+   R       8       10   16          4          /28
+   total  192      202  256
+#+end_example
+
+Block R needs a /28. A /29 gives only 6 usable hosts, and R has 8 devices. So the next size that fits is a /28 with 14 usable hosts.
+
+Allocation rule. Take the largest block first. Place each block at the next free address. A /25 starts on a multiple of 128, a /26 on 64, a /27 on 32, and a /28 on 16.
+
+| Block | Devices | Prefix | Mask | Network address | Usable range | Broadcast |
+|-------+---------+--------+-----------------------+-----------------+----------------------+---------------|
+| Q | 90 | /25 | 255.255.255.128 | 192.168.5.0 | 192.168.5.1 to .126 | 192.168.5.127 |
+| P | 60 | /26 | 255.255.255.192 | 192.168.5.128 | 192.168.5.129 to .190 | 192.168.5.191 |
+| S | 20 | /27 | 255.255.255.224 | 192.168.5.192 | 192.168.5.193 to .222 | 192.168.5.223 |
+| T | 14 | /28 | 255.255.255.240 | 192.168.5.224 | 192.168.5.225 to .238 | 192.168.5.239 |
+| R | 8 | /28 | 255.255.255.240 | 192.168.5.240 | 192.168.5.241 to .254 | 192.168.5.255 |
+
+Use of the block.
+
+#+begin_example
+   Q   192.168.5.0   to 192.168.5.127    128 addresses
+   P   192.168.5.128 to 192.168.5.191     64 addresses
+   S   192.168.5.192 to 192.168.5.223     32 addresses
+   T   192.168.5.224 to 192.168.5.239     16 addresses
+   R   192.168.5.240 to 192.168.5.255     16 addresses
+                                         ------------
+                                         256 addresses
+#+end_example
+
+The five subnets use 128 + 64 + 32 + 16 + 16 = 256 addresses. That is the whole /24. The block is exactly full, so no address is left unassigned.
+
+Check. Q needs 90 hosts and its /25 offers 126. P needs 60 and its /26 offers 62. S needs 20 and its /27 offers 30. T needs 14 and its /28 offers 14 exactly. R needs 8 and its /28 offers 14.
+
+Waste. Each subnet rounds up to a power of two, so each block has spare host addresses. Q has 36 spare, P has 2, S has 10, T has 0, and R has 6. This waste is unavoidable with a power-of-two mask.
+
+MARKS: sizing table 2, prefix and mask 2, ranges 2, broadcast 1, justification 1.
+WATCH: Start with the largest block. If you place P first, the later blocks fall on wrong boundaries.
+
+** CNE6 answers
+*** Q1 Network for 10 computers [5]
+**** Answer
+Propose a single switched Ethernet LAN with a star topology.
+
+Design.
+1. One 24-port gigabit switch as the centre of the star.
+2. Cat6 UTP cable to each of the 10 computers. Each cable run stays under 100 m.
+3. 1000BASE-T, so each host gets 1 Gbps to the switch.
+4. Private block 192.168.10.0/24 with DHCP for the hosts.
+5. One router for internet access and NAT.
+6. One file server and one network printer on the switch.
+
+#+begin_example
+        PC1   PC2   PC3   PC4   PC5
+         |     |     |     |     |
+   +-----+-----+-----+-----+-----+----+
+   |      24-port gigabit switch      |
+   +-----+-----------+-----------+----+
+         |           |           |
+     PC6..PC10  file server   printer
+#+end_example
+
+Justification.
+1. All 10 hosts sit in one office, so every run is short. A LAN fits the distance.
+2. A LAN gives 1 Gbps per host and a delay in microseconds. A WAN gives a slower leased line.
+3. One switch needs no service provider and no monthly fee.
+4. Shared resources stay local. A file copy or a print job never leaves the building.
+5. The design grows. Add a switch or a Wi-Fi access point when the head count rises.
+
+Why not the other types.
+1. WAN. It spans cities and needs a provider and a recurring cost.
+2. MAN. It spans a city and is larger than this office needs.
+3. PAN. It covers about 10 m and serves one person.
+
+Add a small router for internet access, NAT and a firewall. Put the file server on a fixed address. Use DHCP reservations for the printer.
+
+MARKS: choice 1, topology and medium 1, justification 3.
+WATCH: Name the topology and the medium. A LAN answer without a star topology loses a mark.
+
+*** Q2 Packet switching efficiency for an ISP [5]
+**** Answer
+Packet switching improves efficiency because it shares the link on demand.
+
+1. No setup. A circuit needs an end-to-end reservation before the first bit. That costs at least one RTT.
+2. Statistical multiplexing. Packets from many users share one link. A silent user holds no capacity.
+3. No idle reserved capacity. In TDM a slot belongs to one call even when that call sends nothing.
+4. A good fit for bursty traffic. Web pages, email and DNS send a short burst and then go quiet.
+5. More users per link. One link serves many more users at the same delay target.
+
+#+begin_example
+   circuit:  |--call 1--|--call 2--|-- idle --|--call 3--|
+   packet:   |p1|p3|p2|p5|p1|p4|p3|p2|p6|p1|p4|p5|p3|p6|
+              one link, work conserving, no idle slot
+#+end_example
+
+Numbers. Take a 1 Mbps link and users who need 100 kbps when active.
+1. Circuit switching supports 10 users, each with a dedicated 100 kbps.
+2. Packet switching supports about 35 users at 10 percent activity. The chance that more than 10 are active at once is very small.
+3. A TDM link of 1.536 Mbps with 24 slots gives 64 kbps per circuit. That slot stays reserved for the whole call.
+
+So the same link carries about three times as many users. The gain comes from sharing, not from a faster medium.
+
+The costs of packet switching.
+1. Variable delay. Queuing delay grows with load.
+2. Possible loss when a buffer overflows.
+3. It needs congestion control and reliable transport at the ends.
+
+Conclusion. For internet data, the gain in link efficiency is far larger than the cost of variable delay. For a steady real-time flow, add a reservation or a priority queue.
+
+MARKS: efficiency reasons 2, comparison 1, numbers 1, drawbacks 1.
+WATCH: Give both sides. A one-sided answer loses the final mark.
+
+*** Q3 Peer-to-peer file sharing service [5]
+**** Answer
+Peer-to-peer fits this service.
+
+Why it fits.
+1. Each user uploads and downloads directly, and no central host carries the file.
+2. The operator avoids a large bandwidth bill and a large storage bill.
+3. The service scales with its users. Each new peer adds upload capacity as well as demand.
+4. A popular file is served by many peers at once, so one hot file does not overload one link.
+5. A peer is both a client and a server. That single property defines the model.
+
+#+begin_example
+              +-------------+
+              |   tracker   |   index and peer list only
+              +------+------+
+                     |
+        +------------+------------+
+        |            |            |
+      +-+-+        +-+-+        +-+-+
+      | A |<------>| B |<------>| C |
+      +---+        +---+        +---+
+        \____________|____________/
+                file chunks
+#+end_example
+
+Design. Keep a small central index for discovery. The index holds file names, hashes and peer lists. The file bytes move between peers. BitTorrent works this way. A distributed hash table can replace the index.
+
+Why client-server does not fit.
+1. Every byte crosses the server, so the server upload rate limits the whole service.
+2. Storage grows with the catalogue, and so does the cost.
+3. Cost grows linearly with the number of users.
+
+Risks to handle.
+1. A peer may leave during a transfer, so the client needs chunks and several sources.
+2. NAT and firewalls block inbound connections, so the service needs a relay.
+3. Illegal content and malware spread easily, so the operator needs hashes and abuse control.
+
+MARKS: choice 1, reasons 2, design 1, risks 1.
+WATCH: Say that each peer is both a client and a server. That phrase earns a mark.
+
+*** Q4 Persistent HTTP for an e-commerce site [5]
+**** Answer
+Persistent connections cut the number of round trips per page. The page then appears sooner.
+
+Non-persistent HTTP.
+1. The browser opens a TCP connection.
+2. It sends one request.
+3. The server sends one response and closes the connection.
+4. Each object repeats the whole sequence.
+
+Cost. Two RTT per object plus the transfer time. One RTT for the TCP handshake. One RTT for the request and the first byte.
+
+Persistent HTTP, version 1.1.
+1. The server leaves the connection open after the response.
+2. The browser sends the next request on the same connection.
+3. With pipelining, the browser sends all requests at once.
+
+Cost. Two RTT for the base page. Then about one RTT for all the referenced objects.
+
+#+begin_example
+   page = 1 HTML file + 10 images, RTT = 50 ms
+
+   non-persistent:   11 objects x 2 RTT = 22 RTT
+                     22 x 50 ms = 1100 ms
+
+   persistent:       2 RTT + 10 x 1 RTT = 12 RTT
+                     12 x 50 ms = 600 ms
+
+   persistent + pipelining:  2 RTT + 1 RTT = 3 RTT
+                     3 x 50 ms = 150 ms
+#+end_example
+
+Other gains.
+1. Fewer connections mean less CPU and memory on the server.
+2. TCP slow start runs once, not once per object.
+3. Fewer handshakes mean less congestion on the access link.
+4. One TLS handshake covers every object on the connection.
+
+For an e-commerce site the gain is direct. The product grid paints after 150 ms instead of 1100 ms. The server also accepts more shoppers per second, because it holds fewer sockets.
+
+Keep one control. An idle connection still holds a server socket. The server must close idle connections after a timeout.
+
+MARKS: mechanism 2, comparison 2, numbers 1.
+WATCH: Charge 2 RTT for the first object in both cases. The saving applies to the objects after the first.
+
+*** Q5 TCP and UDP services for HTTP, DNS and FTP [5]
+**** Answer
+| Service | TCP | UDP |
+|------------------------+---------------------------+---------------------------|
+| Connection setup | Three-way handshake | None |
+| Reliable delivery | Yes, with retransmission | No |
+| Ordering | In-order byte stream | Not guaranteed |
+| Duplicate removal | Yes | No |
+| Flow control | Receive window | None |
+| Congestion control | Yes | None |
+| Header size | 20 bytes minimum | 8 bytes |
+| Message boundaries | None, it is a byte stream | One segment is one message |
+| Multicast and broadcast | No | Yes |
+| Typical use | Web, mail, file transfer | DNS, voice, video |
+
+HTTP uses TCP on ports 80 and 443. A page must arrive complete and in order. A missing byte breaks the HTML or the script. TCP also supplies congestion control, so a busy server does not flood the network. HTTP/3 is the exception. It runs over QUIC on UDP and adds reliability in the application.
+
+DNS uses UDP on port 53 for normal queries. A query and a reply fit in one packet, and speed matters more than reliability. The client retransmits after a timeout. DNS uses TCP on port 53 for zone transfers and for replies that are too large for one datagram.
+
+FTP uses TCP on ports 20 and 21. The control connection carries commands and replies. The data connection carries the file. Both need reliability and ordering. A corrupt file transfer is useless.
+
+Other common mappings.
+1. SMTP uses TCP on port 25. Mail must not lose a line.
+2. IMAP uses TCP on port 143. The mailbox must stay consistent.
+3. DHCP uses UDP on ports 67 and 68. The client has no address yet, so it broadcasts.
+4. SNMP uses UDP on port 161.
+5. TFTP uses UDP on port 69.
+6. Voice and video use UDP with RTP. A late packet is worse than a lost packet.
+
+Rule of thumb. Use TCP for bulk data and for a stateful session. Use UDP for a short request and reply, and for real time.
+
+MARKS: service table 3, protocol mapping 2.
+WATCH: DNS uses both. Say UDP for queries and TCP for zone transfer and large replies.
+
+*** Q6 Cookies and caching for a shopping cart [5]
+**** Answer
+HTTP is stateless. A cookie adds state, and the server database holds the state itself.
+
+How the cart survives.
+1. First visit. The browser sends a login request with the credentials.
+2. The server creates a session ID and a row in its database. The row holds the cart items.
+3. The server sends Set-Cookie with the session ID in the response.
+4. Every later request carries Cookie with the same session ID.
+5. The server reads the ID, finds the row, and returns the cart.
+
+#+begin_example
+   browser                    server                database
+      |  POST /login  -------->  |                      |
+      |                          |  create session ---> |
+      |  <--- 200 Set-Cookie     |                      |
+      |                          |                      |
+      |  GET /cart               |                      |
+      |  Cookie: sid=8f3a  ----> |  read 8f3a  -------> |
+      |  <--- 200 cart items     |  <--- cart row       |
+#+end_example
+
+Why it survives a refresh and a closed tab.
+1. A refresh sends the same cookie again, so the server returns the same row.
+2. A tab close deletes no cookie, so the cart survives that case anyway.
+3. A session cookie lives in memory and dies when the browser closes.
+4. A persistent cookie has Max-Age or Expires, so the browser writes it to disk.
+5. The cart survives a browser close only when the cookie is persistent and the server keeps the row.
+
+How caching helps.
+1. The browser caches the HTML, CSS, JavaScript and images.
+2. Cache-Control and ETag decide whether a copy is still fresh.
+3. A conditional GET returns 304, so the body is not sent again.
+4. A CDN cache holds the product images near the user.
+
+Effect on performance.
+1. Fewer bytes and fewer RTTs, so the page paints faster.
+2. Less load on the origin server.
+3. A stale cache can show an old price, so the cart page needs no-store.
+
+Effect on privacy.
+1. A first-party cookie tracks behaviour on one site.
+2. A third-party cookie tracks a user across sites, so browsers block them now.
+3. A stolen session ID lets an attacker take over the account.
+4. HttpOnly, Secure and SameSite limit that risk.
+5. GDPR requires consent for non-essential cookies.
+6. A user can clear cookies, so the cart needs a login as a fallback.
+
+MARKS: cookie flow 2, caching 1, performance 1, privacy 1.
+WATCH: The cart is in the server database. The cookie holds only the session ID.
+
+*** Q7 Multiplexing and demultiplexing [5]
+**** Answer
+Multiplexing at the sender. The transport layer collects data from several sockets. It adds a header to each chunk and passes the segments to the network layer.
+
+Demultiplexing at the receiver. The transport layer reads the header of each arriving segment. It delivers the payload to the correct socket.
+
+The transport header carries the source port and the destination port. The network header carries the source address and the destination address.
+
+#+begin_example
+      HOST A                                HOST B
+   +----------------+                   +----------------+
+   | P1    P2    P3 |                   | P4    P5    P6 |
+   +--+-----+-----+-+                   +-+-----+-----+--+
+      |     |     |                       ^     ^     ^
+   +--v-----v-----v--+   one link      +--v-----v-----v--+
+   |  MUX transport  |================>| DEMUX transport |
+   +-----------------+                 +-----------------+
+      add port header                  read port, pick socket
+#+end_example
+
+Connectionless demultiplexing, UDP.
+1. The host uses the destination port only.
+2. Two datagrams with the same destination port reach the same socket, even from different sources.
+3. A socket bound to port 6428 receives all traffic for port 6428.
+
+Connection-oriented demultiplexing, TCP.
+1. The host uses the 4-tuple. The parts are the source address, the source port, the destination address and the destination port.
+2. Each connection has its own socket.
+3. Two browsers on one host open two connections to port 443 and reach two different sockets.
+
+| Segment | Source | Destination | Socket |
+|---------+-----------------+-----------------+--------|
+| 1 | 10.0.0.5:51000 | 93.1.1.1:443 | S1 |
+| 2 | 10.0.0.5:51001 | 93.1.1.1:443 | S2 |
+| 3 | 10.0.0.9:62000 | 93.1.1.1:443 | S3 |
+
+Segments 1 and 2 share the destination and differ in the source port. Segment 3 differs in the source address. All three reach different sockets, because TCP uses the full 4-tuple.
+
+Multiplexing and demultiplexing happen at every layer. The link layer demultiplexes on the frame type. The network layer demultiplexes on the protocol field, so TCP goes to TCP and UDP goes to UDP.
+
+MARKS: definitions 2, diagram 1, UDP 1, TCP 1.
+WATCH: UDP uses the destination port only. TCP uses the full 4-tuple.
+
+*** Q8 TCP reliable data transfer [5]
+**** Answer
+TCP turns an unreliable IP service into a reliable byte stream. It uses sequence numbers, acknowledgements, a checksum, timers and retransmission.
+
+1. Sequence numbers. Each byte of the stream has a number. The sequence field holds the number of the first data byte in the segment.
+2. Acknowledgements. The receiver sends an ACK with the next byte that it expects. The ACK is cumulative, so it covers a whole run of bytes.
+3. Checksum. The receiver checks the checksum. A corrupt segment is dropped and not acknowledged.
+4. Timer. The sender runs one timer for the oldest unacknowledged segment. The timeout is EstimatedRTT plus 4 times DevRTT.
+5. Retransmission on timeout. The sender resends the oldest unacknowledged segment and restarts the timer.
+6. Fast retransmit. Three duplicate ACKs mean that a later segment arrived and one is missing. The sender resends without waiting for the timer.
+7. Out-of-order arrival. The receiver delivers only in-order bytes to the application. It buffers the later segments or discards them.
+8. Duplicate ACK. The receiver repeats the same ACK for each out-of-order segment. That tells the sender which byte is missing.
+
+#+begin_example
+   sender                                receiver
+     |  seq 100, 100 bytes  ------------>  |  ACK 200
+     |  seq 200, 100 bytes  ---- X         |
+     |  seq 300, 100 bytes  ------------>  |  ACK 200  dup
+     |  seq 400, 100 bytes  ------------>  |  ACK 200  dup
+     |  seq 500, 100 bytes  ------------>  |  ACK 200  dup
+     |  resend seq 200 (fast retransmit) ->|  ACK 600
+#+end_example
+
+The cumulative ACK repairs a whole gap with one reply. Flow control with the receive window stops a fast sender from overrunning a slow receiver. Congestion control stops the network from dropping many segments at once.
+
+The method is not perfect. TCP cannot tell whether a segment or its ACK was lost. So it may resend a segment that already arrived. The receiver drops the duplicate by sequence number and sends the ACK again.
+
+MARKS: sequence and ACK 2, retransmission and timer 2, out-of-order handling 1.
+WATCH: The ACK number is the next expected byte, not the last byte received.
+
+*** Q9 Go-Back-N against Selective Repeat [5]
+**** Answer
+Both protocols pipeline. Both use a window of N packets. They differ in what the receiver does with an out-of-order packet.
+
+Go-Back-N.
+1. One timer, for the oldest unacknowledged packet.
+2. The ACK is cumulative.
+3. The receiver discards an out-of-order packet and repeats the ACK for the last in-order packet.
+4. On a timeout, the sender resends that packet and every later packet in the window.
+
+Selective Repeat.
+1. One timer per packet.
+2. The ACK is individual.
+3. The receiver buffers an out-of-order packet and delivers it in order later.
+4. On a timeout, the sender resends only the missing packet.
+
+| Point | Go-Back-N | Selective Repeat |
+|---------------------+----------------------+----------------------|
+| ACK | Cumulative | Individual |
+| Timer | One, for the oldest | One per packet |
+| Receiver buffer | None | One slot per packet |
+| Retransmission | Whole window after a loss | Only the lost packet |
+| Lossy link | Wastes bandwidth | Efficient |
+| Complexity | Low | High |
+| Window limit | N up to 2^k - 1 | N up to 2^(k-1) |
+
+Example. Send packets 0 to 5 with a window of 4. Packet 2 is lost.
+
+#+begin_example
+   GBN:
+     send 0 1 2 3      2 is lost
+     recv ack0 ack1
+     pkt 3 arrives early -> discard, ACK 1 again
+     timeout 2 -> resend 2 3 4 5
+     cost: 4 packets for 1 loss
+
+   SR:
+     send 0 1 2 3      2 is lost
+     recv ack0 ack1, pkt 3 buffered, ack3
+     timeout 2 -> resend 2 only
+     recv 2 -> deliver 2 3 4 5
+     cost: 1 packet for 1 loss
+#+end_example
+
+Evaluation. Go-Back-N wastes up to N packets for one loss. Selective Repeat wastes one packet. On a clean link both are efficient, so Go-Back-N wins on simplicity. On a lossy link Go-Back-N resends many correct packets, and its throughput falls. Selective Repeat keeps throughput but needs a buffer and more state.
+
+Reliability. Both deliver every packet in order and without duplicates. Selective Repeat keeps more of the link busy under loss.
+
+Conclusion. Use Go-Back-N on a clean wire with a simple receiver. Use Selective Repeat on a wireless or lossy link. Selective Repeat also needs N at most half the sequence space, so old and new windows cannot overlap.
+
+MARKS: mechanisms 2, comparison 1, example 1, evaluation 1.
+WATCH: State the window limit for Selective Repeat. Without it, the old and new windows overlap and the receiver accepts a duplicate.
+
+*** Q10 Subnetting 165 devices across three blocks [5]
+**** Answer
+Sizing rule. Usable hosts = 2^h - 2. Add 2 for the network and broadcast addresses, then round up to a power of two.
+
+#+begin_example
+   block  devices  +2   power of 2  host bits  prefix
+   T      108      110  128         7          /25
+   S       45       47  64          6          /26
+   R       12       14  16          4          /28
+   total  165      171  208
+#+end_example
+
+Block R needs a /28. A /29 gives only 6 usable hosts, and R has 12 devices.
+
+Allocation rule. Take the largest block first. Place each block at the next free address.
+
+| Block | Devices | Prefix | Mask | Network address | Usable range | Broadcast |
+|-------+---------+--------+-----------------------+-----------------+----------------------+---------------|
+| T | 108 | /25 | 255.255.255.128 | 192.168.5.0 | 192.168.5.1 to .126 | 192.168.5.127 |
+| S | 45 | /26 | 255.255.255.192 | 192.168.5.128 | 192.168.5.129 to .190 | 192.168.5.191 |
+| R | 12 | /28 | 255.255.255.240 | 192.168.5.192 | 192.168.5.193 to .206 | 192.168.5.207 |
+
+Use of the block.
+
+#+begin_example
+   T   192.168.5.0   to 192.168.5.127    128 addresses
+   S   192.168.5.128 to 192.168.5.191     64 addresses
+   R   192.168.5.192 to 192.168.5.207     16 addresses
+   free 192.168.5.208 to 192.168.5.255    48 addresses
+                                         ------------
+                                         256 addresses
+#+end_example
+
+The three subnets use 128 + 64 + 16 = 208 addresses. The free range is 192.168.5.208 to 192.168.5.255, which is 48 addresses.
+
+The free range holds one /27 and one /28, or three /28 blocks. Keep it for growth or for a management subnet.
+
+Check. T needs 108 hosts and its /25 offers 126. S needs 45 and its /26 offers 62. R needs 12 and its /28 offers 14. Each subnet starts on a valid boundary. A /25 starts on a multiple of 128, a /26 on 64, and a /28 on 16.
+
+Waste. T has 18 spare hosts, S has 17, and R has 2. The rounded size causes this waste, and no smaller mask would fit the device count.
+
+MARKS: sizing 1, prefix and mask 1, table 2, free range 1.
+WATCH: R needs a /28, not a /29. A /29 holds only 6 usable hosts.

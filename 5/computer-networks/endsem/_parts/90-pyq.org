@@ -1,0 +1,1026 @@
+** How to use this bank
+
+Attempt every question on paper before you look anything up. Time-box each
+one at about one minute per mark and stop when the timer ends, even
+mid-answer. Draw the diagrams, because the marks for them are separate
+marks. Only then open the answers file, and log every topic you had to
+guess.
+
+** Coverage map
+
+Unit is the course outcome the paper tags the question with. CNE2
+prints no CO tags, so its units are inferred from the topic.
+
+| Unit | Paper |   Q | Topic                            | Marks |
+|------+-------+-----+----------------------------------+-------|
+| CO1  | CNE1  |  Q1 | Network performance metrics      |     5 |
+| CO1  | CNE1  |  Q2 | Two access networks              |     5 |
+| CO1  | CNE1  | Q11 | OSI layers and FTP               |    10 |
+| CO1  | CNE2  |  Q1 | Network devices                  |     3 |
+| CO1  | CNE2  |  Q2 | Circuit versus packet            |     3 |
+| CO1  | CNE2  |  Q3 | Packet delay formula             |     3 |
+| CO1  | CNE2  | Q11 | P2P versus client-server         |     6 |
+| CO1  | CNE2  | Q19 | OSI versus TCP/IP                |    10 |
+| CO1  | CNE3  | Q1a | End systems, router              |     5 |
+| CO1  | CNE3  | Q1b | Conditional GET                  |     5 |
+| CO1  | CNE4  |  Q1 | Circuit versus packet            |     5 |
+| CO1  | CNE4  |  Q2 | Encapsulation across layers      |     5 |
+| CO1  | CNE4  |  Q3 | Delay components                 |     4 |
+| CO1  | CNE4  |  Q4 | Delay calculation                |     4 |
+| CO1  | CNE4  |  Q5 | Client-server versus P2P         |     4 |
+| CO1  | CNE5  |  Q1 | Transmission versus propagation  |     5 |
+| CO1  | CNE5  |  Q2 | DSL access                       |     5 |
+| CO1  | CNE5  | Q11 | HTTP over TCP/IP                 |    10 |
+| CO1  | CNE6  |  Q1 | LAN versus WAN                   |     5 |
+| CO1  | CNE6  |  Q2 | Circuit versus packet            |     5 |
+| CO1  | CNE6  |  Q3 | P2P file sharing                 |     5 |
+| CO2  | CNE1  |  Q3 | HTTP proxy server                |     5 |
+| CO2  | CNE1  |  Q4 | Cookies and state                |     5 |
+| CO2  | CNE1  | Q12 | Application protocols            |    10 |
+| CO2  | CNE2  |  Q4 | FTP port numbers                 |     3 |
+| CO2  | CNE2  |  Q5 | Socket addressing                |     3 |
+| CO2  | CNE2  | Q13 | Protocols, all layers            |     6 |
+| CO2  | CNE2  | Q17 | Email delivery path              |    10 |
+| CO2  | CNE3  |  Q2 | TCP/IP five layers               |     3 |
+| CO2  | CNE3  |  Q3 | TCP sequence numbers             |     3 |
+| CO2  | CNE3  |  Q4 | Online shopping scenario         |     4 |
+| CO2  | CNE3  |  Q5 | Web caching delay                |     5 |
+| CO2  | CNE3  | Q10 | IPv4 address classes             |     5 |
+| CO2  | CNE4  |  Q6 | HTTP response fields             |     4 |
+| CO2  | CNE4  |  Q7 | Conditional GET                  |     4 |
+| CO2  | CNE4  |  Q8 | IMAP versus POP3                 |     4 |
+| CO2  | CNE4  | Q11 | VLSM five blocks                 |     8 |
+| CO2  | CNE5  |  Q3 | Conditional GET                  |     5 |
+| CO2  | CNE5  | Q12 | Application protocol notes       |    10 |
+| CO2  | CNE6  |  Q6 | Cookies and caching              |     5 |
+| CO3  | CNE1  |  Q5 | Pipelining versus stop-and-wait  |     5 |
+| CO3  | CNE1  | Q13 | TCP versus UDP                   |    10 |
+| CO3  | CNE2  |  Q8 | TCP ack field                    |     3 |
+| CO3  | CNE2  | Q14 | Pipelining protocols             |     6 |
+| CO3  | CNE2  | Q18b | UDP header                       |     4 |
+| CO3  | CNE3  |  Q6 | Email download protocols         |     5 |
+| CO3  | CNE3  |  Q7 | Pipelining utilization           |     5 |
+| CO3  | CNE3  |  Q8 | Go-back-N throughput             |     5 |
+| CO3  | CNE3  |  Q9 | GBN versus SR                    |     5 |
+| CO3  | CNE4  |  Q9 | Recursive, iterative DNS         |     4 |
+| CO3  | CNE4  | Q10 | UDP checksum                     |     4 |
+| CO3  | CNE5  |  Q4 | TCP seq, ack                     |     5 |
+| CO3  | CNE5  |  Q5 | TCP congestion control           |     5 |
+| CO3  | CNE5  | Q13 | Connection versus connectionless |    10 |
+| CO3  | CNE6  |  Q4 | Persistent HTTP                  |     5 |
+| CO3  | CNE6  |  Q5 | TCP versus UDP                   |     5 |
+| CO3  | CNE6  |  Q7 | Multiplexing, demultiplexing     |     5 |
+| CO3  | CNE6  |  Q8 | TCP reliable transfer            |     5 |
+| CO3  | CNE6  |  Q9 | GBN versus SR                    |     5 |
+| CO4  | CNE1  |  Q6 | NAT purpose                      |     5 |
+| CO4  | CNE1  |  Q7 | RIP and OSPF                     |     5 |
+| CO4  | CNE1  |  Q8 | DHCP steps                       |     5 |
+| CO4  | CNE1  | Q14 | Mobility routing                 |    10 |
+| CO4  | CNE2  |  Q6 | Network layer services           |     3 |
+| CO4  | CNE2  | Q16 | IPv4 versus IPv6                 |    10 |
+| CO4  | CNE5  |  Q6 | Mixed IPv4/IPv6 path             |     5 |
+| CO4  | CNE5  |  Q7 | Global versus decentralized      |     5 |
+| CO4  | CNE5  |  Q8 | IPv4 address conservation        |     5 |
+| CO4  | CNE5  | Q14 | VLSM six departments             |    10 |
+| CO4  | CNE6  | Q10 | VLSM three blocks                |     5 |
+| CO5  | CNE1  |  Q9 | Ethernet frame                   |     5 |
+| CO5  | CNE1  | Q10 | Two-dimensional parity           |     5 |
+| CO5  | CNE1  | Q15 | ARP, same LAN                    |    10 |
+| CO5  | CNE2  |  Q7 | Hidden terminal                  |     3 |
+| CO5  | CNE2  |  Q9 | Wireless topologies              |     3 |
+| CO5  | CNE2  | Q10 | 802.11 frame                     |     3 |
+| CO5  | CNE2  | Q12 | Small LAN design                 |     6 |
+| CO5  | CNE2  | Q15 | CSMA/CD                          |     6 |
+| CO5  | CNE2  | Q18a | ARP in detail                    |     6 |
+| CO5  | CNE5  |  Q9 | Multiple access, CSMA/CD         |     5 |
+| CO5  | CNE5  | Q10 | VLAN and trunking                |     5 |
+| CO5  | CNE5  | Q15 | ARP need, steps                  |    10 |
+
+| Unit       | Marks |
+|------------+-------|
+| CO1        |   112 |
+| CO2        |   102 |
+| CO3        |   101 |
+| CO4        |    68 |
+| CO5        |    67 |
+| *total*    |   450 |
+
+The three full papers are the honest guide, and each is 100 marks split
+like this.
+
+| Paper | CO1 | CO2 | CO3 | CO4 | CO5 |
+|-------+-----+-----+-----+-----+-----|
+| CNE1  |  20 |  20 |  15 |  25 |  20 |
+| CNE2  |  25 |  22 |  13 |  13 |  27 |
+| CNE5  |  20 |  15 |  20 |  25 |  20 |
+|-------+-----+-----+-----+-----+-----|
+| mean  |  22 |  19 |  16 |  21 |  22 |
+
+So the real exam is roughly even across the five units. CO4 and CO5
+together carry about 43 marks of the 100. Those are the two units your
+earlier notes never reached.
+
+
+** Repeated questions
+
+These are the highest value questions. A topic here has been asked in more
+than one paper, so the wording is predictable and the marking scheme is
+settled.
+
+| Topic                    | Papers and questions           | Papers |
+|--------------------------+--------------------------------+--------|
+| ARP                      | CNE1 Q15; CNE2 Q18a; CNE5 Q15  |      3 |
+| Conditional GET          | CNE3 Q1b; CNE4 Q7; CNE5 Q3     |      3 |
+| Subnetting and VLSM      | CNE4 Q11; CNE5 Q14; CNE6 Q10   |      3 |
+| Client-server versus P2P | CNE2 Q11; CNE4 Q5; CNE6 Q3     |      3 |
+| Circuit versus packet    | CNE2 Q2; CNE4 Q1; CNE6 Q2      |      3 |
+| Pipelining               | CNE1 Q5; CNE2 Q14; CNE3 Q7    |      3 |
+| TCP versus UDP           | CNE1 Q13; CNE2 Q18b; CNE5 Q13; |      4 |
+|                          | CNE6 Q5                        |        |
+| Layered architecture     | CNE1 Q11; CNE2 Q19; CNE3 Q2;  |      4 |
+|                          | CNE5 Q11                       |        |
+| DNS                      | CNE1 Q12; CNE4 Q9; CNE5 Q12    |      3 |
+| Email protocols          | CNE2 Q17; CNE4 Q8; CNE5 Q12    |      3 |
+| Go-Back-N versus SR      | CNE3 Q8; CNE3 Q9; CNE6 Q9    |      2 |
+| CSMA/CD                  | CNE2 Q15; CNE5 Q9              |      2 |
+| DHCP                     | CNE1 Q8; CNE5 Q12              |      2 |
+| IPv4 versus IPv6         | CNE2 Q16; CNE5 Q6; CNE5 Q8     |      2 |
+| Cookies and state        | CNE1 Q4; CNE6 Q6               |      2 |
+| Web caching              | CNE3 Q5; CNE6 Q6              |      2 |
+| Routing algorithms       | CNE1 Q7; CNE5 Q7               |      2 |
+
+Five topics from the syllabus appear only once across these six papers but
+are still pure recall marks. Do not skip them, they are cheap.
+
+| Topic                  | Where    | Marks |
+|------------------------+----------+-------|
+| Ethernet frame         | CNE1 Q9  |     5 |
+| Two-dimensional parity | CNE1 Q10 |     5 |
+| NAT                    | CNE1 Q6  |     5 |
+| VLAN and trunking      | CNE5 Q10 |     5 |
+| Mobility routing       | CNE1 Q14 |    10 |
+
+** Triage
+
+*** Attempt first
+
+Repeats, and anything worth 8 marks or more.
+
+- ARP: CNE1 Q15, CNE2 Q18a, CNE5 Q15.
+- Conditional GET: CNE3 Q1b, CNE4 Q7, CNE5 Q3.
+- Subnetting and VLSM: CNE4 Q11, CNE5 Q14, CNE6 Q10.
+- Client-server versus P2P: CNE2 Q11, CNE4 Q5, CNE6 Q3.
+- Circuit versus packet switching: CNE2 Q2, CNE4 Q1, CNE6 Q2.
+- Pipelining and sliding window: CNE1 Q5, CNE2 Q14, CNE3 Q7.
+- TCP versus UDP: CNE1 Q13, CNE2 Q18b, CNE5 Q13, CNE6 Q5.
+- Layered architecture with protocol mapping: CNE1 Q11, CNE2 Q19, CNE3
+  Q2a.
+- Go-Back-N against Selective Repeat: CNE3 Q8, CNE3 Q9, CNE6 Q9.
+- DNS: CNE1 Q12, CNE4 Q9, CNE5 Q12.
+- Every 10 mark question in CNE1 and CNE5, and CNE4 Q11.
+
+*** Attempt second
+
+Standard three to five mark definitions and comparisons.
+
+- CSMA/CD, CNE2 Q15 and CNE5 Q9.
+- Ethernet frame and 802.11 frame, CNE1 Q9 and CNE2 Q10.
+- Two-dimensional parity, CNE1 Q10.
+- VLAN and trunking, CNE5 Q10.
+- DHCP, CNE1 Q8 and CNE5 Q12.
+- NAT, CNE1 Q6.
+- IPv4 classes and special addresses, CNE3 Q10.
+- Delay versus bandwidth-delay terms, CNE5 Q1 and CNE4 Q3.
+- Multiplexing and demultiplexing, CNE6 Q7.
+- UDP header and TCP ack field, CNE2 Q18b and CNE2 Q8.
+
+*** Only if time remains
+
+Long essay-style questions where volume scores better than precision.
+
+- CNE1 Q11, the seven layer walk with FTP mapping.
+- CNE1 Q12, four applications and their protocols.
+- CNE2 Q16, IPv4 against IPv6 with both headers.
+- CNE2 Q17, the full mail path.
+- CNE5 Q11, HTTP down the TCP/IP stack.
+- CNE5 Q12, four application protocol notes.
+- CNE5 Q13, connection-oriented against connectionless.
+- CNE1 Q14, mobility by direct and indirect routing.
+
+** CNE1 -- May 2019 degree exam, 100 marks, 3 hours
+
+*** Q1  Network performance metrics  [5]  [CO1]
+
+What are the parameters for measuring performance of a network? Explain
+each in detail.
+
+HINT: Cover bandwidth, throughput, the delay terms, jitter and loss, and
+give one way to measure each.
+
+*** Q2  Two access networks  [5]  [CO1]
+
+Explain any two access networks with diagram.
+
+HINT: Pick two of DSL, cable, fibre to the home or enterprise access, and
+trace the shared medium and the split between the access network and the
+ISP.
+
+*** Q3  HTTP proxy server  [5]  [CO2]
+
+How does a http proxy server work? Explain in context with relevant http
+fields.
+
+HINT: Recall that a proxy is both a server and a client, and name the
+request and response header fields that carry forwarding and freshness
+information.
+
+*** Q4  Cookies and state  [5]  [CO2]
+
+An application developer wants the user name information to be passed
+across all webpages that he/she browses across the website. Suggest a
+mechanism to achieve this as HTTP is a stateless protocol.
+
+HINT: Think of the cookie mechanism, meaning the response header that
+plants the state and the request header that returns it.
+
+*** Q5  Pipelining versus stop-and-wait  [5]  [CO3]
+
+What is the advantage of pipelining protocols over stop and wait protocol?
+Discuss in detail.
+
+HINT: Compare link utilisation with one frame in flight against a window
+of frames, using the stop-and-wait efficiency expression as the baseline.
+
+*** Q6  NAT purpose  [5]  [CO4]
+
+Discuss the purpose of using Network Address Translation (NAT). In which
+networking component it is implemented and how it works?
+
+HINT: Cover the private to public mapping, the translation table, and the
+device that performs the rewriting.
+
+*** Q7  RIP and OSPF  [5]  [CO4]
+
+Network A is using RIP and Network B is using OSPF as their routing
+protocols. All configurations required for communication between two
+networks are perfect. Both networks are in same autonomous system. But
+packets from both the network are failing to ping each other. What might
+be the cause for this? Explain in detail.
+
+HINT: Suspect the exchange of routing information between the two
+protocols, such as redistribution, metric translation or area boundaries.
+
+*** Q8  DHCP steps  [5]  [CO4]
+
+Explain the steps in fetching an IP allocation for a host by using DHCP.
+
+HINT: Walk the message exchange in order and say what each message
+carries, including the role of the relay agent.
+
+*** Q9  Ethernet frame  [5]  [CO5]
+
+Draw Ethernet frame structure and explain all the fields in detail.
+
+HINT: Draw the frame from preamble to frame check sequence and give the
+size and purpose of every field.
+
+*** Q10  Two-dimensional parity  [5]  [CO5]
+
+With the help of an example explain two-dimensional parity. Why it is
+preferred over single-dimensional parity?
+
+HINT: Lay the data out as a grid, add row and column parity, and show
+which error patterns the intersection of a failing row and column can
+locate.
+
+*** Q11  OSI layers and FTP  [10]  [CO1]
+
+Explain the seven-layer architecture of computer network communication.
+Map the protocols to respective layers for an FTP communication.
+
+HINT: Give the seven layers with a one-line duty each, then walk one FTP
+session and name the protocol at every layer, including the two
+connections.
+
+*** Q12  Application protocols  [10]  [CO2]
+
+Explain the following application with the protocols used with respect to
+application layer.
+
+  i)   E Mail
+  ii)  File Sharing
+  iii) Remote Access to any device
+  iv)  Web site name to IP address conversion
+
+HINT: Name the protocol for each application, and for the last one say
+which server answers and how the answer is cached.
+
+*** Q13  TCP versus UDP  [10]  [CO3]
+
+Explain and compare the transport layer protocols with header format.
+
+HINT: Put the two headers side by side and tie each field to a service
+difference between the protocols.
+
+*** Q14  Mobility routing  [10]  [CO4]
+
+Discuss mobility via direct and indirect routing with neat diagrams.
+
+HINT: Separate the direct and indirect cases and name the entities that
+hold the binding, then show the triangle in the indirect case.
+
+*** Q15  ARP, same LAN  [10]  [CO5]
+
+How a host handle a communication to an unknown host in the same LAN with
+respect to layer 2? Explain the steps involved in fetching the details.
+
+HINT: Follow the broadcast query and the unicast reply that maps an IP
+address to a MAC address before the frame can be sent.
+
+** CNE2 -- Nov/Dec 2018 degree exam, 100 marks, 3 hours
+
+*** Q1  Network devices  [3]  [CO1?]
+
+List any six network devices that one can find in computer networks.
+
+HINT: Walk up from the physical layer, naming one device per layer or per
+function.
+
+*** Q2  Circuit versus packet  [3]  [CO1?]
+
+Why is circuit switching more popular than packet switching?
+
+HINT: Argue from reserved capacity against statistical multiplexing, and
+name the traffic type where each wins.
+
+*** Q3  Packet delay formula  [3]  [CO1?]
+
+How much time will it take to send a packet of size L bits from A to B in
+given setup. If Bandwidth is R bps, propagation speed is t meter/sec and
+distance between any two points is d meters (Ignore processing and queuing
+delay)?
+
+HINT: Write the total as a transmission term plus a propagation term, and
+keep the units consistent.
+
+*** Q4  FTP port numbers  [3]  [CO2?]
+
+What are the port numbers used in FTP service and mention their purpose?
+
+HINT: Recall the two well-known FTP ports and say which one carries
+control and which carries data.
+
+*** Q5  Socket addressing  [3]  [CO2?]
+
+List the addresses that uses to identify a TCP/IP communication between a
+client and server. Give an example address for each.
+
+HINT: Name the socket pair, that is the address and port at each end.
+
+*** Q6  Network layer services  [3]  [CO4?]
+
+What are the two important services provided by network layer?
+
+HINT: Think forwarding and routing, and the connectionless datagram model
+that carries them.
+
+*** Q7  Hidden terminal  [3]  [CO5?]
+
+What do you mean by hidden terminal problem in Wi-Fi? How can you overcome
+this issue?
+
+HINT: Explain why two senders that cannot hear each other still collide at
+the receiver, then name the access rule that avoids it.
+
+*** Q8  TCP ack field  [3]  [CO3?]
+
+What is the purpose of ack field in a TCP header?
+
+HINT: Say what the field promises about the next expected byte, and how it
+differs from the sequence number.
+
+*** Q9  Wireless topologies  [3]  [CO5?]
+
+What are the network topologies in wireless communication?
+
+HINT: Classify by how stations associate, from infrastructure to the
+multi-hop and extended forms.
+
+*** Q10  802.11 frame  [3]  [CO5?]
+
+Draw the frame format of 802.11.
+
+HINT: Draw the management, control and data field groups of the MAC frame.
+
+*** Q11  P2P versus client-server  [6]  [CO1?]
+
+Compare the requirements of peer-to-peer and client-server architecture
+with respect to both network and system.
+
+HINT: Contrast the role of each side, the management burden, and what each
+model assumes about the network.
+
+*** Q12  Small LAN design  [6]  [CO5?]
+
+An owner of a small browsing centre with ten machines wishes to make a LAN
+with a Broadband connection for internet. Suggest the devices and network
+medium that he may need to use in his business. You need to justify your
+choice of devices.
+
+HINT: Choose a device per layer and justify the medium from distance, cost
+and bandwidth.
+
+*** Q13  Protocols, all layers  [6]  [CO2?]
+
+A user is trying to gain access to a Data Server for downloading a file
+through web browser from his/her laptop. What are the protocols in all the
+layers that are used in this communication? Consider the user has just
+walked in to a Wi-Fi zone.
+
+HINT: Start at the association with the access point, then walk down and
+back up the stack to the server.
+
+*** Q14  Pipelining protocols  [6]  [CO3?]
+
+Explain two pipelining protocols with neat diagrams.
+
+HINT: Draw the sender and receiver timelines for both window protocols and
+compare what gets retransmitted after a loss.
+
+*** Q15  CSMA/CD  [6]  [CO5?]
+
+Explain the medium access method CSMA/CD which is used in an Ethernet
+environment in detail.
+
+HINT: Cover carrier sense, collision detection, the jam signal and binary
+exponential backoff.
+
+*** Q16  IPv4 versus IPv6  [10]  [CO4?]
+
+Compare IPv4 and IPv6 with their header format. Which one do you recommend
+for a communication and why?
+
+HINT: Compare address size, header fields, fragmentation and options
+handling, then argue from deployment reality.
+
+*** Q17  Email delivery path  [10]  [CO2?]
+
+User A is sending a mail to user B through his/her mail account. Explain
+the complete process with the help of architectural diagram and protocols
+involved in this communication.
+
+HINT: Trace the message from the composer to the sender's server to the
+receiver's server to the reader, naming the protocol at each hop.
+
+*** Q18a  ARP in detail  [6]  [CO5?]
+
+Explain Address Resolution Protocol in detail.
+
+HINT: Cover the need, the cache, the message format, and the four address
+cases of sender and target.
+
+*** Q18b  UDP header  [4]  [CO3?]
+
+Discuss the header format of UDP.
+
+HINT: Draw the four-field header and explain each field, including what
+the checksum covers.
+
+*** Q19  OSI versus TCP/IP  [10]  [CO1?]
+
+Explain and compare TCP/IP layers and ISO-OSI layers.
+
+HINT: Map each OSI layer to its TCP/IP counterpart and note where the
+models differ in count, in scope and in where the protocols actually live.
+
+** CNE3 -- Nov 2023 mid-semester, 50 marks, 2 hours
+
+*** Q1a  End systems, router  [5]  [CO1]
+
+Explain what are end systems and mention how are they used to connect to
+an edge router with the help of a neat diagram.
+
+HINT: Define end systems as the hosts at the edge, then trace the access
+network that reaches the first router.
+
+*** Q1b  Conditional GET  [5]  [CO1]
+
+Explain the need for conditional get method and how does it save bandwidth
+bottleneck of your access network.
+
+HINT: Think of the request that sends a stored validator and the response
+that says the cached copy is still good.
+
+*** Q2  TCP/IP five layers  [3]  [CO2]
+
+Write the five layers of TCP/IP protocol model and mentions the important
+protocol belongs to each layer.
+
+HINT: List the five layers and name one or two protocols at each.
+
+*** Q3  TCP sequence numbers  [3]  [CO2]
+
+Suppose Host A sends two TCP segments back-to-back to Host B over a TCP
+connection. The first segment has sequence number 90; the second has
+sequence number 110. Answer for the following questions with a brief
+explanation.
+
+  i.  How much data is in the first segment? [1]
+  ii. Suppose that the first segment is lost but the second segment arrives
+      at B. In the acknowledgment that Host B sends to Host A, what will be
+      the acknowledgment number? [2]
+
+HINT: Use the gap between consecutive sequence numbers, then reason about
+the next byte the receiver still expects.
+
+*** Q4  Online shopping scenario  [4]  [CO2]
+
+Consider a scenario where Alex an employee of ABC Corporation decides to
+do some online shopping. Alex is very busy at the office with many
+milestones in hand, but at the same time he cannot delay the shopping
+since he needs to leave for vacation in a few days. What do you think Alex
+should do such that he is able to place the orders as well as get it
+delivered before he leaves for vacation. Give relevant explanations with
+diagrams for the same.
+
+HINT: Frame it as an application layer intermediary that acts for Alex,
+then name the protocols such a service needs to place and track the order.
+
+*** Q5  Web caching delay  [5]  [CO2]
+
+Describe how web caching can reduce the delay in receiving a requested
+object. Will Web caching reduce the delay for all objects requested by a
+user or only for some of the objects? Why?
+
+HINT: Explain the cache hit path and the bytes saved on the access link,
+then separate objects that can be cached from those that cannot.
+
+*** Q6  Email download protocols  [5]  [CO3]
+
+Consider a scenario where a student who is studying in college requires to
+download files from his email so that he could make a presentation for the
+project. Identify the protocol which would be required at the application
+layer and transport layer. Give reasons to justify the answer. Also
+mention the services that the protocols should provide at the transport
+layer such that the download takes place reliably.
+
+HINT: Pick the mail retrieval protocol and the transport it rides on, then
+list the guarantees that transport must offer.
+
+*** Q7  Pipelining utilization  [5]  [CO3]
+
+"Pipelining increases utilization". Explain what Pipelining and Justify is
+the statement with the help of an example.
+
+HINT: Compare sending one frame at a time with several in flight, and
+relate the window to the bandwidth-delay product.
+
+*** Q8  Go-back-N throughput  [5]  [CO3]
+
+A 20 Kbps satellite link has a propagation delay of 400 ms. The
+transmitter employs the "go back n ARQ" scheme with n set to 10. Assuming
+that each frame is 100 bytes long, what is the maximum data rate possible?
+
+HINT: Work out the round trip time, the window limited throughput, and
+compare it with the link rate.
+
+*** Q9  GBN versus SR  [5]  [CO3]
+
+Compare the Go back N protocol operation with the Selective Repeat
+Protocol using sequence diagrams.
+
+HINT: Draw both timelines and mark what happens on a lost frame and on a
+lost acknowledgement.
+
+*** Q10  IPv4 address classes  [5]  [CO2]
+
+Write a short note of IPv4 classes and the special category of IPs.
+
+HINT: Give the class ranges with default masks, then the reserved, private
+and loopback blocks.
+
+** CNE4 -- Sep 2025 mid-semester, 50 marks, 2 hours
+
+*** Q1  Circuit versus packet  [5]  [CO1]
+
+A food delivery company like Swiggy/Zomato handles thousands of
+simultaneous orders across multiple cities. Each order consists of small
+data packets, including customer details, restaurant menus, order
+confirmation, and delivery tracking updates. The company must choose
+between circuit switching and packet switching for its communication
+network. Which method is more suitable in this scenario? Explain why,
+comparing both approaches.
+
+HINT: Weigh reserved capacity against statistical sharing for many small,
+bursty flows.
+
+*** Q2  Encapsulation across layers  [5]  [CO1]
+
+A software company has offices in Bengaluru and Chennai, connected through
+a high-speed link. When employees send a message, headers and trailers are
+added at different layers as the data travels from their application to
+the physical medium. With reference to this real-life case, explain how
+encapsulation works across the layers of the TCP/IP model.
+
+HINT: Follow one message down the stack at the sender and up the stack at
+the receiver, naming what each layer adds and removes.
+
+*** Q3  Delay components  [4]  [CO1]
+
+An e-commerce platform is facing customer complaints about delayed page
+loads during peak shopping hours. As a network analyst, explain how
+propagation delay, transmission delay, and queuing delay could contribute
+to this issue. Which of these delays is most affected by network
+congestion?
+
+HINT: Define each term in words, then say which one grows when buffers
+fill.
+
+*** Q4  Delay calculation  [4]  [CO1]
+
+A video conferencing company is testing a new link between its office in
+Delhi and its partner office in London, which is approximately 10,000 km
+apart. The link has a bandwidth of 1 Mbps, and the propagation speed is
+2.5x10^8 m/s. Each video packet is 1,000 bytes in size. The packets pass
+through 2 intermediate routers, each introducing a processing delay of 2
+ms.
+
+  i.   Calculate the transmission delay of one packet.
+  ii.  Calculate the propagation delay across the link.
+  iii. Calculate the total processing delay across the two routers.
+  iv.  Based on your results, explain which type of delay is the most
+       significant in this scenario and why.
+
+HINT: Use size over rate for transmission, distance over speed for
+propagation, and add the per-router terms.
+
+*** Q5  Client-server versus P2P  [4]  [CO1]
+
+Online applications can follow either the Client-Server model or the
+Peer-to-Peer (P2P) model. With suitable examples (e.g., web browsing,
+file sharing), compare these two architectures in terms of scalability,
+reliability, and resource sharing. Which model would you recommend for
+large-scale file distribution and why?
+
+HINT: Compare scaling, centralisation, cost, and who supplies the capacity
+in each model.
+
+*** Q6  HTTP response fields  [4]  [CO2]
+
+Analyze the below given HTTP message and explain the various fields in it.
+
+#+begin_example
+HTTP/1.1 200 OK
+Connection: close
+Date: Mon, 08 Sep 2025 09:50:00 GMT
+Server: Apache/1.4.1 (Unix)
+Last-Modified: Sun, 31 Aug 2025 10:10:30 GMT
+Content-Length: 3106
+Content-Type: text/html
+
+(data data data data ...)
+#+end_example
+
+HINT: Read the status line first, then each header, and say what the
+client learns from it and what it must do next.
+
+*** Q7  Conditional GET  [4]  [CO2]
+
+A news website like BBC allows users to frequently refresh the homepage to
+check for updates. To avoid sending the entire webpage every time, the
+website uses the Conditional GET mechanism in HTTP.
+
+  i.   Describe how the Conditional GET method works.
+  ii.  Identify the HTTP headers involved in this process.
+  iii. Explain how this mechanism reduces unnecessary data transfer between
+       the BBC server and the client's browser.
+
+HINT: Explain the validator based request and the short reply that avoids
+resending the body.
+
+*** Q8  IMAP versus POP3  [4]  [CO2]
+
+A user in a rural area has a very slow and unstable Internet connection
+but still needs to access emails regularly. The email service provider
+supports both IMAP and POP3.
+
+  i.  Briefly describe the role of IMAP and POP3 protocols in email
+      communication.
+  ii. Which protocol (IMAP or POP3) is more efficient for downloading and
+      reading emails over such a slow connection? Justify your answer.
+
+HINT: Compare where the mailbox is kept, what happens to mail after the
+client disconnects, and which protocol synchronises state.
+
+*** Q9  Recursive, iterative DNS  [4]  [CO3]
+
+Explain the mechanisms of Recursive and Iterative DNS query processing.
+How does the response behaviour of DNS servers differ in each case?
+Illustrate your answer with suitable examples for both query types.
+
+HINT: Trace who does the work in each mode and count the queries each
+resolver issues.
+
+*** Q10  UDP checksum  [4]  [CO3]
+
+If a process receives the following information as a UDP segment, state
+whether the data has any errors or not.
+
+#+begin_example
+00000000 01010000 00000000 00011001
+00000000 00010100 01100110 01100110
+01010101 01010101 10001111 00001100
+#+end_example
+
+HINT: Apply the ones complement sum to the rows and then apply the
+checksum verification rule to the result.
+
+*** Q11  VLSM five blocks  [8]  [CO2]
+
+An organization has 192 devices spread across 5 different blocks: P, Q, R,
+S, and T. Machines belonging to different blocks must be placed in
+separate subnets. The number of devices in each block is:
+
+#+begin_example
+Block P: 60 devices
+Block Q: 90 devices
+Block R: 8 devices
+Block S: 20 devices
+Block T: 14 devices
+#+end_example
+
+Starting from the address block 192.168.5.0/24, design an IP addressing
+plan that assigns subnets to each block with the minimum address waste.
+For each block, provide:
+
+  - The network address assigned.
+  - The subnet mask (in both dotted-decimal and prefix notation).
+  - The usable host range (first and last usable IP).
+  - The broadcast address.
+
+Assume you must reserve exactly enough usable host addresses to
+accommodate each block (i.e., choose the smallest possible subnet that
+fits the block's device count).
+
+HINT: Order the blocks by size, hand each one the smallest prefix that
+fits, and keep every block aligned to its own prefix.
+
+** CNE5 -- Jan 2020 degree exam, 100 marks, 3 hours
+
+*** Q1  Transmission versus propagation  [5]  [CO1]
+
+Are transmission delay and propagation delay same? Justify you answer with
+suitable example.
+
+HINT: Separate the time to push bits onto the link from the time a bit
+needs to cross the medium.
+
+*** Q2  DSL access  [5]  [CO1]
+
+With the help of a neat diagram explain Digital Subscriber Line (DSL)
+internet access. What is the benefit of having equal upstream and
+downstream rates?
+
+HINT: Explain the local loop, the splitter, the modem and the DSLAM, then
+argue from traffic symmetry.
+
+*** Q3  Conditional GET  [5]  [CO2]
+
+Explain the need for conditional get method and how does it saves
+bandwidth bottleneck of your access network.
+
+HINT: Think of the request that carries a validator and the reply that
+says the stored copy may be reused.
+
+*** Q4  TCP seq, ack  [5]  [CO3]
+
+Consider a TCP connection between Host A and Host B. Suppose that the TCP
+segment travelling from Host A to Host B has sequence number X and
+acknowledgement number Y. What are the sequence number and acknowledgement
+number for the segment travelling from Host B to Host A? Consider 500
+Bytes as the packet size. Explain with a neat diagram.
+
+HINT: Track the byte offset in each direction, and remember what an
+acknowledgement number refers to.
+
+*** Q5  TCP congestion control  [5]  [CO3]
+
+TCP provide end to end congestion control mechanism. Explain in detail.
+
+HINT: Cover slow start, congestion avoidance, fast retransmit and fast
+recovery, and the reaction to a loss event.
+
+*** Q6  Mixed IPv4/IPv6 path  [5]  [CO4]
+
+Host A is transmitting some packets to Host B, which are separated by 15
+hops. Packets have to travel through all the 15 hops to reach the
+destination. Consider there are both IPv4 and IPv6 networks in between
+Host A and Host B. Explain the different methods for communication.
+
+HINT: Discuss tunnelling and translation, and the header rewriting
+problems when crossing between versions.
+
+*** Q7  Global versus decentralized  [5]  [CO4]
+
+Compare and contrast Global routing algorithm and Decentralized routing
+algorithm. Give example for each.
+
+HINT: Contrast a view of the whole topology with iterative neighbour
+exchange, and name one protocol for each.
+
+*** Q8  IPv4 address conservation  [5]  [CO4]
+
+Discuss the different methods which are used to conserve IPv4 address.
+
+HINT: Cover private addressing with translation, subnetting, variable
+length subnetting, and classless routing.
+
+*** Q9  Multiple access, CSMA/CD  [5]  [CO5]
+
+What are the broad categories of Multiple Access Protocols? Explain the
+working of CSMA/CD.
+
+HINT: Classify random, controlled and channelisation schemes first, then
+work through the steps of the Ethernet access method.
+
+*** Q10  VLAN and trunking  [5]  [CO5]
+
+Explain the concept of VLAN and the advantage of having a trunking
+protocol?
+
+HINT: Explain logical grouping of ports, the tag on the frame, and what a
+trunk link carries between switches.
+
+*** Q11  HTTP over TCP/IP  [10]  [CO1]
+
+Explain the communication implementation of HTTP protocol with respect to
+TCP/IP layers.
+
+HINT: Trace a request from the browser down to the wire and the response
+back up, naming what each layer contributes.
+
+*** Q12  Application protocol notes  [10]  [CO2]
+
+Write short notes on the following application layer protocols
+
+  i)   SMTP
+  ii)  DHCP
+  iii) DNS
+  iv)  FTP
+
+HINT: For each protocol give the purpose, the port, the transport it uses
+and one typical message exchange.
+
+*** Q13  Connection versus connectionless  [10]  [CO3]
+
+Differentiate between connection oriented communication and connectionless
+communication with the help of respective protocols and the flag field
+values.
+
+HINT: Compare handshake, reliability, ordering and the control flags of
+the two styles.
+
+*** Q14  VLSM six departments  [10]  [CO4]
+
+Deploy a variable subnet masking IPv4 for the following requirement of a
+startup.
+
+#+begin_example
+Your IP table must contain the header row:
+Sl No | Network Name | Network ID | Subnet Mask | Usable IP Range | Broadcast IP
+Also mention the available free network IDs if any.
+You are given a major network ID as 102.168.1.0/24.
+
+Research - 20 devices
+Development - 60 devices
+Marketing - 14
+Sales - 6
+System Admin - 2
+HR - 2
+#+end_example
+
+Justify how VLSM saves the network address.
+
+HINT: Use the standard procedure: sort by size, allocate the largest block
+first, and tabulate each subnet with its mask and range.
+
+*** Q15  ARP need, steps  [10]  [CO5]
+
+Why is an Address Resolution Protocol needed for a computer? What are the
+steps involved in it?
+
+HINT: Explain why both an IP address and a MAC address exist, then walk
+the request and reply and the caching that follows.
+
+** CNE6 -- Oct 2025 missed mid-semester, 50 marks, 2 hours
+
+*** Q1  LAN versus WAN  [5]  [CO1]
+
+You are working in a small company that plans to connect 10 computers to
+share data and resources. Explain what type of network architecture you
+would propose (LAN, WAN, etc.) and justify your choice.
+
+HINT: Argue from geographic span, ownership, and the equipment needed for
+a handful of hosts.
+
+*** Q2  Circuit versus packet  [5]  [CO1]
+
+A new ISP advertises that it uses packet switching for data transfer. As a
+network engineer, explain how packet switching helps improve efficiency
+compared to circuit switching for internet usage.
+
+HINT: Argue from statistical multiplexing, idle capacity and charging
+models.
+
+*** Q3  P2P file sharing  [5]  [CO1]
+
+A startup company plans to launch an online file-sharing service that
+allows users to upload and download files directly from each other's
+devices. Identify the suitable network architecture (client-server or
+peer-to-peer) and explain why it fits this use case.
+
+HINT: Think about which model turns every user into both a supplier and a
+consumer of capacity.
+
+*** Q4  Persistent HTTP  [5]  [CO3]
+
+Imagine you are designing a website for an e-commerce platform. Customers
+are complaining about slow page loading. Explain how using persistent HTTP
+connections instead of non-persistent connections can improve the user
+experience.
+
+HINT: Compare the number of connection setups and the per-object overhead
+in the two modes.
+
+*** Q5  TCP versus UDP  [5]  [CO3]
+
+Compare the services provided by TCP and UDP for application-layer
+protocols, such as HTTP, DNS, and FTP.
+
+HINT: Tie each protocol's guarantees to what HTTP, DNS and FTP actually
+need.
+
+*** Q6  Cookies and caching  [5]  [CO2]
+
+A user notices that after logging into a shopping website, their cart
+items remain saved even after refreshing or closing the browser tab.
+Explain how cookies and caching make this possible and discuss their
+impact on website performance and user privacy.
+
+HINT: Separate client side state kept by the browser from copies kept
+along the path, then weigh speed against privacy.
+
+*** Q7  Multiplexing, demultiplexing  [5]  [CO3]
+
+Explain the concept of multiplexing and demultiplexing in the transport
+layer with a diagram.
+
+HINT: Explain how the transport hands a segment to the right socket using
+the port numbers, and show both ends of the diagram.
+
+*** Q8  TCP reliable transfer  [5]  [CO3]
+
+During a file transfer, a sender notices that some packets are lost or
+arrive out of order. Explain how TCP achieves reliable data transfer in
+such cases through mechanisms like packet numbering, acknowledgements, and
+retransmissions.
+
+HINT: Cover sequence numbers, cumulative acknowledgements, timers and the
+retransmission of missing data.
+
+*** Q9  GBN versus SR  [5]  [CO3]
+
+Evaluate the advantages and drawbacks of Go-Back-N and Selective Repeat
+protocols in terms of efficiency and reliability. Explain with the help of
+an example.
+
+HINT: Compare what the receiver buffers, what the sender resends, and the
+window limits of each.
+
+*** Q10  VLSM three blocks  [5]  [CO4]
+
+An organisation has 165 devices spread across 3 different blocks: R, S,
+and T. Machines belonging to different blocks must be placed in separate
+subnets. The number of devices in each block is:
+
+#+begin_example
+Block R: 12 devices
+Block S: 45 devices
+Block T: 108 devices
+#+end_example
+
+Starting from the address block 192.168.5.0/24, design an IP addressing
+plan that assigns subnets to each block with the minimum address waste.
+For each block, provide:
+
+  - The network address assigned.
+  - The subnet mask (in both dotted-decimal and prefix notation).
+  - The usable host range (first and last usable IP).
+  - The broadcast address.
+
+Assume you must reserve exactly enough usable host addresses to
+accommodate each block (i.e., choose the smallest possible subnet that
+fits the block's device count).
+
+HINT: Sort the blocks by size and give each one the smallest prefix that
+holds its hosts plus the network and broadcast addresses.

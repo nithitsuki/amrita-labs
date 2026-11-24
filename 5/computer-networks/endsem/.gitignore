@@ -1,0 +1,10 @@
+# Course material, not ours to publish.
+# Kurose and Ross slides are copyrighted, and the past papers belong to Amrita.
+# They stay on disk and out of the public repo.
+slides/
+papers/
+
+# Emacs backup and autosave files
+*~
+\#*\#
+.#*

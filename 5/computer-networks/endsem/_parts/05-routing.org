@@ -1,0 +1,661 @@
+** Forwarding versus routing, and the two planes
+SUMMARY: The data plane moves one packet with a table. The control plane computes that table, either in every router or in one remote controller.
+KUROSE: 5.1, 5.5
+EXAM: not asked in the 6 papers.
+PRIORITY: core
+
+*** The data plane
+The data plane forwards a single packet. It reads the destination address, looks in the forwarding table, and sends the packet to one output port.
+This job runs for every packet, so it must finish in nanoseconds. A hardware switch does it at line rate.
+
+*** The control plane
+The control plane computes the routes. It runs a routing algorithm, talks to other routers, and writes the forwarding table.
+This job runs only when the topology changes or a policy changes. It is software work and it is much slower than forwarding.
+
+*** The two ways to build the control plane
+Per-router control: every router runs its own routing algorithm. Neighbouring routers exchange messages, so the routers agree on the map and each one builds its own table.
+SDN control: one remote controller computes the whole network view. The controller then installs forwarding tables into each router, often through an open interface such as OpenFlow.
+
+| Question | Data plane | Control plane |
+| Time scale | per packet, nanoseconds | per topology change, seconds |
+| Job | move the packet to one output | choose the best path |
+| Input | forwarding table | routing algorithm plus neighbour messages |
+| Location | line card | router processor or remote controller |
+
+*** Trap
+A forwarding table entry is a local decision. Do not read it as a map of the whole network.
+The table says "send to port 2", not "the path is A to B to C". Only the control plane knows the whole path.
+
+** Link state routing and Dijkstra
+SUMMARY: Every router floods the cost of its own links, so all routers hold the same map. Then each router runs Dijkstra on that map.
+KUROSE: 5.2.1
+EXAM: not asked in the 6 papers.
+PRIORITY: core
+
+*** The idea
+Link state works in two steps.
+Step one: each router measures the cost of its directly attached links. It puts this in a link state advertisement and floods the advertisement to every router in the area.
+Step two: every router now has the same complete graph. Each router runs Dijkstra with itself as the source. The result is its own shortest path tree and its own forwarding table.
+
+The flood is reliable because each router forwards a new advertisement on every link except the one it arrived on. A sequence number stops old copies from looping.
+
+*** The algorithm
+#+begin_example
+Notation
+  c(x,y)  cost of the direct link from x to y, infinity if no link
+  D(v)    current estimate of the cost from source to v
+  p(v)    predecessor of v on the current best path
+  N'      set of nodes with a confirmed least cost path
+
+Initialise
+  N' = {source}
+  for every node v
+      if v is a neighbour of source
+          D(v) = c(source,v)   and   p(v) = source
+      else
+          D(v) = infinity      and   p(v) = none
+
+Repeat
+  pick w not in N' with the smallest D(w)
+  add w to N'
+  for every neighbour v of w that is not in N'
+      if D(w) + c(w,v) < D(v)
+          D(v) = D(w) + c(w,v)
+          p(v) = w
+Until N' holds every node
+#+end_example
+
+Each pass settles one node, so the loop runs n times. The inner scan over unsettled nodes costs n steps. Plain arrays therefore give O(n^2).
+A heap gives O(n log n) for dense graphs. Both forms appear in the slides, so name both.
+
+*** WORKED EXAMPLE (numbers changed on purpose)
+Topology. Source is A. Costs are on the links.
+
+#+begin_example
+      (A)---3---(B)---4---(C)
+       |         |         |
+      2|        2|        2|
+       |         |         |
+      (D)---5---(E)---7---(F)
+#+end_example
+
+Cost of each direct link:
+c(A,B)=3, c(A,D)=2, c(B,C)=4, c(B,E)=2, c(C,F)=2, c(D,E)=5, c(E,F)=7. All other pairs are infinite.
+
+Step table. A blank cell means the node is already in N'.
+
+| Step | N'     | D(B),p(B) | D(C),p(C) | D(D),p(D) | D(E),p(E) | D(F),p(F) |
+|------+--------+-----------+-----------+-----------+-----------+-----------|
+|    0 | A      | 3,A       | infinity  | 2,A       | infinity  | infinity  |
+|    1 | AD     | 3,A       | infinity  |           | 7,D       | infinity  |
+|    2 | ADB    |           | 7,B       |           | 5,B       | infinity  |
+|    3 | ADBE   |           | 7,B       |           |           | 12,E      |
+|    4 | ADBEC  |           |           |           |           | 9,C       |
+|    5 | ADBECF |           |           |           |           |           |
+
+Read the trace one step at a time.
+Step 1 settles D at cost 2. D touches E, so E becomes 2+5=7 through D.
+Step 2 settles B at cost 3. B touches C, so C becomes 3+4=7 through B. B touches E, so E improves to 3+2=5 through B.
+Step 3 settles E at cost 5. E touches F, so F becomes 5+7=12 through E.
+Step 4 settles C at cost 7. C touches F, so F improves to 7+2=9 through C. The old value 12 loses.
+Step 5 settles F at cost 9.
+
+Forwarding table at A. The next hop is the first node on the path, not the predecessor.
+
+| Destination | Least cost | Predecessor | Next hop | Outgoing link |
+|-------------+------------+-------------+----------+---------------|
+| B           | 3          | A           | B        | (A,B)         |
+| C           | 7          | B           | B        | (A,B)         |
+| D           | 2          | A           | D        | (A,D)         |
+| E           | 5          | B           | B        | (A,B)         |
+| F           | 9          | C           | B        | (A,B)         |
+
+Check two paths. C is A to B to C, cost 3+4=7. F is A to B to C to F, cost 3+4+2=9.
+
+*** Complexity
+Time: O(n^2) with an array scan and O(n log n) with a heap.
+Messages: each router floods one advertisement to n routers. One flood crosses O(n) links, so all floods cost O(n^2) messages in total.
+Memory: n distance values and n predecessors at every router.
+
+*** Oscillation
+Real link cost often follows load. A cheap link attracts traffic, becomes expensive, and then loses traffic. The routes then swing back and forth on every update.
+Kurose shows a two-link example. Traffic shifts from one side to the other and never settles.
+One fix: make the cost independent of current load, for example a fixed cost from bandwidth. Another fix: add hysteresis, so a router ignores a small cost saving and does not switch.
+
+*** Trap
+Students copy the predecessor column into the forwarding table. That is wrong.
+p(F)=C, but A does not send to C directly. The next hop is B, because the path starts (A,B).
+Walk back from the destination to the source, then take the last node before the source as the next hop.
+
+** Distance vector routing and Bellman-Ford
+SUMMARY: Each router knows only its neighbours, swaps its whole distance vector with them, and repeats until nothing changes.
+KUROSE: 5.2.2, 5.2.3
+EXAM: not asked in the 6 papers.
+PRIORITY: core
+
+*** The idea
+Distance vector is decentralised. A router starts with the cost of its own links and infinity for everything else.
+Each router sends its full vector to its direct neighbours only. When a vector arrives, the router recomputes its own vector with the Bellman-Ford equation.
+The process is iterative, asynchronous, and self terminating. A router sends an update only when its vector changes. No update means no work.
+
+*** The Bellman-Ford equation
+Let D(x,y) be the cost of the least cost path from x to y. Let c(x,v) be the cost of the direct link from x to neighbour v.
+
+$$D(x,y) = \min_{v}\{\, c(x,v) + D(v,y) \,\}$$
+
+Read it as: pick the neighbour v that gives the smallest total. The best v becomes the next hop toward y.
+The equation works because the tail of a shortest path is itself a shortest path.
+
+*** WORKED EXAMPLE (numbers changed on purpose)
+Four routers in a ring. The period is one synchronous round, so every router uses the vectors of the round before.
+
+#+begin_example
+      (P)---2---(Q)
+       |         |
+      9|        3|
+       |         |
+      (S)---2---(R)
+#+end_example
+
+Cost of each direct link: c(P,Q)=2, c(P,S)=9, c(Q,R)=3, c(R,S)=2.
+
+Round 0. Each router knows only its own links.
+
+| From | to P | to Q | to R | to S |
+|------+------+------+------+------|
+| P    | 0    | 2    | inf  | 9    |
+| Q    | 2    | 0    | 3    | inf  |
+| R    | inf  | 3    | 0    | 2    |
+| S    | 9    | inf  | 2    | 0    |
+
+Round 1. Every router applies Bellman-Ford to the round 0 vectors.
+
+| From | to P | to Q | to R | to S |
+|------+------+------+------+------|
+| P    | 0    | 2    | 5    | 9    |
+| Q    | 2    | 0    | 3    | 5    |
+| R    | 5    | 3    | 0    | 2    |
+| S    | 9    | 5    | 2    | 0    |
+
+Show two calculations.
+P learns R: min over neighbours. Through Q it is 2+3=5. Through S it is 9+2=11. So D(P,R)=5 via Q.
+S learns Q: through P it is 9+2=11. Through R it is 2+3=5. So D(S,Q)=5 via R.
+
+Round 2. P now hears Q say S is at 5. So P improves S from 9 to 2+5=7. S hears R say P is at 5, so S improves P from 9 to 2+5=7.
+
+| From | to P | to Q | to R | to S |
+|------+------+------+------+------|
+| P    | 0    | 2    | 5    | 7    |
+| Q    | 2    | 0    | 3    | 5    |
+| R    | 5    | 3    | 0    | 2    |
+| S    | 7    | 5    | 2    | 0    |
+
+Round 3. No entry changes. Every router stops sending and the network is converged.
+The true costs are these. P to Q is 2, P to R is 5, P to S is 7, Q to S is 5, R to S is 2.
+
+*** Good news and bad news
+Good news travels fast. If a link gets cheaper, the router that sees it updates at once and tells its neighbours. The improvement spreads one hop per round, so it reaches the far side in a few rounds.
+Bad news travels slow. If a link gets worse or dies, the neighbours may still hold old good news. A router then routes through a neighbour that already routes back through it.
+That pair forms a loop. The cost climbs by one link per round and the routers keep believing each other.
+
+*** Count to infinity
+Topology. N is the destination. The link N to O fails.
+
+#+begin_example
+      (N)---1---(O)---1---(P)
+              X
+         this link fails
+#+end_example
+
+Before the failure O has D(N)=1 directly. P has D(N)=2 through O.
+When the link dies, O sets D(N)=infinity. In the same round P's old advertisement (N at 2) still arrives, so O sets D(N)=1+2=3 through P.
+O now advertises 3 to P. P computes 1+3=4 through O. Each round adds one.
+
+| Round | O says N is at | P says N is at | Why |
+|-------+----------------+----------------+-----|
+| 0     | 1              | 2              | link is still up |
+| 1     | 3              | 2              | O believes P's stale 2 |
+| 2     | 3              | 4              | P believes O's 3 |
+| 3     | 5              | 4              | O believes P's 4 |
+| 4     | 5              | 6              | P believes O's 5 |
+| 5     | 7              | 6              | the pattern repeats |
+| 6     | 7              | 8              | still climbing |
+| 7     | 9              | 8              | still climbing |
+| 8     | 9              | 10             | still climbing |
+| 9     | 11             | 10             | still climbing |
+| 10    | 11             | 12             | still climbing |
+| 11    | 13             | 12             | still climbing |
+| 12    | 13             | 14             | still climbing |
+| 13    | 15             | 14             | still climbing |
+| 14    | 15             | 16             | 16 means unreachable |
+| 15    | 16             | 16             | both give up |
+
+The climb stops only because RIP defines 16 as infinity. The packets were looping for 15 rounds.
+
+*** Fix one: split horizon
+Split horizon says: never advertise a route back to the neighbour you learned it from.
+If O learned N through P, O leaves N out of the update it sends to P.
+This stops the obvious reflection, but it does not correct the stale entry. P keeps the old value 2 in silence, so the loop can survive until a timer expires.
+
+*** Fix two: poisoned reverse
+Poisoned reverse is the stronger form. Advertise the route back, but with cost infinity.
+If O routes to N through P, then O tells P that N is at 16.
+
+| Sender | Receiver | Destination N is advertised as | Reason |
+|--------+----------+--------------------------------+--------|
+| O      | P        | 16                             | O reaches N through P |
+| P      | O        | actual cost                    | P reaches N not through O |
+
+With poisoned reverse the trace ends in one round. O tells P that N is infinity. P then sets D(N)=infinity at once, and P tells O the same.
+The count to infinity disappears for this two node loop. For three or more nodes the cure is only partial, so real networks also use a hold down timer.
+
+*** Fix three: define infinity as 16
+RIP fixes the maximum metric at 15 and treats 16 as unreachable. The climb therefore has a hard ceiling and a bounded time.
+The price is a small diameter. A RIP network cannot be wider than 15 hops.
+
+*** Trap
+During convergence the table can look right and the network can still be wrong.
+Round 2 in the trace above shows O at 3 and P at 4. The numbers are finite and look healthy. In reality no path to N exists, so packets bounce between O and P.
+Never trust a forwarding table during convergence. Trust it only after two rounds with no change.
+
+** RIP
+SUMMARY: RIP is a small interior gateway protocol. It is distance vector and it counts hops, with 16 meaning unreachable.
+KUROSE: 5.2.2, 5.3
+EXAM: not asked directly in the 6 papers. The RIP and OSPF question needs these facts.
+PRIORITY: core
+
+*** Fact list
+- Type: distance vector, so it uses the Bellman-Ford update.
+- Metric: hop count. Each link costs 1, whatever its bandwidth.
+- Limit: 15 is the largest valid hop count. A metric of 16 means unreachable.
+- Update: the whole routing table goes to every neighbour every 30 seconds.
+- Transport: it runs over UDP, port 520.
+- Scope: interior gateway protocol, used inside one autonomous system.
+- Convergence: slow. The count to infinity problem is native to it.
+- Timers: 30 seconds for updates, 180 seconds before a route is declared dead.
+
+*** Trap
+15 is a usable distance and 16 is the poison value. Students write "16 hops is the maximum".
+Write it as: 15 is the largest valid metric, and 16 is the value that means infinity.
+A second trap: hop count ignores bandwidth. A 1 Mbps link and a 10 Gbps link both cost 1.
+
+** OSPF
+SUMMARY: OSPF is the link state interior gateway protocol of the Internet. It floods advertisements inside an area and runs Dijkstra on the result.
+KUROSE: 5.3
+EXAM: not asked directly in the 6 papers. The RIP and OSPF question needs these facts.
+PRIORITY: core
+
+*** Fact list
+- Type: link state. Every router builds the same map of its area.
+- Algorithm: Dijkstra, run with the router itself as source.
+- Metric: cost, usually reference bandwidth divided by interface bandwidth.
+- Encapsulation: it runs directly over IP with protocol number 89. It does not use TCP or UDP.
+- Areas: the network is split into areas. Area 0 is the backbone and every other area must attach to it.
+- Flooding: link state advertisements flood within an area, not across the whole network.
+- Multipath: OSPF supports equal cost multipath, so two equal routes can both carry traffic.
+- Convergence: fast, because a change triggers an immediate flooded advertisement.
+- Authentication: it supports authenticated updates, which RIP version 1 does not.
+
+*** Why areas exist
+A flood reaches every router in its area. If the whole network were one area, every link change would wake every router.
+Areas bound the flooding. A change inside area 2 stays inside area 2, and the backbone hears only a summary.
+The cost is that a router in area 2 does not know the detailed topology of area 3.
+
+*** Router roles
+Internal router: all its interfaces sit in one area.
+Area border router: it has interfaces in area 0 and in one other area. It summarises routes between them.
+Autonomous system boundary router: it sits at the edge and exchanges routes with another autonomous system, usually through BGP.
+
+*** OSPF packet types
+Hello: discovers neighbours and keeps the adjacency alive. It also elects the designated router on a broadcast link.
+Database description: sends a summary of the sender's link state database, so the two sides can compare.
+Link state request: asks a neighbour for the full record of one advertisement it is missing.
+Link state update: carries one or more complete advertisements. This is the flooding packet.
+Link state acknowledgment: confirms receipt of an update, which makes the flood reliable.
+
+*** RIP compared with OSPF
+
+| Point | RIP | OSPF |
+|-------+-----+------|
+| Metric | hop count, maximum 15 | cost from bandwidth |
+| Algorithm | distance vector, Bellman-Ford | link state, Dijkstra |
+| Convergence | slow, count to infinity | fast, immediate flood |
+| Scalability | poor beyond 15 hops | good, scales with areas |
+| Overhead | full table every 30 seconds | small hello packets plus triggered floods |
+| Transport | UDP port 520 | IP protocol 89 |
+
+*** Trap
+OSPF cost is not bandwidth. It is reference bandwidth divided by interface bandwidth, so a faster link gets a smaller number.
+With the default reference of 100 Mbps, a 1 Gbps link and a 10 Gbps link both get cost 1. The number is rounded up and never below 1.
+
+** BGP
+SUMMARY: BGP is the inter-domain routing protocol. It carries reachability between autonomous systems and it chooses paths by policy, not by cost.
+KUROSE: 5.4
+EXAM: not asked in the 6 papers.
+PRIORITY: core
+
+*** Why BGP exists
+The Internet is a network of autonomous systems. Each one is run by a different organisation with its own rules.
+An ISP does not want the shortest path through a competitor. It wants a path that respects money, contracts, and law.
+So inter-domain routing needs policy control. Bellman-Ford and Dijkstra cannot express "do not carry traffic for that neighbour".
+
+*** Path vector
+BGP advertises a whole path, not a single distance. The advertisement lists every autonomous system on the route.
+A router accepts a path only if its own AS number is absent from the list. That check removes loops without any counting.
+This is the key difference from distance vector. A distance vector hides the path, so it cannot detect a loop that returns to the sender.
+
+*** eBGP and iBGP
+eBGP runs between routers in different autonomous systems. It is the external session that carries the real route.
+iBGP runs between routers inside one autonomous system. It distributes the routes learned by eBGP to every border router in the AS.
+iBGP is not an interior routing protocol. It does not compute shortest paths inside the AS. OSPF or RIP does that job.
+
+*** Attributes
+AS-PATH: the list of autonomous systems on the route. It prevents loops and it also expresses preference for short paths.
+NEXT-HOP: the IP address of the border router that should receive the traffic for this prefix.
+LOCAL-PREF: a local weight set by the operator. A higher value wins, and it is used to prefer one exit point.
+MED: multi exit discriminator. It hints to a neighbouring AS which of several entry points to use.
+
+*** Why a worse path wins
+BGP often picks a longer path on purpose. A shorter path may cross a customer link that costs money, or cross an AS the operator does not trust.
+
+*** The three protocols together
+
+| Point | RIP | OSPF | BGP |
+|-------+-----+------+-----|
+| Scope | inside one AS | inside one AS | between ASes |
+| Algorithm | distance vector | link state | path vector |
+| Metric | hop count | cost from bandwidth | policy, with AS-PATH length as one input |
+| Runs over | UDP 520 | IP protocol 89 | TCP port 179 |
+| Goal | reachability | least cost path | policy control |
+
+*** Trap
+BGP is not "distance vector with a path attached". The decision is a policy ranking, and AS-PATH length is only one tie breaker.
+A second trap: iBGP is not an IGP. It carries external routes inside the AS but does not replace OSPF.
+
+** Global versus decentralised routing algorithms
+SUMMARY: Global algorithms know the whole map and run Dijkstra. Decentralised algorithms know only their neighbours and iterate with Bellman-Ford.
+KUROSE: 5.2.3
+EXAM: asked in Jan 2020, part A, 5 marks. "Compare and contrast global and decentralized routing algorithms. Give example for each."
+PRIORITY: core
+
+| Point | Global | Decentralised |
+|-------+--------+---------------|
+| What it knows | the full topology and every link cost | only the cost to its own neighbours |
+| When it runs | on a change, after the map is flooded | continuously, on every neighbour message |
+| What it computes | a shortest path tree from itself | one distance per destination |
+| Example | link state, OSPF, Dijkstra | distance vector, RIP, Bellman-Ford |
+| Advantage | fast convergence, full view, no loops after convergence | simple, low memory, little messaging per router |
+| Disadvantage | O(n^2) messages, needs a reliable flood, may oscillate | slow convergence, count to infinity, loops |
+| Failure effect | one wrong cost corrupts one router's tree | one wrong vector propagates to many routers |
+
+*** Exam ready answer
+A global algorithm gives every router the complete topology and all link costs, so each router runs Dijkstra on the same map.
+A decentralised algorithm gives each router only the cost to its neighbours, and the routers iterate by exchanging distance vectors.
+Global algorithms converge fast but need a reliable flood, and they cost O(n^2) messages. Decentralised algorithms are cheap per router but suffer count to infinity.
+Link state with OSPF is the global example and distance vector with RIP is the decentralised example.
+
+*** Trap
+Global is not the same as SDN. Global means every router holds the full map. SDN means one remote machine holds the map and pushes tables.
+OSPF is global and still runs inside each router. A single wrong link cost also hurts a global algorithm, because the flood carries the error everywhere.
+
+** Interoperability between routing protocols
+SUMMARY: Two networks that run different routing protocols stay isolated until the boundary router redistributes routes between them.
+KUROSE: 5.3, 5.4 (protocol boundaries)
+EXAM: asked in May 2019, part A, 5 marks. Network A runs RIP, network B runs OSPF, both in one AS, and pings fail.
+PRIORITY: core
+
+*** The cause
+A router speaks a protocol, not a route. A RIP router understands only RIP messages, and an OSPF router understands only OSPF messages.
+The border router may run both, but running both is not the same as sharing. By default each protocol keeps its own table.
+So network A knows its own prefixes, network B knows its own prefixes, and neither carries the other's prefixes. The ping fails at the first router with no matching entry.
+
+*** What redistribution does
+Redistribution is a configuration on the boundary router. It takes routes from one protocol and injects them into the other.
+In Cisco style the command sits under the routing process. For example, under OSPF you add the line that redistributes RIP.
+The boundary router then advertises the foreign prefixes as if it owned them. Each side learns the far prefixes through its own native protocol.
+
+*** The metric translation problem
+Hop count and cost are not comparable. A RIP metric of 3 means three hops. An OSPF metric of 3 means a cost of 3, which may be one fast link.
+No formula converts one into the other. The boundary router therefore needs a seed metric.
+The seed metric is a fixed starting value. For example, redistributed routes enter OSPF with cost 20, and enter RIP with metric 2.
+Without a seed metric many routers refuse the route, or give it infinity, so the route never appears.
+
+*** Administrative distance
+Administrative distance is a trust value per protocol. When two protocols offer the same prefix, the router installs the route from the more trusted protocol.
+Cisco numbers are 120 for RIP and 110 for OSPF, so OSPF wins a tie by default.
+
+*** Other causes
+No default route: neither side has a route to the far prefix and no gateway of last resort exists.
+A filter: a distribute list or route map blocks the prefix even after redistribution.
+A mismatched area: the interface sits in the wrong OSPF area, so the two ends never form an adjacency.
+A missing network statement: the interface is not advertised into its own protocol, so the prefix is absent from the start.
+
+*** The diagnostic order to write
+1. Run =show ip route= on both sides. Look for the far prefix on each router.
+2. Run =show ip protocols=. Check that redistribution is configured in both directions.
+3. Check the seed metric on the redistributed routes. A missing seed metric gives an unusable value.
+4. Check for filters, then check the interface area and the network statements.
+
+*** Trap
+Redistribution is directional. Configuring it on one side only gives one way reachability.
+The ping may then work from A to B and fail from B to A. That pattern looks like a broken link, not a missing route.
+
+** Mobility: direct and indirect routing
+SUMMARY: A mobile host keeps its permanent address while it moves, and routing hides the new point of attachment from the correspondent.
+KUROSE: 7.5, 7.6
+EXAM: asked in May 2019, part B, 10 marks. "Discuss mobility via direct and indirect routing with neat diagrams."
+PRIORITY: core
+
+*** The problem
+An IP address does two jobs. It names the host and it also names the host's point of attachment to the network.
+When the host moves to another subnet, its old address no longer routes to it. Changing the address breaks every open connection.
+So mobility needs a way to keep the address and still deliver packets. Routing, not addressing, must absorb the move.
+
+*** The vocabulary
+Home network: the subnet the host belongs to, with the prefix in its permanent address.
+Home agent: a router in the home network. It keeps track of where the mobile host has gone.
+Foreign network: the subnet the host is visiting now.
+Foreign agent: a router in the foreign network. It helps the mobile host and can hold a care-of address.
+Care-of address: a temporary address in the foreign network. It is the real delivery point right now.
+Correspondent: the host that sends to the mobile host. It knows only the permanent address.
+
+#+begin_example
+   home network 130.20.1.0/24        foreign network 145.60.4.0/24
+   +----------------------+          +----------------------+
+   |      [H] home agent  |          |  [F] foreign agent   |
+   |           |          |          |          |           |
+   |        (M) mobile    |          |        (M) mobile    |
+   |   permanent address  |          |   care-of address    |
+   |      130.20.1.5      |          |      145.60.4.9      |
+   +----------------------+          +----------------------+
+              ^
+              |  (C) correspondent sends to 130.20.1.5
+#+end_example
+
+*** Indirect routing
+The correspondent never learns the new address. It sends every datagram to the permanent address, as it always did.
+The home agent intercepts that datagram. It wraps the whole datagram inside a new one addressed to the care-of address, and sends it through the tunnel.
+The foreign agent unwraps it and delivers the original datagram to the mobile host.
+
+#+begin_example
+        (C) correspondent
+         |            ^
+    (1)  |            |  (3) reply
+         v            |      direct, or back through H
+    [H] home agent    |
+         |            |
+         | (2) tunnel |
+         v            |
+    [F] foreign agent-+
+         |
+        (M) mobile host, care-of 145.60.4.9
+#+end_example
+
+The triangle routing inefficiency: each datagram travels C to H, then H to F, then F to M. The direct path C to F is shorter.
+When the correspondent and the mobile host are both far from home, every packet takes a long detour through the home network.
+
+*** Direct routing
+Direct routing removes the detour for the correspondent. It adds a query and a cache.
+Step one: the correspondent sends a query to the home agent and asks for the care-of address.
+Step two: the home agent answers with the care-of address, and the correspondent stores it in a binding cache.
+Step three: the correspondent tunnels straight to the care-of address. The foreign agent unwraps and delivers.
+
+#+begin_example
+  step 1:  (C) --- query ---> [H]
+  step 2:  [H] --- care-of 145.60.4.9 ---> (C)
+  step 3:  (C) === tunnel ===> [F] ---> (M)
+#+end_example
+
+The correspondent also needs a correspondent agent. That agent sends the query, holds the binding cache, and builds the tunnel.
+Registration is the glue. When the mobile host arrives, it registers its care-of address with its home agent. The home agent then always knows the current tunnel end.
+
+*** The comparison
+
+| Point | Indirect routing | Direct routing |
+|-------+------------------+----------------|
+| Path | correspondent to home agent to foreign agent | correspondent straight to care-of address |
+| Path length | longer, the triangle | shortest possible |
+| Transparency | full, the correspondent changes nothing | partial, the correspondent needs a binding cache |
+| Requirement on correspondent | none | a correspondent agent and a query to the home agent |
+| Cost | tunnel load on the home agent | extra state in the correspondent |
+
+*** Trap
+The permanent address and the care-of address are both addresses of the same host, but they play different roles.
+The permanent address identifies the host and never changes. The care-of address identifies where the host is now, and it changes at every move.
+A second trap: in indirect routing the outer header carries the care-of address. The inner header still carries the permanent address, which is why the connection survives.
+
+** Broadcast, multicast, and anycast
+SUMMARY: Broadcast reaches every host on the subnet, multicast reaches a subscribed group, and anycast reaches the nearest member of a group.
+KUROSE: 4.6 (addressing), 5.4 (anycast use)
+EXAM: not asked in the 6 papers.
+PRIORITY: extra
+
+Broadcast reaches every host on the local subnet. One example is an ARP request, which asks all hosts for one address. The limited broadcast address is 255.255.255.255, and a subnet broadcast ends in all ones.
+Multicast reaches only the hosts that joined a group. One example is a live video feed or a stock ticker. The group range is 224.0.0.0 to 239.255.255.255.
+Anycast reaches the nearest member of a group that shares one address. One example is a root DNS server, which many sites host under the same address. It uses an ordinary unicast address, so the destination looks normal.
+
+** Drills, routing
+SUMMARY: Four short exercises, each on a small graph, to be done with a pen and a timer.
+KUROSE: 5.2, 5.3, 5.4
+EXAM: pattern of the three routing questions in the 6 papers.
+PRIORITY: core
+
+*** Drill 1: Dijkstra trace
+Run Dijkstra from S on this graph. Give the full step table and the forwarding table at S.
+
+#+begin_example
+           (B)
+         4/   \4
+         /     \
+      (A)---1---(U)
+       |         |
+      2|         |2
+       |         |
+      (S)---7---(T)
+#+end_example
+
+Links: c(S,A)=2, c(S,T)=7, c(A,U)=1, c(A,B)=4, c(B,U)=4, c(U,T)=2. All other pairs are infinite.
+
+*** Drill 2: one distance vector round
+Four routers W, X, Y, Z. Links: c(W,X)=1, c(X,Y)=2, c(Y,Z)=5, c(W,Z)=4. All start from their direct costs only.
+Write the vectors after round 1 and after round 2. State the round in which the network converges.
+
+*** Drill 3: count to infinity
+Two routers O and P sit in a line behind destination N. Links: c(N,O)=2 and c(O,P)=2.
+The link N to O fails. Show the climb round by round until RIP gives up, first with no fix and then with poisoned reverse.
+
+*** Drill 4: written answer under timing
+Give yourself 8 minutes and about 150 words. Compare global and decentralised routing algorithms. Cover knowledge, examples, and one advantage and one disadvantage of each. Write it without looking at the table.
+
+** Drill answers, routing
+SUMMARY: Full traces for the four drills, with the arithmetic shown once per step.
+KUROSE: 5.2, 5.3, 5.4
+EXAM: closes the loop on the three routing questions in the 6 papers.
+PRIORITY: core
+
+*** Answer 1
+Initialise. N'={S}. D(A)=2 via A, D(T)=7 via T, D(U)=infinity, D(B)=infinity.
+
+| Step | N'    | D(A),p(A) | D(U),p(U) | D(B),p(B) | D(T),p(T) |
+|------+-------+-----------+-----------+-----------+-----------|
+|    0 | S     | 2,S       | infinity  | infinity  | 7,S       |
+|    1 | SA    |           | 3,A       | 6,A       | 7,S       |
+|    2 | SAU   |           |           | 6,A       | 5,U       |
+|    3 | SAUT  |           |           | 6,A       |           |
+|    4 | SAUTB |           |           |           |           |
+
+Step 1 settles A at 2. U becomes 2+1=3 through A. B becomes 2+4=6 through A.
+Step 2 settles U at 3. B stays at 6, because 3+4=7 is worse. T improves to 3+2=5 through U.
+Step 3 settles T at 5. T touches only S and U, and both are already settled, so nothing changes.
+Step 4 settles B at 6.
+
+| Destination | Cost | Predecessor | Next hop | Link |
+|-------------+------+-------------+----------+------|
+| A           | 2    | S           | A        | (S,A) |
+| B           | 6    | A           | A        | (S,A) |
+| T           | 5    | U           | A        | (S,A) |
+| U           | 3    | A           | A        | (S,A) |
+
+Watch the T row. p(T)=U, yet the next hop is A, because the path is S to A to U to T.
+Check the cost: 2+1+2=5, which is less than the direct 7.
+
+*** Answer 2
+Round 0 vectors. W is (0,1,inf,4). X is (1,0,2,inf). Y is (inf,2,0,5). Z is (4,inf,5,0).
+
+Round 1. Every router applies Bellman-Ford to the round 0 vectors.
+
+| From | W | X | Y | Z |
+|------+---+---+---+---|
+| W    | 0 | 1 | 3 | 4 |
+| X    | 1 | 0 | 2 | 5 |
+| Y    | 3 | 2 | 0 | 5 |
+| Z    | 4 | 5 | 5 | 0 |
+
+Show four calculations.
+W learns Y: through X it is 1+2=3. Through Z it is 4+5=9. So 3 through X.
+X learns Z: through W it is 1+4=5. Through Y it is 2+5=7. So 5 through W.
+Y learns W: through X it is 2+1=3. Through Z it is 5+4=9. So 3 through X.
+Z learns X: through W it is 4+1=5. Through Y it is 5+2=7. So 5 through W.
+
+Round 2. Apply Bellman-Ford again and compare.
+
+| From | W | X | Y | Z |
+|------+---+---+---+---|
+| W    | 0 | 1 | 3 | 4 |
+| X    | 1 | 0 | 2 | 5 |
+| Y    | 3 | 2 | 0 | 5 |
+| Z    | 4 | 5 | 5 | 0 |
+
+No entry changes, so the network converged at round 1 and round 2 only confirms it.
+Check against the true costs. W to X is 1, W to Y is 3, W to Z is 4. X to Y is 2, X to Z is 5, Y to Z is 5. Every entry agrees.
+The network is small, so one round is enough. A larger network needs one round per hop.
+
+*** Answer 3
+Before the failure O has D(N)=2 directly and P has D(N)=4 through O.
+When N to O fails, O sets D(N)=infinity, then believes P's stale 4.
+
+| Round | O says N is at | P says N is at |
+|-------+----------------+----------------|
+| 1     | 6              | 4              |
+| 2     | 6              | 8              |
+| 3     | 10             | 8              |
+| 4     | 10             | 12             |
+| 5     | 14             | 12             |
+| 6     | 14             | 16             |
+| 7     | 16             | 16             |
+
+The metric climbs by two each round, because each hop costs 2. RIP stops at 16, so seven rounds of looping traffic pass before both routers give up.
+
+With poisoned reverse, O knows its route to N runs through P. So O advertises N to P as 16.
+P sets D(N)=16 at once and advertises 16 back to O. Both converge in one round with zero looping packets.
+
+*** Answer 4
+Model answer, about 150 words.
+A global routing algorithm gives every router the complete topology and every link cost. Each router runs Dijkstra on that shared map, and OSPF is the standard example. The advantage is fast convergence with a full view, and the disadvantage is O(n^2) messages for the flood plus possible oscillation.
+A decentralised routing algorithm gives each router only the cost to its direct neighbours. Routers exchange distance vectors and iterate with Bellman-Ford, and RIP is the standard example. The advantage is low memory and little messaging per router, and the disadvantage is slow convergence with the count to infinity problem.
+Link state suits a single well managed domain. Distance vector suits a small network with simple routers.
+
+*** Marking notes for the drills
+A Dijkstra answer earns marks for the settled set, for the correct relaxation arithmetic, and for the forwarding table. One wrong cell usually costs one mark.
+A distance vector answer earns marks for showing the vectors round by round, not for the final numbers alone.
+The count to infinity answer needs the word infinity and the number 16. State both.

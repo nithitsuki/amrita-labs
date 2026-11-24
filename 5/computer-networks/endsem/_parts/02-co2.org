@@ -1,0 +1,465 @@
+** HTTP
+SUMMARY: HTTP is a stateless request-response protocol that runs over TCP on port 80.
+KUROSE: 2.2.1, 2.2.2, 2.2.3
+EXAM: CNE4 Q6 parses a response message for 4 marks. CNE5 Q11 explains HTTP over the layers for 10 marks. CNE6 Q4 compares persistent and non-persistent.
+PRIORITY: core
+
+*** Request message
+#+begin_example
+ GET /index.html HTTP/1.1        request line, method, URL, version
+ Host: www.example.edu
+ User-Agent: Mozilla/5.0
+ Accept: text/html
+ Connection: keep-alive
+                                 blank line ends the headers
+#+end_example
+
+| Header | Side | Meaning |
+|--------+------+---------|
+| Host | request | name of the server, needed for virtual hosting |
+| Connection | both | keep-alive asks for a persistent connection, close ends it |
+| User-Agent | request | browser and platform that sent the request |
+| Accept | request | media types the client can handle |
+| If-Modified-Since | request | date of the cached copy, used by conditional GET |
+| Cookie | request | state value the server set earlier |
+| Date | response | time the response was created |
+| Server | response | server software and version |
+| Last-Modified | response | time the object last changed at the origin |
+| Content-Length | response | size of the body in bytes |
+| Content-Type | response | media type of the body |
+| Set-Cookie | response | identifier the browser must store and return |
+
+#+begin_example
+ HTTP/1.1 200 OK                 status line, version, code, phrase
+ Date: Mon, 08 Sep 2025 09:50:00 GMT
+ Server: Apache/2.4.1 (Unix)
+ Last-Modified: Sun, 31 Aug 2025 10:10:30 GMT
+ Content-Length: 3106
+ Content-Type: text/html
+                                 blank line, then the body
+ data data data ...
+#+end_example
+
+| Code | Class | Meaning |
+|------+-------+---------|
+| 200 | success | request worked and the object follows |
+| 301 | redirection | object moved, new URL in the Location header |
+| 304 | redirection | cached copy is still valid, no body sent |
+| 400 | client error | request not understood by the server |
+| 404 | client error | object not found on this server |
+| 505 | server error | HTTP version not supported |
+
+Classes are 1xx information, 2xx success, 3xx redirection, 4xx client error, 5xx server error.
+
+*** Persistent and non-persistent
+| Point | Non-persistent | Persistent |
+|-------+----------------+------------|
+| Objects per connection | one | many |
+| Round trips per object | 2 RTT plus transmission | 1 RTT plus transmission after the first |
+| TCP connections for N objects | N plus 1 | 1 |
+| Overhead | TCP setup and slow start repeat | setup cost paid once |
+| Version | HTTP 1.0 default | HTTP 1.1 default |
+
+Counting rule for a page with one base file and N objects.
+
+- Non-persistent: base file costs 2 RTT plus transmit, and each object costs the same.
+- Persistent without pipelining: base file costs 2 RTT plus transmit, then 1 RTT plus transmit per object.
+- Persistent with pipelining: base file, then one RTT for all requests, then all objects back to back.
+
+WORKED EXAMPLE (numbers changed on purpose)
+Given
+
+- N = 6 referenced objects
+- RTT = 80 ms
+- object size = 500 kbit, so transmission time = 50 ms at 10 Mbit/s
+- ignore queuing and processing
+
+Step 1, non-persistent
+base file = 2 x 80 + 50 = 210 ms
+each object = 2 x 80 + 50 = 210 ms
+total = 210 + 6 x 210 = 1470 ms
+
+Step 2, persistent without pipelining
+base file = 210 ms
+each object = 80 + 50 = 130 ms
+total = 210 + 6 x 130 = 990 ms
+
+Step 3, persistent with pipelining
+total = 210 + 80 + 6 x 50 = 590 ms
+
+Pipelining saves 880 ms against non-persistent, which is a 60 percent cut.
+
+*** Proxy server
+A proxy server is a web cache that sits between the client and the origin server.
+It acts as a server to the client and as a client to the origin.
+
+- On a hit it returns the stored object at once, with a short delay.
+- On a miss it fetches the object, stores a copy, then returns it.
+- It reads Cache-Control, Expires, Last-Modified and ETag to decide what to store and for how long.
+- It adds Age and Via headers so the client knows the copy came from a cache.
+The benefit is lower delay for the user and less traffic on the access link.
+A browser proxy is configured by hand. A transparent proxy intercepts traffic without configuration.
+
+*** Trap
+Non-persistent is 2 RTT per object, not 1. The TCP handshake costs one RTT before any request.
+The request and the first bytes of the response cost the second RTT.
+
+*** Trap
+Pipelining is not the same as persistence. Persistence reuses one connection.
+Pipelining sends several requests without waiting for replies, so the RTTs overlap.
+
+** Cookies
+SUMMARY: Cookies let a stateless protocol carry state by tagging each request with an identifier.
+KUROSE: 2.2.4
+EXAM: CNE1 Q4 asks how to pass a user name across pages. CNE6 Q6 asks cookies with caching and privacy.
+PRIORITY: core
+
+HTTP keeps no memory of past requests. The server cannot tell two requests from the same user apart.
+
+Four components
+
+1. The Set-Cookie header line in the response.
+2. The Cookie header line in later requests.
+3. The cookie file on the client, managed by the browser.
+4. The back-end database at the site, keyed by the cookie value.
+
+#+begin_example
+ browser                             server
+   |  GET /cart                        |
+   |---------------------------------->|  creates id 4471
+   |  Set-Cookie: 4471                 |  stores row in database
+   |<----------------------------------|
+   |  GET /pay                         |
+   |  Cookie: 4471                     |  reads the row
+   |---------------------------------->|
+   |  200 OK, your cart is waiting     |
+   |<----------------------------------|
+#+end_example
+
+A cookie identifies a session, not a person. One site can still map it to a login.
+
+Privacy in two sentences.
+Cookies let a site follow a user across pages, and third-party cookies let an ad network follow the same user across sites.
+That builds a profile without the user choosing to visit the tracker.
+
+*** Trap
+A cookie is a short string, not a program. It cannot read the disk or run code.
+The browser stores it and returns it. The server holds the meaning.
+
+*** Trap
+First-party and third-party cookies differ by the site in the address bar.
+The ad network cookie is third-party because the user never visited the ad network.
+
+** Web caching and conditional GET
+SUMMARY: A cache serves repeat requests locally, and conditional GET avoids resending unchanged objects.
+KUROSE: 2.2.5, which also carries the conditional GET
+EXAM: CNE3 Q5 and CNE5 Q3 ask how caching cuts delay. CNE4 Q7 asks conditional GET. CNE6 Q6 links caching with cookies.
+PRIORITY: core
+
+A conditional GET carries If-Modified-Since with the date of the cached copy.
+
+#+begin_example
+ browser                                  server
+   |  GET /news.html                        |
+   |  If-Modified-Since: 12 Sep 2025        |
+   |--------------------------------------->|
+   |                                        | object unchanged
+   |  304 Not Modified                      |
+   |<---------------------------------------|
+   |  no body, the browser reuses its copy  |
+#+end_example
+
+If the object has changed, the server sends 200 OK with the full body.
+The 304 reply carries headers only, so the object never crosses the link.
+This saves bandwidth on the bottleneck link and saves the transfer time.
+
+WORKED EXAMPLE (numbers changed on purpose)
+Given
+
+- access link 8 Mbit/s
+- object size 200 kbit
+- request rate 12 per second, so offered load = 12 x 200 kbit = 2.4 Mbit/s
+- cache hit rate 0.55
+- delay from the origin 1.6 s, delay from the cache 10 ms
+
+Step 1, utilisation without a cache
+2.4 Mbit/s / 8 Mbit/s = 0.30, which is light, so the delay stays near 1.6 s
+
+Step 2, load that reaches the access link with a cache
+0.45 x 2.4 Mbit/s = 1.08 Mbit/s
+
+Step 3, utilisation with a cache
+1.08 / 8 = 0.135
+
+Step 4, average delay with a cache
+0.45 x 1.6 s + 0.55 x 0.010 s = 0.72 s + 0.0055 s = 0.73 s
+
+Step 5, delay saved
+1.6 s - 0.73 s = 0.87 s, about 54 percent
+
+*** Why a cache helps on a fast link
+A fast link still has a long propagation delay to a distant origin.
+The cache removes those round trips, so latency falls even when bandwidth is plentiful.
+Bandwidth is not the only cost. Distance is the other cost.
+
+*** Trap
+A cache does not cut delay for every object. It cuts delay only for repeat requests that hit.
+The first request for an object still pays the full trip to the origin.
+
+*** Trap
+304 Not Modified is not 200 OK with an empty body. It is a separate status code with no body.
+Do not write 200 in a conditional GET answer.
+
+** DNS
+SUMMARY: DNS is a distributed hierarchical database that maps names to IP addresses.
+KUROSE: 2.4.1, 2.4.2, 2.4.3
+EXAM: CNE4 Q8 asks recursive against iterative for 4 marks. CNE5 Q12 asks short notes on DNS.
+PRIORITY: core
+
+#+begin_example
+                     root servers
+                    /      |      \
+              .com        .org       .edu      top level domains
+             /   \          |          |
+      amazon.com  ...     pbs.org   umass.edu   authoritative
+          |
+      www.amazon.com
+#+end_example
+
+- The root server knows where each top-level domain server is. Thirteen logical root servers exist.
+- A top-level domain server knows the authoritative server for each domain under it.
+- An authoritative server holds the real records for its own domain.
+- The local resolver is the ISP server that a host asks first. It caches answers and is not part of the hierarchy.
+
+*** Iterative query
+#+begin_example
+ host --> local resolver --> root
+                            root replies: ask the .edu server
+         local resolver --> .edu server
+                            replies: ask dns.umass.edu
+         local resolver --> dns.umass.edu
+                            replies with the IP address
+         local resolver --> host
+#+end_example
+
+The contacted server returns a referral, so the resolver sends the next query itself.
+
+*** Recursive query
+#+begin_example
+ host --> local resolver --> root --> .edu --> dns.umass.edu
+                   ^                              |
+                   +-------- the answer ----------+
+#+end_example
+
+The contacted server takes the duty of finding the answer, so it returns the final address.
+
+The difference in two sentences.
+In iterative resolution each server returns the name of the next server, and the resolver repeats the query.
+In recursive resolution each server forwards the whole task, so the answer comes back in one chain.
+
+| Record | Name field | Value field | Use |
+|--------+------------+-------------+-----|
+| A | hostname | IPv4 address | the common host lookup |
+| AAAA | hostname | IPv6 address | host lookup over IPv6 |
+| CNAME | alias name | canonical name | host aliasing |
+| MX | domain | mail server name | mail routing |
+| NS | domain | authoritative server name | delegation down the hierarchy |
+
+Services: name to address translation, host aliasing, mail server aliasing, and load distribution across replicated servers.
+
+DNS uses UDP on port 53 because a query is one small packet and the overhead of TCP is waste.
+It falls back to TCP when the reply exceeds 512 bytes, and for zone transfers between servers.
+
+*** Trap
+The local resolver is not the root server and not the authoritative server.
+It is the first stop for the host, and it does the hard work in iterative mode.
+
+*** Trap
+Recursive is not "more accurate". Both return the same record.
+They differ only in who sends the follow-up queries.
+
+** Email
+SUMMARY: Mail moves by SMTP push to the receiver server, then by an access protocol to the reader.
+KUROSE: 2.3.1, 2.3.2, 2.3.3
+EXAM: CNE2 Q17 asks the full process with a diagram for 10 marks. CNE4 Q9 asks IMAP against POP3 for a slow link.
+PRIORITY: core
+
+Three components
+
+- The user agent composes, reads and stores messages.
+- The mail server holds the mailbox and the outgoing queue.
+- SMTP moves the message between servers, over TCP on port 25.
+
+#+begin_example
+ Alice UA --SMTP--> Alice server --SMTP--> Bob server --IMAP--> Bob UA
+              push                push                  pull
+#+end_example
+
+1. Alice composes the message in her user agent.
+2. Her agent pushes it to her mail server with SMTP.
+3. Her server puts it in the outgoing queue.
+4. The SMTP client at her server opens TCP to Bob's server on port 25.
+5. It sends HELO, MAIL FROM, RCPT TO and DATA, then the body.
+6. Bob's server stores the message in Bob's mailbox.
+7. Bob reads it with an access protocol.
+
+When both users are on the same mail server, steps 4 to 6 collapse into one local delivery.
+No SMTP connection leaves the machine. The server writes the message into Bob's mailbox directly.
+
+| Point | SMTP | HTTP |
+|-------+------+------|
+| Direction | push, sender drives | pull, client drives |
+| Transport | TCP port 25 | TCP port 80 |
+| Message form | ASCII commands and replies | ASCII commands and replies |
+| Objects per message | many parts in one body | one object per response |
+| Persistent connection | yes | optional |
+
+*** Access protocols
+- POP3 downloads mail to the client and usually deletes it from the server. State lives on one device.
+- IMAP keeps mail and folders on the server, so many devices see the same mailbox.
+- Webmail puts an HTTP interface over SMTP for sending and IMAP for reading.
+
+On a slow and unstable link, choose IMAP with a small header fetch.
+IMAP downloads headers first, so the user reads subjects and sizes before pulling a body.
+POP3 would download every message in full, and a dropped link would force a restart.
+
+*** Trap
+SMTP is not used to read mail. It only delivers and stores.
+Reading needs POP3, IMAP or webmail.
+
+*** Trap
+The MAIL FROM and RCPT TO commands are not the To and From header lines.
+The commands are the SMTP envelope. The headers are part of the message itself.
+
+** FTP
+SUMMARY: FTP keeps a control connection open and opens a fresh data connection for each file.
+KUROSE: 2.1 (FTP as an application example), RFC 959
+EXAM: CNE2 Q4 asks the port numbers and their purpose for 3 marks.
+PRIORITY: extra
+
+#+begin_example
+ client                        server
+   |--- control, port 21 ------->|  stays open for the session
+   |<-- reply 200 ---------------|
+   |--- PORT or PASV ----------->|
+   |=== data, port 20 ==========>|  opens, sends, closes
+#+end_example
+
+- Port 21 carries commands and replies for the whole session.
+- Port 20 carries one file, then closes, so a second file needs a second connection.
+- Control is out of band, which means commands travel on a separate connection from the data.
+- The server keeps state, because it must remember the current directory and the login.
+
+Active mode: the client sends PORT, and the server opens the data connection back to the client.
+Passive mode: the client sends PASV, and the server replies with a port that the client connects to.
+In passive mode the data port is chosen by the server, not port 20.
+Passive mode works through NAT and firewalls. Active mode often fails behind them.
+
+*** Trap
+The control connection does not close after each file. Only the data connection does.
+That is why FTP is called stateful.
+
+** Peer to peer
+SUMMARY: In P2P each peer uploads as well as downloads, so total capacity grows with the swarm.
+KUROSE: 2.5
+EXAM: CNE2 Q11 compares the two models for 6 marks. CNE4 Q5 and CNE6 Q3 ask which suits large file sharing.
+PRIORITY: core
+
+| Point | Client-server | Peer to peer |
+|-------+---------------+--------------|
+| Server | always on, fixed address | none required |
+| Scaling | upload of the server caps the growth | each new peer adds capacity |
+| Cost to the provider | grows with demand | shared by the users |
+| Reliability | high, one controlled copy | depends on peers staying online |
+| Management | simple | complex, peers join and leave |
+
+Formulas for distributing a file of F bits to N peers.
+
+- The server uploads at us. Peer i uploads at ui and downloads at di. The smallest di is d_min.
+- Client-server: D = max(NF/us, F/d_min)
+- Peer to peer: D = max(F/us, F/d_min, NF/(us + sum of ui))
+
+WORKED EXAMPLE (numbers changed on purpose)
+Given
+
+- F = 400 Mbit
+- us = 10 Mbit/s
+- each peer uploads 2 Mbit/s
+- d_min = 4 Mbit/s
+
+Step 1, client-server time for N = 10
+D = max(10 x 400 / 10, 400 / 4) = max(400 s, 100 s) = 400 s
+
+Step 2, P2P time for N = 10
+D = max(40, 100, 4000 / (10 + 20)) = max(40, 100, 133) = 133 s
+
+Step 3, client-server time for N = 20
+D = max(800 s, 100 s) = 800 s
+
+Step 4, P2P time for N = 20
+D = max(40, 100, 8000 / (10 + 40)) = 160 s
+
+Step 5, the gap
+400 / 133 = 3 times faster at 10 peers
+800 / 160 = 5 times faster at 20 peers
+
+*** BitTorrent in six lines
+- A torrent is a file split into chunks of fixed size.
+- A tracker tells a new peer which other peers hold the chunks.
+- The peer downloads chunks from many peers at once and uploads the chunks it has.
+- Rarest first means it asks for the least common chunk, which keeps chunks available.
+- Tit for tat means it uploads most to the peers that upload most to it.
+- Optimistic unchoke gives one random peer upload service, so new peers can join the swarm.
+
+*** Trap
+P2P does not get faster without limit as peers join. It approaches a ceiling of F/ui.
+More peers add upload capacity, and they also add demand. The gain is slower growth, not free speed.
+
+*** Trap
+NF/us is the server upload term. It is not the total traffic.
+The traffic is N x F. The time is what the formulas bound.
+
+** Cloud computing and virtualization
+SUMMARY: Cloud computing rents pooled compute over a network, and virtualization makes that pooling possible.
+KUROSE: not in Kurose. Use the cloud slides and the CO6 line in the syllabus.
+EXAM: not asked in the 6 papers. CO6 appears only in the outcome table, so keep this short.
+PRIORITY: extra
+
+Cloud computing gives on-demand access to shared resources over a network, with rapid elasticity and measured service.
+
+| Model | What the user gets | Example |
+|-------+--------------------+---------|
+| IaaS | virtual machines, storage, network, user picks the OS | AWS EC2, Azure VMs |
+| PaaS | runtime, APIs and tools, user writes only the app | Google App Engine, Heroku |
+| SaaS | finished software over a browser | Gmail, Office 365 |
+
+| Deployment | Who uses the cloud |
+|------------+--------------------|
+| Public | any customer, shared infrastructure |
+| Private | one organisation, owned or leased |
+| Hybrid | private core with public burst capacity |
+| Community | several organisations with a shared concern |
+
+A hypervisor creates and runs virtual machines by sharing the physical hardware.
+A type 1 hypervisor runs directly on the hardware, such as ESXi, Xen or Hyper-V.
+A type 2 hypervisor runs as an application on a host OS, such as VirtualBox.
+
+A virtual machine carries a full guest OS, so it boots slowly and uses more memory.
+A container shares the host kernel, so it starts in seconds and packs more services per host.
+
+Data-centric networking puts the data in the centre, not the host that stores it.
+Content is named and requested by name, so the network can cache and serve it from anywhere.
+This suits IoT and content delivery, where the same reading or file is wanted by many users.
+
+*** Trap
+IaaS gives a machine. PaaS gives a platform. SaaS gives an application.
+The exam answer is one example each, not a long list of vendors.
+
+*** Trap
+Virtualization is not the cloud. Virtualization is the technique that pools hardware.
+The cloud adds self-service, elasticity and metering on top of it.
+
+*** Fog and the edge
+Fog computing puts a layer of gateways between the devices and the cloud.
+It cuts latency, filters data before upload, and keeps sensitive data local.
+Fog does not replace the cloud. It handles the urgent local decisions.

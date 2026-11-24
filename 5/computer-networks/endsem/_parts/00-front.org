@@ -1,0 +1,413 @@
+#+TITLE: 23CSE302 Computer Networks — Endsems
+#+SUBTITLE: Exam 25 Nov 2026, 09:30. Built 24 Nov, afternoon.
+#+STARTUP: overview
+#+OPTIONS: toc:2 num:nil
+
+* How to use this file
+SUMMARY: Read this page, then work down the units in order. Do not read the answers file until you have written an attempt on paper.
+
+The file has three parts.
+
+1. This front matter. The plan, the formula sheet, and the traps.
+2. The unit notes. CO1 through CO6, written from zero. Every topic has a
+   =PRIORITY= line. Do the =core= topics first and skip =extra= if the clock
+   runs out.
+3. The paper bank. All six papers, question by question, with a one-line
+   hint and no answers.
+
+The answers live in a separate file. Open it only after you have written an
+attempt. Marking your own attempt is worth more than reading a solution.
+
+** The honest position
+You scored 25 of 50 in the mid-sem. The mid-sem covered CO1 and CO2. The
+endsem covers CO1 through CO5, so roughly two thirds of the paper is
+material you have not studied.
+
+The good news. The marks do not sit where you think they do. Look at the
+CO split printed on the two 2025 papers.
+
+| Paper | CO1 | CO2 | CO3 | CO4 | CO5 |
+|-------+-----+-----+-----+-----+-----|
+| CNE4  |  22 |  20 |   8 |   0 |   0 |
+| CNE6  |  15 |   5 |  25 |   5 |   0 |
+
+CO3 is the heaviest single block across the two papers, and CO3 is the one
+unit that is almost entirely mechanical. Sequence numbers, checksums,
+windows, and efficiency formulas. You can learn those cold in two hours.
+That is the highest return in the whole syllabus.
+
+Here is the honest count. I compared every question in the bank against
+your own =midsem-prep.org= by matching the wording. Two of the six papers
+are already fully attempted. The other four are not attempted at all.
+
+| Paper | Questions | Already attempted | Genuinely new |
+|-------+-----------+-------------------+---------------|
+| CNE1  |        15 |                 0 |            15 |
+| CNE2  |        20 |                 0 |            20 |
+| CNE3  |        11 |                 0 |            11 |
+| CNE4  |        11 |                11 |             0 |
+| CNE5  |        15 |                 0 |            15 |
+| CNE6  |        10 |                10 |             0 |
+|-------+-----------+-------------------+---------------|
+| total |        82 |                21 |            61 |
+
+So 61 questions are new, not 39. That is the real work. Do not plan around
+the number 39.
+
+But 61 questions sit on only about a dozen distinct ideas. ARP is three of
+them. CSMA/CD is two. Conditional GET is three. Subnetting is three. Learn
+the idea once and you have answered every question that asks for it.
+
+** The plan, today
+Two hours of reading per unit, then attempt. Do not read a unit twice on the
+first pass. Read, close the file, write the diagram from memory, reopen, fix.
+
+| Time | Block | What you actually do |
+|----------+---------------------------+---------------------------------------|
+| 14:30    | Transport, part 1         | UDP, TCP header, seq and ack numbers |
+| 15:15    | Transport, part 2         | GBN, SR, flow control |
+| 16:15    | Break, 15 min             | Stand up, water, no screen |
+| 16:30    | Network layer             | IPv4 header, classes, NAT, DHCP |
+| 17:15    | Subnetting drills         | Do all six drills, timed |
+| 18:00    | Break, 15 min             |                                       |
+| 18:15    | Routing                   | Dijkstra trace, distance vector, RIP, OSPF, BGP |
+| 19:00    | Mobility                  | Direct and indirect routing, draw both |
+| 19:15    | Dinner, 30 min            |                                       |
+| 19:45    | Link layer, part 1        | Parity, CRC, multiple access, CSMA/CD |
+| 20:30    | Link layer, part 2        | Ethernet frame, ARP, VLAN, 802.11 |
+| 21:15    | Break, 10 min             |                                       |
+| 21:25    | Paper attempt             | CNE4 in full, 50 marks, 50 minutes |
+| 22:15    | Mark it                   | Open the answers file, score yourself |
+| 22:45    | Formula sheet             | Write it out once from memory |
+| 23:00    | Sleep                     | Non-negotiable |
+
+** The plan, tomorrow morning
+Waking at 05:00. Do not study past 09:05. A tired brain loses more marks
+than a missing fact.
+
+| Time | Block |
+|-----------+--------------------------------------------------------------|
+| 05:00     | Wash, water, no phone |
+| 05:15     | Write the formula sheet from memory. Check it. |
+| 05:45     | CNE5 Part A, ten questions, 50 marks, 55 minutes, closed file |
+| 06:45     | Mark CNE5 Part A. Write down every gap. |
+| 07:15     | CNE1 Part A, outline only. Bullet per question, 5 minutes each. |
+| 08:15     | Re-drill the three gaps you found. Nothing new. |
+| 08:50     | Traps section, one read |
+| 09:05     | Stop. Eat. Walk. |
+| 09:30     | Exam |
+
+** If you only have three hours
+Cut in this order. Keep going down the list until the time fits.
+
+1. Formula sheet, this file. 20 minutes.
+2. Transport: seq and ack numbers, TCP header, UDP checksum. 40 minutes.
+3. Subnetting and VLSM method. 30 minutes.
+4. ARP and CSMA/CD. 30 minutes.
+5. Ethernet frame and 802.11 frame layouts, drawn from memory. 25 minutes.
+6. Two-dimensional parity, one worked grid. 15 minutes.
+7. RIP versus OSPF versus BGP comparison table. 15 minutes.
+8. Mobility, both diagrams. 15 minutes.
+
+Skip the cloud unit entirely. Skip CRC. Skip SDN.
+
+* Resources
+SUMMARY: The author's own free lecture set, and two drill sites. Nothing here is a random third party.
+
+The textbook authors publish their lectures and their problem sets for free. The
+slides your course uses are built from the same book. So the author's own
+channel is the closest match to what your examiner will ask.
+
+** The author's lectures
+| What | Where |
+|-----------------------------------+----------------------------------------------------------|
+| All chapters, index page | https://gaia.cs.umass.edu/kurose_ross/online_lectures.htm |
+| Chapter 3 transport, per section | https://www-net.cs.umass.edu/kurose_ross/videos/3/ |
+| Author's YouTube channel | https://www.youtube.com/@JimKurose/videos |
+
+The chapter 3 page is the important one. Each section there has the video, the
+notes, a knowledge check, and a problem set. The knowledge checks give instant
+feedback. Use them as your first test after reading a unit.
+
+** Which video to watch, if you only watch four
+| Section | Video | Why it matters |
+|---------+-------------------------+---------------------------------------------|
+| 3.3 | Connectionless UDP | The checksum question is copied from this |
+| 3.4 part 1 and 2 | Reliable data transfer | GBN and SR, drawn out slowly |
+| 3.5 part 1 | TCP connection, seq and ack | Your highest-value calculation |
+| 3.7 | TCP congestion control | The sawtooth drawn properly |
+
+Each video is between 8 and 15 minutes. Watch at 1.5 speed. Do not watch a
+video you have not read the matching section for.
+
+** Drill sites
+https://subnetting.net/Subnetting.aspx?mode=practice
+Hands you a random subnet question and marks it. Use this for ten minutes
+before the exam instead of rereading your notes.
+
+https://subnetcalculator.dev/practice/
+Same idea, and it explains the block-size method on the same page.
+
+** Where the answers file is
+=CN-endsem-answers.org=, in the same folder as this file. Open it after an
+attempt, not before. If you open it first you will recognise the questions
+in the exam and still not be able to reproduce the method.
+
+* The compressed pass
+SUMMARY: If the clock beats you, read only these topics. They cover about 43 of the 100 marks in a full paper. Ninety minutes in total.
+
+Each line names a section heading in this file. Jump straight to it. Skip
+everything else in that unit.
+
+** CO3, the highest value 35 minutes
+| Read                                         | Why                                        |
+|----------------------------------------------+--------------------------------------------|
+| UDP: header and checksum                     | a checksum verification is a whole question |
+| TCP: header and fields                       | asked inside every transport comparison    |
+| TCP: sequence and acknowledgement numbers    | the most repeated calculation in the bank  |
+| Go-Back-N                                    | first half of the GBN against SR question  |
+| Selective Repeat                             | second half of it                          |
+| GBN versus SR comparison                     | the table is the answer                    |
+| Pipelining: the maximum data rate numerical  | one full 5-mark numerical                  |
+
+Skip =TCP: connection management=, =TCP: flow control=, and the whole
+rdt ladder, unless time allows.
+
+** CO4, 30 minutes
+| Read                                            | Why                                       |
+|-------------------------------------------------+-------------------------------------------|
+| Subnetting: the mechanical method               | every paper has a subnet question         |
+| VLSM: the method the papers actually ask for    | worth 8 to 10 marks                       |
+| IPv4 versus IPv6                                | a 10-mark comparison in two papers        |
+| NAT                                             | one 5-mark question                       |
+| DHCP                                            | one 5-mark question, and inside CO2 notes |
+| Link state routing and Dijkstra                 | one trace earns most of the marks         |
+| Global versus decentralised routing algorithms  | a named 5-mark comparison                 |
+| Mobility: direct and indirect routing           | a 10-mark question with two diagrams      |
+
+Skip =Fragmentation=, =ICMP=, =BGP=, and =Broadcast, multicast, and anycast=.
+
+** CO5, 25 minutes
+| Read                                    | Why                                          |
+|-----------------------------------------+----------------------------------------------|
+| Error detection: two-dimensional parity | one 5-mark question, and an easy grid        |
+| Multiple access: the taxonomy           | a named question, and it feeds CSMA/CD       |
+| CSMA/CD                                 | appears in two papers                        |
+| Ethernet                                | the frame diagram is a whole question        |
+| ARP                                     | three papers, the most repeated topic here   |
+| VLAN and trunking                       | one 5-mark question                          |
+| 802.11 wireless LAN                     | frame format and the hidden terminal problem |
+
+Skip =CRC=, =ALOHA=, =Network topologies for wireless and wired=, and
+=Network devices inventory=.
+
+** CO1 and CO2, 10 minutes
+You already sat a mid-sem on these two units and scored half marks. Read
+=The four delays= and =Web caching and conditional GET= only. Skip the rest.
+
+* Formula sheet
+SUMMARY: Everything numeric on one screen. Rewrite this from memory the night before and the morning of.
+
+** Delay
+#+begin_example
+  transmission delay   d_trans = L / R
+                       L = packet bits, R = link rate in bits per second
+
+  propagation delay    d_prop  = d / s
+                       d = distance in metres, s = propagation speed
+
+  nodal delay          d_nodal = d_proc + d_queue + d_trans + d_prop
+
+  traffic intensity    La / R
+                       below 1 the queue drains, at 1 it explodes
+
+  end to end, N links  N x (L/R) + sum of d_prop + sum of d_proc
+                       the L/R term repeats because every hop
+                       receives the whole packet before forwarding it
+#+end_example
+
+** Throughput and utilisation
+#+begin_example
+  throughput           min(Rs, Rc, Rcore)
+
+  bandwidth delay product   R x d_prop  bits that fit in the pipe
+
+  stop and wait        U = (L/R) / (RTT + L/R)
+
+  pipelined            U = (N x L/R) / (RTT + L/R)      capped at 1
+
+  frames that fill a window   (R x RTT) / L   (round trip, not BDP)
+#+end_example
+
+** Windows and reliability
+#+begin_example
+  Go-Back-N     max window = 2^k - 1        k = sequence number bits
+  Selective Repeat  max window = 2^(k-1) = half the sequence space
+#+end_example
+
+** Subnetting
+#+begin_example
+  block size        B = 2^(32 - prefix)
+  usable hosts      H = 2^(32 - prefix) - 2
+  mask in octet     the octet the mask cuts through, 256 - B is the step
+
+  ladder   /30 = 2    /29 = 6    /28 = 14   /27 = 30
+           /26 = 62   /25 = 126  /24 = 254
+
+  rule     smallest prefix n where 2^(32-n) - 2 >= required hosts
+#+end_example
+
+** Link layer
+#+begin_example
+  minimum Ethernet frame   2 x t_prop x R    and at least 64 bytes
+  10 Mbps slot time        512 bit times = 51.2 microseconds
+
+  CSMA/CD efficiency       1 / (1 + 5 x (t_prop / t_trans))
+
+  CRC check bits           equal to the degree of the generator
+  fragment offset unit     8 bytes
+#+end_example
+
+** Congestion control
+#+begin_example
+  effective window    min(cwnd, rwnd)
+
+  slow start          cwnd doubles every RTT until ssthresh
+  congestion avoidance   cwnd grows by 1 MSS per RTT
+
+  throughput          about  (0.75 x W) / RTT
+                      or     (1.22 x MSS) / (RTT x sqrt(p))
+#+end_example
+
+** Numbers to memorise
+| Item | Value |
+|------------------------------+---------------------------------|
+| IPv4 header, minimum | 20 bytes |
+| IPv6 header, fixed | 40 bytes |
+| TCP header, minimum | 20 bytes |
+| UDP header | 8 bytes |
+| Ethernet frame, minimum | 64 bytes |
+| Ethernet frame, maximum | 1518 bytes |
+| Ethernet payload, MTU | 1500 bytes |
+| MAC address | 48 bits |
+| IPv4 address | 32 bits |
+| IPv6 address | 128 bits |
+| 802.1Q tag | 4 bytes |
+| 802.11 address fields | 6 bytes each, up to four |
+| Port numbers | 16 bits |
+| TCP sequence number | 32 bits |
+| RIP maximum hop count | 15, and 16 means unreachable |
+| RIP update interval | 30 seconds, over UDP port 520 |
+| OSPF over IP | protocol number 89 |
+| TCP and UDP protocol numbers | 6 and 17 |
+| ICMP protocol number | 1 |
+
+** Port numbers
+| Service | Port |
+|------------------+------|
+| FTP data | 20 |
+| FTP control | 21 |
+| SSH | 22 |
+| Telnet | 23 |
+| SMTP | 25 |
+| DNS | 53 |
+| DHCP server | 67 |
+| DHCP client | 68 |
+| HTTP | 80 |
+| POP3 | 110 |
+| HTTPS | 443 |
+| IMAP | 143 |
+
+* The twenty traps
+SUMMARY: Each line is a mistake that has cost marks before. Read this last, ten minutes before you walk in.
+
+1. Transmission delay is not propagation delay. Transmission is L/R and
+   depends on the packet and the link rate. Propagation is d/s and depends
+   only on distance. A short packet on a long fibre has a huge propagation
+   delay and a tiny transmission delay.
+2. Every hop pays the transmission delay again. A packet crossing three
+   links pays L/R three times, not once.
+3. Store and forward means the whole packet arrives before the first bit
+   leaves. Do not overlap the L/R terms.
+4. Queuing delay is the only delay that congestion changes. The other three
+   are fixed by the packet, the link rate, and the geography.
+5. Bandwidth is not throughput. Bandwidth is the capacity of one link.
+   Throughput is what the path actually delivers, and it is the minimum
+   across the path.
+6. TCP numbers bytes, not segments. A segment with seq 90 and a payload of
+   20 bytes makes the next segment's seq 110.
+7. The ACK number is the next byte expected, not the last byte received.
+8. SYN and FIN each consume one sequence number. Payload plus one for each
+   of those flags.
+9. In the reverse direction the roles swap. If A sent seq X with a payload
+   of N bytes, B replies with ack X + N.
+10. A checksum verification that does not end in all ones means the segment
+    is corrupt. Do not round it off and call it close enough.
+11. Forget the end-around carry on a one's-complement sum and the answer is
+    wrong by one.
+12. Go-Back-N retransmits the lost packet and everything after it. Selective
+    Repeat retransmits only the lost one. If the question says GBN, do not
+    describe SR.
+13. A subnet has two reserved addresses. Usable hosts is 2^(32-n) minus 2,
+    never 2^(32-n).
+14. Every subnet address must be a multiple of its own block size. A /27
+    cannot start at .96 if a /26 already occupies .64 to .127.
+15. VLSM allocates largest first. Allocate smallest first and you will
+    fragment the space and fail the alignment rule.
+16. ARP is not used for a host on another subnet. The sender ARPs for its
+    default gateway. This is the most commonly lost mark in the whole paper.
+17. The fragment offset counts units of 8 bytes, not bytes.
+18. The Ethernet frame minimum of 64 bytes excludes the preamble. The
+    preamble is 8 bytes and is not counted.
+19. A switch breaks collision domains but not broadcast domains. A VLAN or a
+    router breaks broadcast domains.
+20. Distance vector converges by gossip and bad news travels slowly. If a
+    link fails, the cost climbs one hop at a time unless split horizon or
+    poisoned reverse is in use.
+
+* Exam technique
+SUMMARY: How to spend 3 hours to get the most marks for what you know.
+
+** How marks are actually given
+A 5-mark answer needs five distinct points. A diagram counts as one or two.
+A 10-mark answer needs a diagram plus six to eight points plus one worked
+example.
+
+Write the diagram first, even if you are unsure. Diagrams earn marks on
+their own and they organise the prose that follows.
+
+Name the thing. "The ARP request is broadcast at layer 2" earns a mark.
+"The request goes out to everyone" does not.
+
+** The order to answer in
+Answer the numerical questions first. They are objective, they are fast, and
+you cannot bluff them. Then the diagrams. Then the comparisons. Then the
+essay questions.
+
+Leave the last 15 minutes for checking arithmetic. A subnetting answer with
+a wrong broadcast address loses marks that the method had already earned.
+
+** The shape of a numerical answer
+Always show three lines, even when you can do it in your head.
+
+#+begin_example
+  formula
+  substitution with units
+  answer with units and a box
+#+end_example
+
+A correct number with no working loses marks. A correct formula with one
+arithmetic slip keeps most of them.
+
+** When you do not know the answer
+Write the definition you do know, then the diagram, then the comparison
+table. Partial credit is generous on this paper. An empty page scores zero.
+
+** Reading the question
+The verb tells you the shape of the answer. Compare means a table.
+Explain means numbered points. Discuss means points plus a judgement.
+Design or deploy means a table with the columns named in the question. Draw
+means a diagram with labels.
+
+If the question lists the columns it wants, use exactly those columns, in
+that order, with those names. Free marks.

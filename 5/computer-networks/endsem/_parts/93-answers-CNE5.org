@@ -1,0 +1,934 @@
+*** CNE5 Q1  Transmission delay versus propagation delay  [5]
+**** Answer
+
+No. Transmission delay and propagation delay are two different delays. Each one measures a different part of the packet journey.
+
+1. Transmission delay is the time to push all the bits of a packet onto the link.
+2. Propagation delay is the time for one bit to travel from one end of the link to the other.
+
+#+begin_example
+Transmission delay   d_trans = L / R
+  L = packet length in bits
+  R = link rate in bits per second
+
+Propagation delay    d_prop = d / s
+  d = link length in metres
+  s = signal speed in metres per second
+#+end_example
+
+*Example 1. A large packet on a fast and long link.*
+
+#+begin_example
+L = 1500 bytes = 12000 bits
+R = 1 Gbps = 1 x 10^9 bits/s
+d_trans = 12000 bits / 1 x 10^9 bits/s = 12 microseconds
+
+d = 3000 km = 3 x 10^6 m
+s = 2 x 10^8 m/s in optical fibre
+d_prop = 3 x 10^6 m / 2 x 10^8 m/s = 15 milliseconds
+
+15 milliseconds is 1250 times larger than 12 microseconds
+#+end_example
+
+Here the packet leaves the sender in 12 microseconds. The first bit then needs 15 milliseconds to reach the receiver. A short 500-byte message on the same link still takes 15 milliseconds to cross the country. Only its transmission delay falls, to 4 microseconds.
+
+*Example 2. A small link inside a data centre.*
+
+#+begin_example
+L = 12000 bits
+R = 100 Mbps = 100 x 10^6 bits/s
+d_trans = 12000 / 100 x 10^6 = 120 microseconds
+
+d = 100 m
+d_prop = 100 / 2 x 10^8 = 0.5 microseconds
+#+end_example
+
+Here transmission delay dominates by a factor of 240.
+
+The two delays react to different changes.
+
+- A higher link rate lowers transmission delay and leaves propagation delay unchanged.
+- A longer cable raises propagation delay and leaves transmission delay unchanged.
+- A larger packet raises transmission delay and leaves propagation delay unchanged.
+
+So the two delays are independent. A link can have a small transmission delay and a large propagation delay at the same time.
+
+MARKS: definitions 2, formulas 1, worked example 1, independence argument 1.
+WATCH: Do not say that propagation delay depends on packet size or link rate. It depends only on distance and signal speed.
+
+*** CNE5 Q2  DSL internet access and symmetric rates  [5]
+**** Answer
+
+DSL sends data over the existing telephone line. The customer keeps the same copper pair that already carries the phone service. The telephone company (telco) is therefore also the ISP.
+
+DSL uses frequency division multiplexing. One physical line acts as three separate channels.
+
+- 0 kHz to 4 kHz carries the ordinary telephone call.
+- 4 kHz to 50 kHz carries upstream data from the home.
+- 50 kHz to 1 MHz carries downstream data to the home.
+
+The components are as follows.
+
+1. The splitter at the home separates the voice signal from the data signal.
+2. The telephone connects to the voice port of the splitter.
+3. The DSL modem connects to the data port and converts digital data into high-frequency tones.
+4. The local loop is the twisted pair that runs from the home to the central office (CO).
+5. The DSLAM in the CO converts the analog tones back into digital data.
+6. The DSLAM separates voice traffic and sends it to the PSTN switch.
+7. The DSLAM sends data traffic to the ISP network.
+8. One DSLAM serves hundreds or thousands of homes.
+
+#+begin_example
+ HOME                                   TELCO CENTRAL OFFICE (CO)
++----------------------+            +----------------------------------+
+| Telephone            |            |   DSLAM                          |
+|     |                |            |    |            |                |
+|  Splitter            | local loop |  voice        data               |
+|   /       \          | twisted    |    |            |                |
+| phone   DSL modem    | pair       |  PSTN        ISP router          |
+|            |         |============|  switch        |                 |
++------------|---------+            +----------------|-----------------+
+             |                                       |
+        home router / PC                       ISP network
+#+end_example
+
+The line carries voice and data together because the bands do not overlap. A phone call therefore works during a download.
+
+*Benefit of equal upstream and downstream rates.*
+
+ADSL is asymmetric. The slides give 24 Mbps or 52 Mbps downstream and 3.5 Mbps or 16 Mbps upstream. The reason is that home users download far more than they upload.
+
+A symmetric DSL service (SDSL) gives the same rate in both directions. This suits business use.
+
+1. A company that hosts a web or mail server must upload at full speed.
+2. Video conferencing sends an equal video stream in both directions.
+3. Cloud backup and VPN traffic are upload heavy.
+4. Equal rates make the delay predictable in both directions.
+
+So the business does not pay for a fast download path and then wait on a slow upload path. The upstream side stops being the bottleneck.
+
+MARKS: diagram 2, splitter and DSLAM explanation 1.5, frequency bands 0.5, benefit of equal rates 1.
+WATCH: Do not draw the DSLAM at the home. The splitter is at the home and the DSLAM is in the CO.
+
+*** CNE5 Q3  Conditional GET and the access link  [5]
+**** Answer
+
+A browser cache keeps a copy of a web object. The copy can become stale. A normal GET would download the full object again, even when nothing has changed.
+
+The conditional GET solves this problem. The request carries the header =If-Modified-Since=. The value is the date of the cached copy.
+
+1. The client sends =GET /index.html= with =If-Modified-Since: <date>=.
+2. The server compares that date with the last modification time of the object.
+3. If the object is unchanged, the server replies =304 Not Modified=.
+4. The 304 response has no body. The client shows the cached copy.
+5. If the object has changed, the server replies =200 OK= with the new object.
+
+#+begin_example
+ Client (with cache)                        Server
+     |                                        |
+     |  GET /index.html                       |
+     |  If-modified-since: 10 Jan 2020        |
+     |--------------------------------------->|
+     |                                        | object not changed
+     |  304 Not Modified                      | since that date
+     |<---------------------------------------|
+     |  no body, use the cached copy          |
+     |                                        |
+#+end_example
+
+*How this saves the bottleneck.*
+
+The access link is usually the slowest link on the path. A 1 Mbps access link is common, while the core runs at gigabits per second. The access link is therefore the bottleneck.
+
+#+begin_example
+Object size = 500 kB = 4 x 10^6 bits
+Access rate = 1 Mbps = 1 x 10^6 bits/s
+Full GET time on the access link = 4 s
+
+304 response size = about 200 bytes = 1600 bits
+Conditional GET time = 1600 / 1 x 10^6 = 1.6 ms
+Saving per check = 4 s - 1.6 ms = about 4 s
+#+end_example
+
+The bandwidth saving is 4,000,000 bits minus 1,600 bits per check. The access link carries almost nothing for an unchanged object.
+
+Two more points earn marks.
+
+- The check still costs one round trip, so the saving is in bytes, not in request latency.
+- Many objects are unchanged between visits, so the saving repeats for every cached object.
+
+MARKS: need for the method 1, request and 304 flow 2, numeric bandwidth saving 2.
+WATCH: Do not say that a conditional GET avoids the request. It avoids the response body only, and one RTT remains.
+
+*** CNE5 Q4  TCP sequence and acknowledgement numbers  [5]
+**** Answer
+
+The sequence number is the byte offset of the first data byte in the segment. It counts bytes in the sender's own stream. The acknowledgement number is the next byte that the sender expects from the other side.
+
+Host A sends sequence number X and acknowledgement number Y.
+
+1. A's segment carries bytes X to X + 499. The payload is 500 bytes.
+2. B receives the segment and expects byte X + 500 next.
+3. B's own stream has already sent bytes up to Y - 1. So B's next byte is Y.
+4. B therefore sends sequence number Y and acknowledgement number X + 500.
+
+#+begin_example
+      Host A                                       Host B
+   +---------+                                 +---------+
+   |   TCP   |                                 |   TCP   |
+   +---------+                                 +---------+
+        |                                            |
+        |  Segment 1                                 |
+        |  seq = X                                   |
+        |  ack = Y                                   |
+        |  data = 500 bytes                          |
+        |------------------------------------------->|
+        |                                            |
+        |  Segment 2                                 |
+        |  seq = Y                                   |
+        |  ack = X + 500                             |
+        |<-------------------------------------------|
+        |                                            |
+#+end_example
+
+*Worked numbers.*
+
+#+begin_example
+Assume X = 1000 and Y = 5000
+
+A to B: seq = 1000, ack = 5000, 500 bytes of data
+        data bytes 1000 to 1499
+
+B to A: seq = 5000, ack = 1500
+
+A now expects byte 5000 from B
+B now expects byte 1500 from A
+#+end_example
+
+The two directions are independent. Each side keeps its own sequence space. The acknowledgement number always refers to the other side's stream.
+
+The same rule holds for every later segment. If B sends 200 bytes, A replies with ack = Y + 200. If A then sends 100 bytes, B replies with ack = X + 600.
+
+Note on control segments. A SYN or a FIN consumes one sequence number. This answer assumes that both segments carry data only.
+
+MARKS: sequence number rule 1.5, acknowledgement number 1.5, diagram 1, worked example 1.
+WATCH: Do not set B's sequence number to X + 500. B's sequence number comes from B's own stream, so it is Y.
+
+*** CNE5 Q5  TCP end to end congestion control  [5]
+**** Answer
+
+TCP congestion control limits how much data a sender can have in the network. The sender keeps a congestion window (cwnd). The effective window is the smaller of cwnd and the receiver window rwnd.
+
+#+begin_example
+LastByteSent - LastByteAcked <= min(cwnd, rwnd)
+#+end_example
+
+The control is end to end. Routers do not keep state for each connection. The sender infers congestion from packet loss and from delay. A lost segment usually means that a congested router dropped it.
+
+TCP uses additive increase and multiplicative decrease (AIMD).
+
+- Additive increase. The sender adds one MSS to cwnd for each RTT without loss.
+- Multiplicative decrease. The sender halves cwnd after a loss event.
+- The result is the sawtooth pattern of cwnd against time.
+
+*Slow start.*
+
+The connection starts with cwnd = 1 MSS. The sender adds one MSS for every ACK. So cwnd doubles in each RTT. Slow start ends at the slow start threshold (ssthresh).
+
+*Congestion avoidance.*
+
+After ssthresh, cwnd grows by one MSS per RTT. This linear growth probes for extra bandwidth without a sudden overload.
+
+*Loss events.*
+
+1. Timeout. The sender sets ssthresh = cwnd / 2, sets cwnd = 1 MSS, and re-enters slow start.
+2. Three duplicate ACKs. The sender performs fast retransmit, sets ssthresh = cwnd / 2, and sets cwnd = ssthresh. This is fast recovery in TCP Reno.
+3. A new ACK then returns the sender to congestion avoidance.
+
+#+begin_example
+cwnd (MSS)
+  24 |            /\               /\
+  18 |           /  \             /  \
+  12 |          /    \           /    \
+   6 |         /      \         /      \
+   1 |--------+--------+-------+--------+----> time
+        slow start   avoidance  timeout
+                                cwnd = 1
+#+end_example
+
+*Why the mechanism works.*
+
+1. Each sender probes for more bandwidth with small increases.
+2. Each sender backs off sharply when the network drops a packet.
+3. All senders share the bottleneck link in a stable way.
+4. The mechanism needs no help from the routers.
+
+TCP Tahoe uses slow start after every loss. TCP Reno adds fast recovery. TCP Vegas estimates congestion from the measured RTT instead of loss. ECN lets routers mark packets before a drop.
+
+MARKS: cwnd and AIMD 2, slow start and avoidance 1.5, loss response 1, diagram 0.5.
+WATCH: Do not halve cwnd on a timeout and also set cwnd to 1. A timeout sets cwnd to 1 MSS, and only the threshold is halved.
+
+*** CNE5 Q6  IPv4 and IPv6 coexistence over 15 hops  [5]
+**** Answer
+
+A packet cannot change its IP version in the middle of the path. A router at the boundary must handle the difference. Three methods allow communication.
+
+*1. Dual stack.*
+
+A dual stack router runs both IPv4 and IPv6. It keeps two routing tables and two interfaces on each link. The router picks the version from the destination address.
+
+The DNS helps the choice. An A record returns an IPv4 address. An AAAA record returns an IPv6 address. The source host prefers IPv6 when both answers exist.
+
+*2. Tunnelling.*
+
+A tunnel carries an IPv6 datagram inside an IPv4 datagram. The IPv6 packet becomes the payload of the IPv4 packet. The IPv4 protocol field is set to 41.
+
+1. The dual stack router at the entry point adds an IPv4 header.
+2. The source and destination of that header are the two tunnel endpoints.
+3. The IPv4 routers in the middle forward the packet normally. They never inspect the inner IPv6 header.
+4. The router at the exit point removes the IPv4 header.
+5. The router forwards the original IPv6 datagram.
+
+#+begin_example
+ IPv6 host   dual stack    IPv4 only region    dual stack   IPv6 host
+    A ---------- R1 ============ R2 ... R3 ============ R4 ---------- B
+                 |                                      |
+                 |<----------- IPv4 tunnel ------------>|
+
+ At R1:  [ IPv4 header | IPv6 header | TCP header | data ]
+                        protocol = 41
+ At R4:  remove the IPv4 header, forward the IPv6 datagram
+#+end_example
+
+Tunnelling is the usual choice for the 15-hop mixed path. The IPv4 region looks like one logical link to the two IPv6 ends.
+
+*3. Header translation.*
+
+A translator rewrites the IPv6 header into an IPv4 header. This method is used when one end supports only IPv6 and the other end supports only IPv4.
+
+1. The translator maps the 128-bit IPv6 addresses to 32-bit IPv4 addresses.
+2. It copies the hop limit into the TTL field.
+3. It maps the traffic class into the type of service field.
+4. It drops the flow label, because IPv4 has no such field.
+5. It fragments the packet when the IPv4 side needs smaller units.
+
+NAT64 is a common form of this method. The translator also keeps the address mapping state.
+
+*Summary for the 15-hop path.*
+
+- Use dual stack on the routers that touch both networks.
+- Use a tunnel across each IPv4-only island.
+- Use header translation only at the edge of an IPv6-only or IPv4-only host.
+
+MARKS: dual stack 1.5, tunnelling 2, header translation 1.5.
+WATCH: Do not say that the IPv6 packet is converted into an IPv4 packet at every hop. The tunnel hides the IPv6 packet until the exit router.
+
+*** CNE5 Q7  Global versus decentralised routing  [5]
+**** Answer
+
+The two classes differ in what a router knows and in how it computes a route.
+
+| Basis       | Global routing                   | Decentralised routing                 |
+|-------------+----------------------------------+---------------------------------------|
+| Information | Full topology and all link costs | Only the costs to direct neighbours   |
+| Algorithm   | Link state with Dijkstra         | Distance vector with Bellman-Ford     |
+| Messages    | Flood link state to all routers  | Send distance vector to neighbours    |
+| Computation | One Dijkstra run per router      | Iterative and asynchronous exchange   |
+| Convergence | Fast and loop free               | Slow, with possible count to infinity |
+| Example     | OSPF                             | RIP                                   |
+
+*Global routing.*
+
+1. Each router learns the full map of the network.
+2. Each router runs Dijkstra's shortest path algorithm.
+3. The result is a least cost tree from that router to every destination.
+
+Advantages.
+
+- The router has complete information, so the path is optimal for the known costs.
+- Convergence is fast after a link change.
+- The protocol does not suffer from the count to infinity problem.
+
+Disadvantages.
+
+- Each router stores the full topology.
+- Dijkstra costs O(n^2) time, or O(n log n) with a heap.
+- Link state flooding creates O(n^2) messages.
+- Routes can oscillate when link costs depend on traffic.
+
+*Decentralised routing.*
+
+1. Each router starts with the cost to its neighbours only.
+2. Each router sends its distance vector to its neighbours.
+3. Each router applies the Bellman-Ford equation with the values it receives.
+
+#+begin_example
+Dx(y) = min over v { c(x,v) + Dv(y) }
+#+end_example
+
+Advantages.
+
+- The router needs little memory, because it stores one vector.
+- The protocol is simple and needs no flooding.
+- The message load is low and local.
+
+Disadvantages.
+
+- Bad news travels slowly, which causes count to infinity.
+- A link failure can create a temporary routing loop.
+- The final path can be suboptimal during convergence.
+
+Poisoned reverse reduces the count to infinity problem. A router advertises an infinite cost back to the neighbour that gave it that route. BGP is a path vector protocol, so it avoids the loop problem in another way.
+
+MARKS: comparison table 2, global advantages and disadvantages 1.5, decentralised advantages and disadvantages 1.5.
+WATCH: Do not pair Dijkstra with RIP. Dijkstra belongs to link state, and Bellman-Ford belongs to distance vector.
+
+*** CNE5 Q8  Methods to conserve IPv4 addresses  [5]
+**** Answer
+
+IPv4 has 32-bit addresses, so the space is finite. Six methods reduce the demand.
+
+*1. Classless addressing with CIDR.*
+
+CIDR removes the fixed class boundaries. An ISP can give a customer any prefix, such as a /26 or a /29. A small customer then takes 8 addresses instead of 256.
+
+CIDR also allows route aggregation. One entry such as 200.10.0.0/16 replaces many longer prefixes. This keeps routing tables small and slows the growth of the table.
+
+*2. Network address translation.*
+
+NAT lets many hosts share one public address. The NAT box rewrites the source address and the source port. It keeps a translation table for the return traffic.
+
+A home router often puts 20 devices behind one public address. A carrier grade NAT can put thousands of subscribers behind one address.
+
+*3. Private addressing.*
+
+RFC 1918 reserves three blocks for internal use.
+
+| Block       | Prefix | Addresses  |
+|-------------+--------+------------|
+| 10.0.0.0    | /8     | 16,777,216 |
+| 172.16.0.0  | /12    | 1,048,576  |
+| 192.168.0.0 | /16    | 65,536     |
+
+These addresses never appear on the public Internet. The same block is reused in every private network, so the world needs fewer public addresses.
+
+*4. Subnetting and VLSM.*
+
+Subnetting divides one block into smaller blocks. VLSM gives each subnet only the size that it needs. A point to point link gets a /30, so 252 addresses are not wasted.
+
+*5. Dynamic address assignment.*
+
+DHCP leases an address for a fixed time. A visitor who leaves returns the address to the pool. A university with 5,000 students can run on 1,000 addresses when only 1,000 devices are active.
+
+*6. Migration to IPv6.*
+
+IPv6 has 128-bit addresses. It removes the shortage in the long term. Dual stack and tunnelling allow a gradual move.
+
+The methods work together. A campus uses private addresses, VLSM and DHCP inside. It uses one NAT address at the border. CIDR keeps the global table small.
+
+MARKS: CIDR 1, NAT 1, private addressing 1, subnetting and VLSM 1, DHCP and IPv6 1.
+WATCH: Do not call NAT an address expansion method. NAT shares one public address, and it does not create new addresses.
+
+*** CNE5 Q9  Multiple access protocols and CSMA/CD  [5]
+**** Answer
+
+A multiple access protocol decides who may transmit on a shared link. The three broad categories follow.
+
+| Category          | Rule                                     | Examples                            |
+|-------------------+------------------------------------------+-------------------------------------|
+| Random access     | Send when ready, recover from collisions | ALOHA, slotted ALOHA, CSMA, CSMA/CD |
+| Controlled access | Reserve or poll before sending           | Reservation, polling, token passing |
+| Channelisation    | Fixed share by frequency, time or code   | FDMA, TDMA, CDMA                    |
+
+*Random access.* No station has priority. Collisions are possible, so the protocol needs a recovery rule.
+
+*Controlled access.* A station waits for permission. Collisions do not occur, but the control traffic adds overhead.
+
+*Channelisation.* Each station owns a frequency, a time slot or a code. The share is fixed, so an idle station wastes its share.
+
+*Working of CSMA/CD.*
+
+CSMA/CD means carrier sense multiple access with collision detection. Ethernet uses it on a shared medium.
+
+1. The adapter listens to the channel before it sends. This step is carrier sense.
+2. If the channel is idle, the adapter starts to transmit.
+3. If the channel is busy, the adapter waits until the channel becomes idle.
+4. During transmission, the adapter compares the sent signal with the received signal.
+5. A difference means that another station transmits at the same time. This is a collision.
+6. The adapter aborts the frame and sends a 32-bit jam signal. The jam signal warns all stations.
+7. The adapter enters binary exponential backoff.
+8. After the m-th collision, it picks K at random from 0 to 2^m - 1. The value of m stops at 10.
+9. The adapter waits K times 512 bit times and then retries. It gives up after 16 attempts.
+
+#+begin_example
+ Station A   ------ frame ------X
+ Station B        ------ frame ------X
+                                |
+                          collision detected
+                                |
+                     jam signal, then backoff
+
+ 10 Mbps Ethernet: slot time = 512 bit times = 51.2 us
+ Minimum frame = 64 bytes, so the sender still transmits
+ when the collision signal returns
+#+end_example
+
+Collision detection needs the whole frame to last at least one round trip. This is why 10 Mbps Ethernet sets a 64-byte minimum frame.
+
+MARKS: three categories 2, CSMA/CD steps 2.5, timing diagram 0.5.
+WATCH: Do not describe CSMA/CA here. Collision detection is wired Ethernet, and collision avoidance belongs to 802.11.
+
+*** CNE5 Q10  VLAN and the trunking protocol  [5]
+**** Answer
+
+A VLAN is a logical group of switch ports. The group acts as one broadcast domain. The physical location of the users does not matter.
+
+1. Ports 1 to 4 carry VLAN 10 for the accounts team.
+2. Ports 5 to 8 carry VLAN 20 for the sales team.
+3. A frame from VLAN 10 never reaches VLAN 20 without a router.
+4. Each VLAN is one subnet.
+
+A VLAN gives three benefits.
+
+- Broadcast traffic stays inside its own group.
+- A user moves to a new desk and keeps the same VLAN.
+- Security improves because groups are isolated at layer 2.
+
+#+begin_example
+ Switch 1                                   Switch 2
++----------------------+  trunk link  +----------------------+
+| VLAN 10: ports 1-4   |==============| VLAN 10: ports 1-4   |
+| VLAN 20: ports 5-8   | 802.1Q tagged| VLAN 20: ports 5-8   |
++----------------------+              +----------------------+
+
+ Access port: one VLAN, frames leave the port untagged
+ Trunk port:  many VLANs, frames carry an 802.1Q tag
+#+end_example
+
+*Access port versus trunk port.*
+
+An access port belongs to one VLAN. It connects to an end device. Frames leave the port without a tag, because the PC does not understand VLAN tags.
+
+A trunk port carries the frames of several VLANs. It connects two switches. Each frame carries an 802.1Q tag, so the far switch knows its VLAN.
+
+*The 802.1Q tag.*
+
+The tag is 4 bytes and sits after the source MAC address.
+
+1. A 2-byte tag protocol identifier with the value 0x8100 marks the frame as tagged.
+2. A 3-bit priority field supports quality of service.
+3. A 1-bit drop eligible indicator marks frames that the switch may drop first.
+4. A 12-bit VLAN identifier gives 4094 usable VLANs. The values 0 and 4095 are reserved.
+
+*Advantage of a trunking protocol.*
+
+One trunk link carries every VLAN between the switches. This saves ports and cable, and it keeps the VLAN separation across the building.
+
+The VLAN Trunking Protocol (VTP) is the Cisco trunking protocol. It spreads the VLAN database from one server switch to all client switches in the same domain.
+
+1. An administrator defines a VLAN once.
+2. VTP sends the definition to every switch in the domain.
+3. The VLAN identifiers stay consistent, so a trunk link matches VLANs correctly.
+4. Less manual work means fewer configuration errors.
+
+VTP has three modes. A server creates and deletes VLANs. A client accepts them. A transparent switch forwards the messages but keeps its own database.
+
+MARKS: VLAN concept 1.5, access versus trunk 1, 802.1Q tag 1, trunking benefit and VTP 1.5.
+WATCH: Do not say that an access port tags frames. The access port sends untagged frames, and the trunk port adds the tag.
+
+*** CNE5 Q11  HTTP over the TCP/IP layers  [10]
+**** Answer
+
+HTTP is an application layer protocol. It uses the services of TCP below it. Each layer adds its own header on the way down.
+
+*1. Application layer.*
+
+HTTP defines the message format and the methods. A client sends a request with a method, a URL, headers and an optional body.
+
+1. GET asks for an object.
+2. POST sends data to the server.
+3. HEAD asks for the headers only.
+4. PUT uploads an object.
+5. DELETE removes an object.
+
+The server answers with a status line and a body. Common codes are 200 OK, 304 Not Modified and 404 Not Found.
+
+HTTP is stateless. The server keeps no memory of earlier requests. Cookies add state when an application needs it.
+
+*2. Transport layer.*
+
+HTTP runs over TCP on port 80 by default. The client opens a socket to the server address and port.
+
+1. TCP performs a three-way handshake before the first request.
+2. TCP delivers a reliable, ordered byte stream.
+3. TCP applies flow control with rwnd and congestion control with cwnd.
+4. HTTP therefore never retransmits a lost segment itself.
+
+In HTTP/1.0 each object needs a new connection. The cost is two round trips plus the transmission time per object. HTTP/1.1 uses persistent connections, so many objects share one connection.
+
+*3. Network layer.*
+
+IP carries the TCP segment in a datagram. IP adds the source and destination addresses. Routers forward the datagram hop by hop.
+
+1. IP is best effort, so a datagram can be lost or reordered.
+2. TCP repairs both problems.
+3. The path MTU can force fragmentation or a smaller segment.
+
+*4. Link and physical layers.*
+
+The link layer builds a frame for the local network. Ethernet adds the source and destination MAC addresses. The physical layer sends the bits as signals.
+
+#+begin_example
+ Client stack                                Server stack
++----------------+                      +----------------+
+| HTTP           |  GET /index.html     | HTTP           |
++----------------+                      +----------------+
+| TCP            |  sport 49152         | TCP            |
+|                |  dport 80            |                |
++----------------+                      +----------------+
+| IP             |  192.168.1.10        | IP             |
+|                |  to 198.51.100.7     |                |
++----------------+                      +----------------+
+| Ethernet       |  frame to the        | Ethernet       |
+|                |  gateway MAC         |                |
++----------------+                      +----------------+
+| Physical       |  bits on the wire    | Physical       |
++----------------+                      +----------------+
+#+end_example
+
+*Encapsulation on the wire.*
+
+#+begin_example
++----------+---------+---------+--------------------+
+| Ethernet |   IP    |   TCP   |   HTTP message     |
+|  header  | header  | header  |   (request body)   |
++----------+---------+---------+--------------------+
+#+end_example
+
+*The full sequence for one page.*
+
+1. The browser resolves the host name with DNS.
+2. The browser opens a TCP connection to port 80.
+3. The browser sends the HTTP request.
+4. The server sends the response.
+5. The browser renders the page and fetches the embedded objects.
+6. Either side closes the connection with FIN.
+
+Each step uses the layer below it. DNS uses UDP. TCP uses IP. IP uses the link layer. This stacking is the reason HTTP can ignore routing, lost frames and wire formats.
+
+MARKS: layer mapping 4, encapsulation diagram 2, request flow 2, TCP role 2.
+WATCH: Do not put HTTP on UDP for normal web traffic. HTTP/3 uses QUIC over UDP, and the paper expects HTTP over TCP.
+
+*** CNE5 Q12  Short notes on SMTP, DHCP, DNS and FTP  [10]
+**** Answer
+
+*1. SMTP.*
+
+SMTP transfers electronic mail. It runs over TCP on port 25. The sender's mail server is the client and the receiver's mail server is the server.
+
+1. The client opens a TCP connection to the server.
+2. The server sends a 220 greeting.
+3. The client sends HELO or EHLO.
+4. The client sends MAIL FROM with the sender address.
+5. The client sends RCPT TO for each recipient.
+6. The client sends DATA and then the message body.
+7. The client sends QUIT.
+
+SMTP is a push protocol. It pushes mail from the sender to the receiver. HTTP is a pull protocol, because the receiver asks for the object.
+
+MIME extends SMTP for non-text content. It encodes attachments and sets the content type. The message stays in 7-bit ASCII form.
+
+*2. DHCP.*
+
+DHCP gives a host an IP address and other settings automatically. It runs over UDP. The server uses port 67 and the client uses port 68.
+
+1. DHCP DISCOVER. The client broadcasts to find a server.
+2. DHCP OFFER. A server offers an address and a lease time.
+3. DHCP REQUEST. The client asks for the offered address.
+4. DHCP ACK. The server confirms the lease.
+
+The server also sends the subnet mask, the default gateway and the DNS server address. The client may renew the lease at half of the lease time. A relay agent forwards DHCP messages between subnets.
+
+*3. DNS.*
+
+DNS maps host names to IP addresses. It is a distributed hierarchical database. It runs over UDP on port 53, and over TCP for zone transfers and large replies.
+
+1. The root servers name the top level domains.
+2. The top level domain servers name the authoritative servers.
+3. The authoritative server holds the records for one zone.
+
+A local resolver answers from its cache when it can. Otherwise it performs a recursive query, and the recursion walks down the tree.
+
+Common records are A for IPv4, AAAA for IPv6, CNAME for an alias, MX for mail and NS for a name server. Each record has a TTL that controls caching.
+
+*4. FTP.*
+
+FTP transfers files between hosts. It uses two TCP connections.
+
+1. The control connection uses port 21 and stays open for the session.
+2. The data connection carries the file and closes after each transfer.
+
+The control information travels out of band, on a separate connection. FTP is stateful, because the server remembers the user, the current directory and the transfer mode.
+
+In active mode the server opens the data connection from port 20. In passive mode the client opens the data connection to a port that the server chooses. Passive mode works through NAT and firewalls.
+
+FTP supports ASCII mode for text and binary mode for images and programs.
+
+| Protocol | Transport   | Port      | Main job                            |
+|----------+-------------+-----------+-------------------------------------|
+| SMTP     | TCP         | 25        | Push mail between servers           |
+| DHCP     | UDP         | 67 and 68 | Assign addresses and settings       |
+| DNS      | UDP and TCP | 53        | Resolve names to addresses          |
+| FTP      | TCP         | 20 and 21 | Transfer files with two connections |
+
+MARKS: SMTP 2.5, DHCP 2.5, DNS 2.5, FTP 2.5.
+WATCH: Do not give FTP one connection. The control connection and the data connection are separate.
+
+*** CNE5 Q13  Connection oriented versus connectionless communication  [10]
+**** Answer
+
+Connection oriented communication sets up a relationship before data flows. Connectionless communication sends each message on its own.
+
+| Basis       | Connection oriented     | Connectionless              |
+|-------------+-------------------------+-----------------------------|
+| Setup       | Handshake before data   | No setup                    |
+| State       | Both ends keep state    | No end to end state         |
+| Order       | Bytes arrive in order   | Order is not guaranteed     |
+| Reliability | Loss is retransmitted   | Loss is not repaired        |
+| Header      | 20 bytes minimum in TCP | 8 bytes in UDP              |
+| Flags       | Full flag field         | No flag field               |
+| Example     | TCP, and the telephone  | UDP, and the postal service |
+
+*Connection oriented side. TCP.*
+
+TCP provides a reliable byte stream. It numbers every byte, acknowledges data and retransmits loss. It also applies flow control and congestion control.
+
+The connection is full duplex. Each side has its own sequence space. A connection is identified by four values, which are the two addresses and the two ports.
+
+*Connectionless side. UDP.*
+
+UDP provides a datagram service. It adds ports, a length and a checksum to the IP datagram. It does not retransmit, reorder or slow down.
+
+UDP suits DNS, DHCP, streaming and voice. A late voice packet is useless, so a retransmission would only add delay.
+
+*TCP flag field.*
+
+The TCP header has eight flag bits. Each flag has a clear job.
+
+1. SYN. Synchronises the sequence numbers and opens a connection.
+2. ACK. Shows that the acknowledgement number is valid.
+3. FIN. Shows that the sender has no more data to send.
+4. RST. Resets the connection at once after an error.
+5. PSH. Asks the receiver to pass the data to the application immediately.
+6. URG. Shows that the urgent pointer field is valid.
+7. ECE. Echoes an explicit congestion notification.
+8. CWR. Shows that the sender reduced its congestion window.
+
+*Three-way handshake.*
+
+#+begin_example
+   Client                                      Server
+     |                                            |
+     |  SYN, seq = x                              |
+     |------------------------------------------->|
+     |                                            |
+     |  SYN + ACK, seq = y, ack = x + 1           |
+     |<-------------------------------------------|
+     |                                            |
+     |  ACK, seq = x + 1, ack = y + 1             |
+     |------------------------------------------->|
+     |          connection established            |
+#+end_example
+
+The SYN flag consumes one sequence number. That is why the acknowledgement is x + 1 and not x.
+
+*Connection release.*
+
+#+begin_example
+   Client                                      Server
+     |                                            |
+     |  FIN, seq = u                              |
+     |------------------------------------------->|
+     |                                            |
+     |  ACK, ack = u + 1                          |
+     |<-------------------------------------------|
+     |                                            |
+     |  FIN, seq = w                              |
+     |<-------------------------------------------|
+     |                                            |
+     |  ACK, ack = w + 1                          |
+     |------------------------------------------->|
+#+end_example
+
+Each side closes its own direction. The side that sends the first FIN still receives data until its peer also sends a FIN.
+
+*UDP has no flags.*
+
+The UDP header has four fields only. They are the source port, the destination port, the length and the checksum. There is no flag field at all. A UDP application therefore cannot signal a connection, a reset or an urgent datum inside the header.
+
+MARKS: comparison table 4, TCP flags 4, handshake and release 2.
+WATCH: Do not assign SYN or FIN to UDP. UDP has no flags, and its header is 8 bytes.
+
+*** CNE5 Q14  VLSM plan for a startup  [10]
+**** Answer
+
+The given block is 102.168.1.0/24. It has 256 addresses. Note that 102.0.0.0/8 is a public Class A block. The design below is still valid. The startup must use NAT at its border if it needs Internet access.
+
+*Step 1. Size each subnet.*
+
+Each subnet needs one address for the network ID and one for the broadcast. So the host formula is 2^n - 2.
+
+#+begin_example
+Development : 60 hosts -> 2^6 - 2 = 62 usable -> /26 = 64 addresses
+Research    : 20 hosts -> 2^5 - 2 = 30 usable -> /27 = 32 addresses
+Marketing   : 14 hosts -> 2^4 - 2 = 14 usable -> /28 = 16 addresses
+Sales       :  6 hosts -> 2^3 - 2 =  6 usable -> /29 =  8 addresses
+System Admin:  2 hosts -> 2^2 - 2 =  2 usable -> /30 =  4 addresses
+HR          :  2 hosts -> 2^2 - 2 =  2 usable -> /30 =  4 addresses
+#+end_example
+
+*Step 2. Allocate in descending size order.*
+
+Each subnet starts on a multiple of its own block size. This keeps every block aligned and avoids overlap.
+
+#+begin_example
+Development : .0   to .63   block size 64, start 0   is a multiple of 64
+Research    : .64  to .95   block size 32, start 64  is a multiple of 32
+Marketing   : .96  to .111  block size 16, start 96  is a multiple of 16
+Sales       : .112 to .119  block size 8,  start 112 is a multiple of 8
+System Admin: .120 to .123  block size 4,  start 120 is a multiple of 4
+HR          : .124 to .127  block size 4,  start 124 is a multiple of 4
+#+end_example
+
+*Step 3. The VLSM table.*
+
+| SI No | Network Name | Network ID       | Subnet Mask     | Usable IP Range               | Broadcast IP  |
+|-------+--------------+------------------+-----------------+-------------------------------+---------------|
+| 1     | Development  | 102.168.1.0/26   | 255.255.255.192 | 102.168.1.1 - 102.168.1.62    | 102.168.1.63  |
+| 2     | Research     | 102.168.1.64/27  | 255.255.255.224 | 102.168.1.65 - 102.168.1.94   | 102.168.1.95  |
+| 3     | Marketing    | 102.168.1.96/28  | 255.255.255.240 | 102.168.1.97 - 102.168.1.110  | 102.168.1.111 |
+| 4     | Sales        | 102.168.1.112/29 | 255.255.255.248 | 102.168.1.113 - 102.168.1.118 | 102.168.1.119 |
+| 5     | System Admin | 102.168.1.120/30 | 255.255.255.252 | 102.168.1.121 - 102.168.1.122 | 102.168.1.123 |
+| 6     | HR           | 102.168.1.124/30 | 255.255.255.252 | 102.168.1.125 - 102.168.1.126 | 102.168.1.127 |
+
+*Step 4. Free network IDs.*
+
+The last block is still unused.
+
+#+begin_example
+Free block inside 102.168.1.0/24
+  Network ID   : 102.168.1.128/25
+  Subnet mask  : 255.255.255.128
+  Usable range : 102.168.1.129 - 102.168.1.254
+  Broadcast    : 102.168.1.255
+  Usable hosts : 126
+
+The block can be split further when the startup grows
+  102.168.1.128/26  and  102.168.1.192/26
+
+The rest of the Class A major block also stays free
+  102.168.0.0/24
+  102.168.2.0/24 through 102.255.255.0/24
+#+end_example
+
+*Step 5. Justification for VLSM.*
+
+VLSM gives each subnet the smallest block that holds its hosts. No subnet takes addresses that it cannot use.
+
+Compare it with fixed length subnetting. A /26 gives 62 usable hosts, which covers every department. But six /26 blocks need 384 addresses. The given /24 has only 256 addresses. So a fixed /26 plan cannot fit in 102.168.1.0/24 at all. The startup would need a /23.
+
+#+begin_example
+Fixed /26 for all six subnets
+  6 x 64 addresses = 384 addresses
+  384 > 256, so the plan fails in 102.168.1.0/24
+
+VLSM
+  64 + 32 + 16 + 8 + 4 + 4 = 128 addresses
+  128 of 256 addresses used, so one /25 stays free
+  percentage used = 128 / 256 = 50 percent
+
+Usable host addresses
+  VLSM gives 62 + 30 + 14 + 6 + 2 + 2 = 116 usable
+  the startup needs 60 + 20 + 14 + 6 + 2 + 2 = 104
+  spare addresses = 12
+  fixed /26 gives 6 x 62 = 372 usable, so 268 usable are wasted
+#+end_example
+
+VLSM therefore saves 128 addresses here, which is exactly half of the given /24. The saved block is one /25, and it can serve a new department later.
+
+Two design notes earn the last marks.
+
+1. Marketing has exactly 14 usable addresses in a /28, so it has no spare at all. One extra device needs a bigger block.
+2. The allocation order matters. A /26 placed after a /29 could overlap, because the large block needs a 64-address boundary.
+
+MARKS: size calculation 2, table 4, free ranges 1, VLSM justification 3.
+WATCH: Do not give Marketing a /27 or Development a /27. Check the host formula 2^n - 2 against the device count.
+
+*** CNE5 Q15  Address Resolution Protocol  [10]
+**** Answer
+
+A computer needs ARP because it has two kinds of address. IP addresses are logical and can change. MAC addresses are physical and belong to the network card.
+
+1. IP selects the path across networks.
+2. The link layer delivers a frame inside one LAN.
+3. A frame needs a 48-bit destination MAC address.
+4. The application knows only the destination IP address.
+
+So a host must translate an IP address into a MAC address before it can send a frame. ARP performs this translation. It works inside one subnet and it needs no configuration.
+
+*The ARP procedure.*
+
+1. Host A wants to send a datagram to 192.168.1.20.
+2. A looks in its ARP cache for an entry for that IP address.
+3. If the entry exists, A uses the stored MAC address at once.
+4. If the entry is missing, A builds an ARP request.
+5. A puts its own IP address and MAC address in the request.
+6. A sets the target IP address and leaves the target MAC address empty.
+7. A sends the request in a frame with the broadcast MAC address FF:FF:FF:FF:FF:FF.
+8. Every host in the LAN receives the frame, because the address is broadcast.
+9. Only the host with the matching IP address answers.
+10. Host B sends a unicast ARP reply with its MAC address.
+11. A stores the pair in its cache with a timeout, often 20 minutes.
+12. A then sends the waiting datagram in a frame to that MAC address.
+
+#+begin_example
+ Host A                                      Host B
+ IP 192.168.1.10                             IP 192.168.1.20
+ MAC AA:AA:AA:AA:AA:AA                       MAC BB:BB:BB:BB:BB:BB
+    |                                           |
+    |  ARP request, broadcast                   |
+    |  who has 192.168.1.20?                    |
+    |  dst MAC = FF:FF:FF:FF:FF:FF              |
+    |------------------------------------------>|  every host receives
+    |                                           |
+    |  ARP reply, unicast                       |
+    |  192.168.1.20 is at BB:BB:BB:BB:BB:BB     |
+    |<------------------------------------------|
+    |                                           |
+    |  data frame, dst MAC = BB:BB:BB:BB:BB:BB  |
+    |------------------------------------------>|
+#+end_example
+
+*The ARP packet.*
+
+An ARP packet is 28 bytes for IPv4. The fields are the hardware type, the protocol type, the hardware length, the protocol length and the opcode.
+
+1. Opcode 1 means a request and opcode 2 means a reply.
+2. The sender fields hold the sender MAC address and IP address.
+3. The target fields hold the target MAC address and IP address.
+
+ARP sits between the network layer and the link layer. It does not use IP, so an ARP packet travels directly in an Ethernet frame. The EtherType value is 0x0806.
+
+*Two important cases.*
+
+1. Same subnet. The host ARPs for the destination IP address itself.
+2. Different subnet. The host ARPs for the default gateway, not for the final destination. The gateway then forwards the datagram.
+
+*Cache and security notes.*
+
+The cache avoids one request for every packet. Gratuitous ARP is an ARP message that a host sends for its own address. The host sends it without a request, and it detects a duplicate address.
+
+ARP has no authentication. An attacker can send false replies and redirect traffic. This is ARP spoofing. Static entries and dynamic inspection reduce the risk.
+
+MARKS: need for ARP 3, procedure steps 4, packet and diagram 2, cache and gateway cases 1.
+WATCH: Do not say that A broadcasts the data frame. Only the ARP request is broadcast, and the data frame is unicast.

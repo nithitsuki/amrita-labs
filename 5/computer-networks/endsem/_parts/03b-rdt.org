@@ -1,0 +1,647 @@
+** Reliable data transfer: the ladder from rdt 1.0 to rdt 3.0
+SUMMARY: Each rdt version adds one mechanism to survive one more defect in the channel.
+KUROSE: 3.4.1, 3.4.2
+EXAM: not asked as a direct question, but every GBN and SR answer rests on this ladder.
+PRIORITY: core
+
+| Version | Assumed channel     | Mechanisms added                        | Remaining problem              |
+|---------+---------------------+-----------------------------------------+--------------------------------|
+| rdt 1.0 | no errors, no loss  | none                                    | nothing, channel is perfect    |
+| rdt 2.0 | bit errors, no loss | checksum, ACK and NAK, stop and wait    | a corrupted ACK or NAK         |
+| rdt 2.1 | bit errors, no loss | 1-bit seq number, duplicate detection   | no loss handling, NAK needed   |
+| rdt 2.2 | bit errors, no loss | ACK carries the last good seq number    | no loss handling               |
+| rdt 3.0 | errors and loss     | countdown timer, retransmit on timeout  | correct, but very slow         |
+
+rdt 3.0 sends one packet then waits a full round trip, so a long fat link sits
+idle almost all the time.
+
+** Stop and wait, and the utilisation problem
+SUMMARY: Stop and wait wastes the link because the sender idles for one round trip after every packet.
+KUROSE: 3.4.1, 3.4.2 (Figure 3.20)
+EXAM: "why is pipelining better than stop and wait", 5 marks, CNE1 and CNE3.
+PRIORITY: core
+
+*** The utilisation formula
+Utilisation is the fraction of time the sender is actually pushing bits.
+
+  U = (L/R) / (RTT + L/R)
+
+  L/R   = transmission time, the time to push all L bits onto the link
+  RTT   = round trip time, data out plus ACK back
+  L/R + RTT = one full cycle of stop and wait
+
+The numerator is the busy part. The denominator is the whole cycle.
+
+*** The timeline
+#+begin_example
+ time          sender                       receiver
+  |              |                           |
+  t=0            |== first bit leaves ======>|
+                 |                           |
+  t=L/R          |== last bit leaves         |
+                 |        . . . . . . . . . >|
+  t=L/R+prop     |                           | last bit lands
+                 |                           | ACK sent at once
+                 |   idle, nothing in flight |
+                 |<================ ACK =====|
+  t=L/R+RTT      |  ACK lands, send next     |
+                 |== next data =============>|
+#+end_example
+
+The idle band is the whole problem. No data crosses the link during it.
+
+*** WORKED EXAMPLE (numbers changed on purpose)
+A 1 Mbps link, 1500 byte packets, one way propagation delay 25 ms.
+
+  L = 1500 x 8 = 12000 bits
+  L/R = 12000 / 1000000 = 0.012 s = 12 ms
+  RTT = 2 x 25 ms = 50 ms
+  U = 12 / (50 + 12) = 12 / 62 = 0.1935
+
+The sender uses 19.4 percent of the link. The other 80.6 percent is idle.
+
+*** Pipelining fixes it
+Let the sender keep N packets in flight instead of one. The busy part of the
+cycle becomes N x L/R and the cycle length does not change.
+
+  U = (N x L/R) / (RTT + L/R)
+
+  with N = 5:  U = (5 x 12) / 62 = 60 / 62 = 0.968
+
+Utilisation rose from 19.4 percent to 96.8 percent. Pipelining multiplies
+utilisation by N, up to the point where the link is full.
+
+The link is full when N packets take at least one RTT to transmit.
+
+  N >= (RTT + L/R) / (L/R)      here N >= 62 / 12 = 5.17
+
+So N = 6 fills this pipe. Past that, extra packets only build a queue.
+
+*** Trap: using the one way delay where RTT belongs
+The confusion: the student writes U = (L/R) / (prop + L/R) and gets double the
+true answer. The fix: the ACK must travel back, so the idle time is a round
+trip, which is two propagation delays. Compute RTT first, then use it.
+
+*** Trap: thinking a bigger RTT means a faster link
+The confusion: a long link looks impressive, so the student expects high
+utilisation. The fix: a long link makes RTT large and the denominator large, so
+utilisation falls. Distance hurts stop and wait and helps nobody.
+
+*** Trap: L/R and RTT are both times, so adding them is safe but swapping is not
+The confusion: the student divides RTT by L/R. The fix: the ratio of busy time
+to total time is the only meaningful fraction. Keep L/R on top.
+
+** Go-Back-N
+SUMMARY: GBN keeps a window of N packets in flight and the receiver throws away anything out of order.
+KUROSE: 3.4.3
+EXAM: GBN against SR with sequence diagrams, 5 marks, CNE3 and CNE6. The GBN rate numerical is also CNE3.
+PRIORITY: core
+
+*** The sender
+The sender holds a window of up to N consecutive packets that are sent but not
+yet acknowledged. Three variables run it.
+
+  send_base    = oldest packet sent and not yet ACKed
+  next_seqnum  = next packet to send
+  window       = the range [send_base, send_base + N - 1]
+
+Rules:
+
+- If next_seqnum is inside the window, send the packet and advance next_seqnum.
+- If next_seqnum is outside the window, refuse the data and tell the app later.
+- One timer only, and it belongs to the oldest unACKed packet.
+- On timeout for packet n, resend n and every higher packet in the window.
+- ACKs are cumulative. ACK(n) means every packet up to and including n landed.
+
+Cumulative ACK is the reason for one timer. A single ACK number moves the base
+forward and implicitly clears many packets at once.
+
+*** The receiver
+The receiver keeps one variable, rcv_base, the next packet it expects in order.
+
+- Packet with seq == rcv_base: deliver it, advance rcv_base, send ACK(rcv_base-1).
+- Packet with any other seq: discard it, send ACK(rcv_base-1) again.
+- No buffering and no reordering. The receiver never stores a gap filler.
+
+That duplicate ACK is not a request. It is a report of the highest in-order
+packet seen, repeated.
+
+*** Sequence diagram, window of 4, packet 1 lost
+#+begin_example
+ time    sender                            receiver
+  |        |                                 |
+  t1       |--- pkt0 ---------------------->| in order, deliver 0
+           |<---------------------- ACK0 ----| base=1, window [1..4]
+  t2       |--- pkt1 ---- X LOST ------------|
+  t3       |--- pkt2 ---------------------->| out of order, discard
+           |<---------------------- ACK0 ----| duplicate
+  t4       |--- pkt3 ---------------------->| out of order, discard
+           |<---------------------- ACK0 ----| duplicate
+  t5       |--- pkt4 ---------------------->| out of order, discard
+           |<---------------------- ACK0 ----| dup, ignored
+  t6       |  timer for pkt1 fires           |
+  t7       |--- pkt1 ---------------------->| in order, deliver 1
+           |<---------------------- ACK1 ----|
+  t8       |--- pkt2 ---------------------->| in order, deliver 2
+           |<---------------------- ACK2 ----|
+  t9       |--- pkt3 ---------------------->| in order, deliver 3
+           |<---------------------- ACK3 ----|
+  t10      |--- pkt4 ---------------------->| in order, deliver 4
+           |<---------------------- ACK4 ----|
+#+end_example
+
+Read the discard lines carefully. Packets 2, 3 and 4 arrive intact and are
+still thrown away. Then all four are sent again.
+
+Count the waste. Five useful packets, nine transmissions. Packets 2, 3, 4 were
+sent twice and packet 1 was sent twice.
+
+*** Window size limit
+Sequence numbers are k bits wide, so the space is 2^k values.
+
+  N <= 2^k - 1
+
+  k = 3 bits, space 8, so N <= 7
+
+One value must stay unused. If the window covered all 2^k values, then ACK(n)
+and ACK(n - 2^k) would name the same number and the sender could not tell an
+old ACK from a new one.
+
+*** Efficiency
+GBN is efficient while nothing is lost. After a loss it wastes bandwidth equal
+to the number of packets sent after the lost one, because all of them are sent
+again. A loss at the start of a large window costs almost a whole window.
+
+*** Trap: treating the duplicate ACK as a negative ACK
+The confusion: the student says the receiver "NAKs packet 2" when packet 2 is
+missing. The fix: GBN has no NAK. The receiver repeats ACK0, which means "I
+still want 1". The sender learns nothing new from it and waits for its timer.
+
+*** Trap: moving the window on a duplicate ACK
+The confusion: every ACK0 slides the window. The fix: ACK(n) slides the base
+only when n >= send_base. A stale ACK below the base is ignored. In the diagram
+the last ACK0 changes nothing.
+
+*** Trap: N = 2^k instead of 2^k - 1
+The confusion: 3 bit numbers give 8 values, so the window is 8. The fix: at
+N = 2^k the base and the newest packet share a sequence number. Use 2^k - 1.
+
+** Selective Repeat
+SUMMARY: SR retransmits only the lost packet because the receiver buffers everything that arrives early.
+KUROSE: 3.4.4
+EXAM: paired with GBN in CNE3 and CNE6, 5 marks, usually asked as compare with sequence diagrams.
+PRIORITY: core
+
+*** The sender
+The sender keeps a window of N packets and one logical timer per unACKed packet.
+
+- Data from above: send if the sequence number is inside the window.
+- Timeout(n): resend only packet n, restart its timer.
+- ACK(n) inside the window: mark n as received.
+- If n == send_base, advance the base past the run of acknowledged packets.
+
+Individual ACKs mean the base can jump several places at once when a burst of
+ACKs lands together.
+
+*** The receiver
+The receiver keeps a window of N packets, not one variable.
+
+- Packet with seq inside the window: send ACK(n), buffer it if it is not in order.
+- Packet that completes a run: deliver it plus every buffered packet after it,
+  then slide the window to the first packet still missing.
+- Packet with seq in the previous window, that is [rcv_base - N, rcv_base - 1]:
+  send ACK(n) again. That is a duplicate, already delivered.
+- Packet anywhere else: ignore it silently.
+
+Buffering is the whole point. Data arrives early and waits for the gap.
+
+*** Sequence diagram, window of 4, packet 1 lost
+#+begin_example
+ time    sender                            receiver
+  |        |                                 |
+  t1       |--- pkt0 ---------------------->| in order, deliver 0
+           |<---------------------- ACK0 ----|
+  t2       |--- pkt1 ---- X LOST ------------|
+  t3       |--- pkt2 ---------------------->| buffer 2
+           |<---------------------- ACK2 ----|
+  t4       |--- pkt3 ---------------------->| buffer 3
+           |<---------------------- ACK3 ----|
+  t5       |--- pkt4 ---------------------->| buffer 4
+           |<---------------------- ACK4 ----|
+  t6       |  only the timer for pkt1 fires  |
+  t7       |--- pkt1 ---------------------->| deliver 1, then 2, 3, 4
+           |<---------------------- ACK1 ----| window slides to 5
+#+end_example
+
+Compare with GBN. Here the sender waits with 2, 3, 4 already acknowledged and
+resends one packet. GBN resent four.
+
+*** Window size rule and why
+  N <= 2^(k-1)         that is 2N <= 2^k
+
+  k = 3 bits, space 8, so N <= 4
+
+Here is why. If 2N exceeds the sequence space, the two windows overlap on the
+same sequence numbers after a slide. A late duplicate then looks like new
+data, because the number it carries is one the receiver now expects.
+
+*** Trap: thinking the receiver window slides on every packet
+The confusion: each buffered packet moves the window. The fix: the window moves
+only when rcv_base itself arrives and the buffered run behind it can be
+delivered. Buffering alone changes nothing.
+
+*** Trap: accepting a packet from the previous window as new data
+The confusion: any packet inside the receiver window is new. The fix: the
+window spans N numbers, but the previous N numbers are still legal on the wire.
+A packet in [rcv_base - N, rcv_base - 1] is a duplicate and gets an ACK, not a
+delivery.
+
+*** Trap: "selective repeat has no timers on the receiver"
+The confusion: only TCP-like senders time out. The fix: SR needs one timer per
+in-flight packet on the sender side. The receiver has no timers at all. It
+never retransmits and it never asks.
+
+** GBN versus SR comparison
+SUMMARY: GBN is simple and cheap in state, SR is efficient and expensive in state.
+KUROSE: 3.4.3, 3.4.4
+EXAM: evaluate the advantages and drawbacks of GBN and SR, 5 marks, CNE6. CNE3 asks for the same comparison with diagrams.
+PRIORITY: core
+
+| Property          | Go-Back-N                    | Selective Repeat              |
+|-------------------+------------------------------+-------------------------------|
+| Timers on sender  | one, for the oldest packet   | one per unACKed packet        |
+| ACK type          | cumulative                   | individual per packet         |
+| Receiver buffer   | none, discards the gap       | buffers out of order packets  |
+| Retransmit cost   | lost packet and all after it | only the lost packet          |
+| Complexity        | low, few variables           | high, per packet state        |
+| Window limit      | N <= 2^k - 1                 | N <= 2^(k-1)                  |
+| Best use case     | short link, low loss         | long link, costly resend      |
+
+The verdict, ready to write in the exam. GBN wins on simplicity because one
+variable and one timer run the whole receiver. SR wins on bandwidth because a
+single loss costs one retransmission instead of a window. Choose GBN for short
+low loss links and SR when the bandwidth delay product is large.
+
+*** Trap: claiming SR always beats GBN
+The confusion: fewer retransmissions must mean a faster protocol. The fix: SR
+pays for that with per packet timers, per packet buffers and more header work.
+On a short link with rare loss, GBN delivers the same rate for less effort.
+
+*** Trap: "GBN buffers out of order packets"
+The confusion: the Kurose slide says the receiver "can discard or buffer".
+The fix: buffering is allowed as an implementation choice but it is useless,
+because GBN still retransmits the whole window. The reference behaviour
+delivers in order only and discards the gap.
+
+** Pipelining: the maximum data rate numerical
+SUMMARY: If the window cannot fill the pipe the rate is window over cycle time, otherwise it is just the bandwidth.
+KUROSE: 3.4.2, 3.4.3
+EXAM: CNE3 asks this with a 20 kbps satellite link, 400 ms delay, 100 byte frames and n = 10. Expect the same shape with new numbers.
+PRIORITY: core
+
+*** The method
+The sender may have at most n frames outstanding. One cycle is: send n frames
+back to back, then wait for the first ACK to return.
+
+  cycle time = RTT + L/R
+
+The ACK for frame 1 arrives one round trip plus one transmission time after
+frame 1 left. Everything the sender fits inside that cycle sets the rate.
+
+*** Two cases
+Case 1, the window is larger than the pipe. The sender never runs dry. The link
+stays busy and the rate is simply R.
+
+Case 2, the window is smaller than the pipe. The sender goes idle every cycle.
+The rate is the data per cycle divided by the cycle time.
+
+  rate = n x L / (RTT + L/R)
+
+*** The pipe
+Two different quantities get called the pipe. Keep them apart.
+
+  bits in flight on the wire   R x d_prop    this is the bandwidth-delay product
+  bits needed to cover a trip  R x RTT       this is the window you need
+
+  frames to fill the window    (R x RTT) / L
+
+The sender needs enough frames outstanding to cover a round trip, because it
+cannot send the next window until the first ACK returns. So window sizing uses
+RTT, while the true in-flight capacity of the wire uses the one-way delay.
+
+Compare n with the frame count from RTT. If n is at least that count, use
+case 1. If n is smaller, use case 2.
+
+*** WORKED EXAMPLE (numbers changed on purpose)
+A 64 kbps link, one way propagation delay 250 ms, frame size 200 bytes,
+window n = 8.
+
+Step 1, convert everything.
+  R = 64000 bps
+  L = 200 x 8 = 1600 bits
+  one way delay = 250 ms, so RTT = 2 x 250 = 500 ms = 0.5 s
+
+Step 2, transmission time.
+  L/R = 1600 / 64000 = 0.025 s = 25 ms
+
+Step 3, cycle time.
+  RTT + L/R = 500 + 25 = 525 ms = 0.525 s
+
+Step 4, pipe size.
+  R x RTT = 64000 x 0.5 = 32000 bits
+
+Step 5, frames that fill the pipe.
+  32000 / 1600 = 20 frames
+
+Step 6, decide the case.
+  n = 8 < 20, so the window is smaller than the pipe. Use case 2.
+
+Step 7, rate.
+  rate = 8 x 1600 / 0.525 = 12800 / 0.525 = 24381 bps
+
+Step 8, utilisation.
+  U = 24381 / 64000 = 0.381
+
+The answer is about 24.4 kbps, or 38 percent of the link. The window is the
+limit, not the link. Raising n to 20 would reach the full 64 kbps.
+
+*** Trap: using case 1 when the window is small
+The confusion: the paper gives a bandwidth, so the answer must be that
+bandwidth. The fix: always compute the pipe first. A small window caps the rate
+below R, and the answer is n x L over the cycle.
+
+*** Trap: forgetting that RTT is twice the one way delay
+The confusion: the paper says "propagation delay 400 ms", so RTT is 400 ms.
+The fix: that phrasing means one way. Double it. Every rate then comes out
+twice as high as it should.
+
+*** Trap: comparing n with 2^k instead of with the pipe
+The confusion: n = 10 with 3 bit numbers looks legal, so the link must be full.
+The fix: the window limit and the pipe limit are different tests. The window
+limit is a correctness test, the pipe comparison is a speed test.
+
+*** Trap: mixing bits and bytes in the rate
+The confusion: 200 byte frames with R in bits per second. The fix: convert L to
+bits before dividing. A rate in bytes per second must be multiplied by 8 at the
+end.
+
+** Congestion control: principles
+SUMMARY: Congestion control protects the network from too much offered load, while flow control protects one receiver from one fast sender.
+KUROSE: 3.6, 3.6.1, 3.6.2
+EXAM: the end to end versus network assisted split sits inside the CNE5 congestion question, 5 marks.
+PRIORITY: extra
+
+Flow control guards one receiver from one sender. Congestion control guards
+the network from every sender at once. A slow receiver means flow control. A
+busy network means congestion control.
+
+Two causes. Too many sources send too fast. Routers have finite buffers, so
+queues overflow and packets drop. Then senders retransmit, offered load rises,
+and useful throughput falls. That fall is congestion collapse.
+
+Two approaches. End to end control infers congestion from loss and delay, as
+TCP does. Network assisted control takes explicit feedback from routers, as in
+ECN.
+
+*** Trap: swapping congestion control and flow control
+The confusion: both are called "control" and both limit the sender. The fix:
+ask who is being protected. A slow receiver means flow control. A busy network
+means congestion control. The window that binds is min(cwnd, rwnd).
+
+** TCP congestion control
+SUMMARY: TCP grows a congestion window until loss, halves it, and repeats, which gives the AIMD sawtooth.
+KUROSE: 3.7, 3.7.1
+EXAM: explain TCP end to end congestion control in detail, 5 marks, CNE5. The throughput numerical is a standard add on.
+PRIORITY: core
+
+*** The window that governs sending
+TCP keeps a congestion window cwnd, measured in bytes or MSS.
+
+  effective window = min(cwnd, rwnd)
+  in flight limit  : LastByteSent - LastByteAcked <= cwnd
+
+rwnd is the buffer space the receiver advertises, so it bounds flow control.
+cwnd is the guess the sender makes about the network, so it bounds
+congestion. Whichever is smaller wins.
+
+*** Slow start
+The connection begins with cwnd = 1 MSS. Every ACK increments cwnd, so cwnd
+doubles once per RTT.
+
+  RTT 1: 1 MSS
+  RTT 2: 2 MSS
+  RTT 3: 4 MSS
+  RTT 4: 8 MSS
+
+This is exponential. It is called slow start only because the first step is
+small. The ramp is fast, and it ends at ssthresh.
+
+  on a loss: ssthresh = cwnd / 2 at the moment of loss
+
+*** Congestion avoidance
+Once cwnd reaches ssthresh, growth becomes additive.
+
+  cwnd = cwnd + 1 MSS per RTT
+
+One extra segment each round trip. Together with a halving on loss, this is
+AIMD, additive increase and multiplicative decrease.
+
+*** The sawtooth
+#+begin_example
+  W  |                        /*   peak, then loss
+     |                      /  |
+     |                    /    |
+     |                 /       |
+     |               /         |
+ ssh |             /           |         /  ssthresh = W/2
+     |           /             |       /
+     |         /               |     /
+     |      /                  |   /
+     |    /                    |  /
+  1  |  /                      | /
+     +---------------------------------------------------> time
+        slow start   congestion avoidance    timeout
+#+end_example
+
+Growth is exponential, then linear, then a cliff. The cliff is the loss event.
+The pattern repeats, and that repeated probe is the sawtooth.
+
+*** Loss detection, Tahoe and Reno
+A timeout is severe. The network gave no ACKs at all for a long time.
+
+  timeout:  ssthresh = cwnd / 2,  cwnd = 1,  re-enter slow start
+
+Three duplicate ACKs are mild. Packets are still flowing, so one packet may
+have been lost. The receiver keeps repeating the last in-order ACK, and each
+repeat names the same missing byte.
+
+  three duplicate ACKs:  fast retransmit, resend the missing segment at once
+  TCP Tahoe:  any loss, including three duplicates, drops cwnd to 1
+  TCP Reno:   timeout drops cwnd to 1, three duplicates use fast recovery
+
+Fast recovery in Reno sets ssthresh = cwnd / 2 and cwnd = ssthresh + 3 MSS.
+The three extra segments stand for the three packets that already left the
+network. Each further duplicate ACK inflates cwnd by one MSS. The new ACK
+deflates cwnd back to ssthresh and congestion avoidance resumes.
+
+*** Throughput
+Two forms of the same idea, one in terms of window, one in terms of loss.
+
+  throughput = 0.75 x W / RTT
+
+W is the window size in bytes at the moment of loss. The 0.75 comes from
+averaging the sawtooth: the window falls from W to W/2, so the mean is 0.75W.
+
+  throughput = 1.22 x MSS / (RTT x sqrt(p))
+
+p is the loss probability. This form comes from the square root of p rule: the
+window a flow settles at scales as 1 over sqrt(p).
+
+*** WORKED EXAMPLE (numbers changed on purpose)
+MSS = 1460 bytes, RTT = 80 ms, loss probability p = 0.02.
+
+Step 1, take the square root of p.
+  sqrt(0.02) = 0.1414
+
+Step 2, build the denominator.
+  RTT x sqrt(p) = 0.08 x 0.1414 = 0.011314 s
+
+Step 3, build the numerator.
+  1.22 x 1460 = 1781.2 bytes
+
+Step 4, divide.
+  throughput = 1781.2 / 0.011314 = 157437 bytes per second
+
+Step 5, convert to bits.
+  157437 x 8 = 1259500 bps, about 1.26 Mbps
+
+Check with the window form. The same loss rate implies W of about 12 MSS.
+  0.75 x 12 x 1460 / 0.08 = 13140 / 0.08 = 164250 bytes per second
+
+That is 1.31 Mbps. The two forms agree to within rounding, which is expected.
+A 12 MSS window and a 2 percent loss rate describe the same sawtooth.
+
+*** Trap: dropping cwnd to half on a timeout
+The confusion: multiplicative decrease halves the window, so a timeout halves
+it. The fix: only the three duplicate ACK case halves the window into fast
+recovery. A timeout is severe, so cwnd returns to 1 MSS and slow start restarts.
+
+*** Trap: calling ssthresh the current window
+The confusion: ssthresh and cwnd are two names for the same value. The fix:
+ssthresh is the switch point, a memory of the last loss. cwnd is the live
+window. They are equal only at the instant slow start hands over.
+
+*** Trap: reading three duplicate ACKs as a NAK
+The confusion: three duplicates look like a request for retransmission. The fix:
+they are one repeated ACK from a receiver that keeps getting out of order data.
+The sender reads the repetition itself as a loss signal.
+
+*** Trap: forgetting that p sits inside a square root
+The confusion: throughput halves when loss doubles. The fix: throughput falls
+with the square root of p, so it drops by about 1.41 when p doubles. A fourfold
+rise in loss only halves the rate.
+
+*** Trap: mixing units inside the throughput formula
+The confusion: MSS in bytes with RTT in milliseconds. The fix: put RTT in
+seconds and MSS in bytes. The answer then comes out in bytes per second, and you
+multiply by 8 only if the question asks for bits.
+
+** Drills, data transfer and congestion
+SUMMARY: Four short problems that rehearse the whole chapter under exam timing.
+KUROSE: 3.4.2, 3.4.3, 3.4.4, 3.7.1
+EXAM: three of these shapes come straight from the six papers. The cwnd trace is the standard variant.
+PRIORITY: core
+
+Four drills, one per skill. Answers are at the end of this file. Cover them
+before you check.
+
+*** Drill 1, utilisation
+A 2 Mbps link carries 1000 byte frames. One way propagation delay is 40 ms.
+
+  a) Compute the utilisation for stop and wait.
+  b) How many frames fill the pipe?
+  c) Compute the utilisation with a window of 20 frames.
+  d) Compute the achievable rate with a window of 10 frames.
+
+*** Drill 2, GBN trace
+Window N = 5, sequence space 0 to 15. The sender sends packets 0 through 4.
+Packets 0, 1 and 2 arrive. Packet 3 is lost. Packet 4 arrives. Then ACK0,
+ACK1 and ACK2 arrive in that order and each one frees a slot, so packets 5, 6
+and 7 are sent.
+
+  a) Which ACKs does the receiver send, in order, before any timer fires?
+  b) Which packets does the sender retransmit after the timeout?
+  c) How many transmissions in total carry 8 useful packets?
+
+*** Drill 3, SR window legality
+Check each case against the SR rule.
+
+  a) Sequence numbers are 3 bits, window is 5.
+  b) Sequence numbers are 5 bits, window is 16.
+  c) Sequence numbers are 4 bits, window is 9.
+
+For each case say legal or illegal, and give the largest legal window.
+
+*** Drill 4, congestion window trace
+A TCP connection starts with cwnd = 1 MSS and ssthresh = 16 MSS. There is no
+loss until the RTT in which cwnd first reaches 20 MSS, and that loss is a
+timeout.
+
+  a) Give cwnd at the end of each of the first twelve RTTs.
+  b) Give the new ssthresh.
+  c) Give cwnd for the three RTTs after the timeout.
+
+** Drill answers, data transfer and congestion
+SUMMARY: Model answers with the reasoning that the examiner looks for.
+KUROSE: 3.4.2, 3.4.3, 3.4.4, 3.7.1
+EXAM: not asked, this section is for self checking only.
+PRIORITY: core
+
+*** Drill 1 answers
+  L = 1000 x 8 = 8000 bits
+  L/R = 8000 / 2000000 = 0.004 s = 4 ms
+  RTT = 2 x 40 ms = 80 ms
+  cycle = 84 ms
+
+  a) U = 4 / 84 = 0.0476, that is 4.8 percent
+  b) pipe = R x RTT = 2000000 x 0.08 = 160000 bits
+     frames = 160000 / 8000 = 20 frames
+  c) U = (20 x 4) / 84 = 80 / 84 = 0.952, that is 95.2 percent
+  d) rate = 10 x 8000 / 0.084 = 80000 / 0.084 = 952381 bps
+
+Note for part d. A window of 10 is half the pipe, so the rate is about half of
+2 Mbps. The small shortfall is the transmission time that the cycle still holds.
+
+*** Drill 2 answers
+a) ACK0, ACK1, ACK2, then four duplicate ACK2. The duplicates come from
+packets 4, 5, 6 and 7, each discarded as out of order. Just one duplicate
+follows packet 4, and one more follows each of 5, 6 and 7.
+
+b) The window is [3..7] at the timeout, so the sender resends 3, 4, 5, 6 and 7.
+GBN resends everything from the lost packet to the top of the window.
+
+c) 8 first transmissions plus 5 retransmissions is 13. The retransmitted 4, 5,
+6 and 7 were already sent once and thrown away, so 5 slots of bandwidth are
+wasted.
+
+*** Drill 3 answers
+a) 3 bits gives 8 numbers. 2N = 10 is greater than 8, so it is illegal. The
+largest legal window is 4.
+b) 5 bits gives 32 numbers. 2N = 32 equals 32, so it is legal. It sits exactly
+on the limit.
+c) 4 bits gives 16 numbers. 2N = 18 is greater than 16, so it is illegal. The
+largest legal window is 8.
+
+*** Drill 4 answers
+a) RTT 1 to 12: 1, 2, 4, 8, 16, 17, 18, 19, 20, 1, 2, 4.
+
+Read the trace. RTT 1 to 5 is slow start, doubling from 1 to 16. RTT 5 lands
+exactly on ssthresh, so RTT 6 onward adds one per round trip. The timeout hits
+when cwnd is 20, so the window collapses to 1 and the pattern restarts.
+
+b) New ssthresh = 20 / 2 = 10 MSS.
+c) RTT 13 is 8, RTT 14 is 10, RTT 15 is 11. Slow start doubles until it reaches
+ssthresh at 10, then congestion avoidance adds one per round trip.
+
+Watch the handover. A double of 8 would be 16, but ssthresh is 10, so cwnd stops
+at 10 and switches to additive growth. That is the step most answers get wrong.

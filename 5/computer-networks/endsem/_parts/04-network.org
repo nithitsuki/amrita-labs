@@ -1,0 +1,752 @@
+** IPv4 datagram format
+SUMMARY: The IPv4 header is a 20-byte base of 13 fields that carries addressing, lifetime, and reassembly data.
+KUROSE: 4.3.1, Figure 4.13
+EXAM: not asked alone in the 6 papers. CNE2 asks you to compare the IPv4 header with the IPv6 header, so you must draw this layout.
+PRIORITY: core
+
+*** The layout with a bit ruler
+
+#+begin_example
+     0      4      8             16            24            31
++-----------------------------------------------------------+
+|  ver  |  hlen | type of svc  |        total length        |
+|  4 b  |  4 b  |     8 b      |            16 b            |
++-----------------------------------------------------------+
+|       identification       |  flgs |   fragment offset    |
+|            16 b            |  3 b  |         13 b         |
++-----------------------------------------------------------+
+|  TTL   | proto |             header checksum              |
+|  8 b   |  8 b  |                   16 b                   |
++-----------------------------------------------------------+
+|                   source address (32 b)                   |
++-----------------------------------------------------------+
+|                 destination address (32 b)                |
++-----------------------------------------------------------+
+|                    options (0 to 40 B)                    |
++-----------------------------------------------------------+
+|                  payload data (variable)                  |
++-----------------------------------------------------------+
+#+end_example
+
+The base header is 20 bytes. The widest header is 60 bytes with all options.
+
+*** What every field does
+
+| Field | Width | Purpose |
+|-------+-------+---------|
+| version | 4 b | IP version number, 4 for IPv4 |
+| header length | 4 b | Header size in 32-bit words, normally 5 |
+| type of service | 8 b | DSCP priority bits plus two ECN bits |
+| total length | 16 b | Header plus payload in bytes, largest value 65535 |
+| identification | 16 b | Same value in every fragment of one datagram |
+| flags | 3 b | Reserved, DF, MF |
+| fragment offset | 13 b | Payload position in the original, in 8-byte units |
+| TTL | 8 b | Hops left, each router subtracts one |
+| protocol | 8 b | Upper-layer protocol, 6 TCP, 17 UDP, 1 ICMP |
+| header checksum | 16 b | Ones-complement sum over the header only |
+| source address | 32 b | Sender interface address |
+| destination address | 32 b | Final receiver interface address |
+| options | variable | Timestamp, record route, source route |
+| padding | variable | Zeros that round the header to 4 bytes |
+
+*** The three flags
+
+The first flag bit is reserved and must be 0.
+
+DF means do not fragment. A router that needs a smaller packet drops the datagram. It then sends ICMP type 3 code 4 back to the source. Path MTU discovery uses this rule.
+
+MF means more fragments. A value of 1 says another fragment follows. The last fragment carries MF equal to 0, so the receiver knows the set is complete.
+
+*** What TTL protects against
+
+TTL is a hop counter that starts near 255 and drops by one at every router. It stops a datagram from looping forever when routing tables disagree. A router that reaches TTL 0 discards the packet and sends ICMP time exceeded. Traceroute abuses this rule to map the path.
+
+*** Protocol numbers you must know
+
+#+begin_example
+1    ICMP     error reports and echo
+6    TCP      reliable byte stream
+17   UDP      unreliable datagrams
+41   IPv6     IPv6 inside IPv4, used by tunnels
+#+end_example
+
+*** Header length rule
+
+The field counts 4-byte words, not bytes. A value of 5 means 20 bytes. The field is 4 bits wide, so the largest value is 15 and the largest header is 60 bytes. The 20-byte base plus 40 bytes of options gives that limit. Payload starts at the byte offset given by (hlen x 4).
+
+*** Trap
+Reading hlen as a byte count is the classic error. A header of 5 is 20 bytes, not five bytes. Every field after the header then shifts, and the whole answer fails.
+
+*** Trap
+A 60-byte header is legal. Do not assume that the header is always 20 bytes when you compute the payload size.
+
+** IPv4 addressing, classes, and special addresses
+SUMMARY: An IPv4 address is a 32-bit number split into a network part and a host part, written as four decimal octets.
+KUROSE: 4.3.2
+EXAM: classful addressing is not asked in the 6 papers. The VLSM questions in CNE4, CNE5, and CNE6 all assume you can read a prefix and a mask.
+PRIORITY: core
+
+*** The 32-bit address
+
+The address is 32 bits long. Write it as four octets in decimal, separated by dots. Each octet is 8 bits, so each value runs from 0 to 255.
+
+#+begin_example
+223.1.1.1  =  11011111 . 00000001 . 00000001 . 00000001
+              octet 1    octet 2    octet 3    octet 4
+#+end_example
+
+The prefix marks how many high-order bits name the network. The remaining bits name the host. A /24 keeps 24 network bits and 8 host bits.
+
+The address belongs to an interface, not to the machine. A router has one address on every interface it owns.
+
+*** The class table
+
+#+begin_example
+Class  First  Range      Default mask     Pfx  Nets      Hosts
+A      0      1-126      255.0.0.0        /8   126       16,777,214
+B      10     128-191    255.255.0.0      /16  16,384    65,534
+C      110    192-223    255.255.255.0    /24  2,097,152 254
+D      1110   224-239    multicast        /4   -         -
+E      1111   240-255    reserved         /4   -         -
+#+end_example
+
+Class A gives 2^7 minus 2 networks because 0 and 127 are special. Class B gives 2^14 networks. Class C gives 2^21 networks.
+
+*** Classful addressing is dead
+
+Classful addressing forced a fixed network size. A company that needed 300 hosts had to take a whole class B, which wasted 65000 addresses. CIDR replaced it in 1993. CIDR allows any prefix length and writes the network as a.b.c.d/x.
+
+Modern routing uses longest prefix match. The router picks the entry with the most matching bits, not the class of the address.
+
+*** Special addresses
+
+#+begin_example
+Address         Name          Routed  Used when
+0.0.0.0         unspecified   no      source before DHCP, default route
+127.0.0.0/8     loopback      no      testing the local stack
+169.254.0.0/16  link local    no      DHCP failed, host self assigns
+10.0.0.0/8      private       no      enterprise LAN, needs NAT
+172.16.0.0/12   private       no      enterprise LAN, needs NAT
+192.168.0.0/16  private       no      home and small office LAN
+224.0.0.0/4     multicast     yes     one sender to a group
+255.255.255.255 broadcast     no      DHCP discover on the local link
+#+end_example
+
+The three private blocks come from RFC 1918. No public router forwards them. A host that uses one needs NAT at the border.
+
+*** Network, broadcast, and usable host addresses
+
+Take 192.168.10.128/26 as the subnet.
+
+The network address is the first address, 192.168.10.128. All host bits are 0. It names the subnet and is never given to a host.
+
+The broadcast address is the last address, 192.168.10.191. All host bits are 1. A packet sent there reaches every host in the subnet.
+
+A usable host address sits between them, from 192.168.10.129 to 192.168.10.190. That gives 62 addresses, which is 64 minus 2.
+
+*** Trap
+The network address and the broadcast address are not assignable. Always subtract 2 from the block size. Forgetting the subtraction turns 62 usable hosts into 64 and loses two marks.
+
+** Subnetting: the mechanical method
+SUMMARY: Subnetting is a five-step arithmetic routine that finds the subnet boundary and the usable range from a prefix.
+KUROSE: 4.3.2
+EXAM: CNE4, CNE5, and CNE6 all hide subnet arithmetic inside a VLSM design question. No paper asks a bare "subnet this address" question.
+PRIORITY: core
+
+*** The five steps
+
+1. Compute the block size. Block = 2^(32 - prefix). This counts every address in the subnet, including the two reserved ones.
+2. Find the interesting octet. That is the octet where the mask value is neither 255 nor 0.
+3. Compute the block size in that octet. Octet block = 256 minus the mask value in that octet.
+4. List the subnet boundaries. They are the multiples of the octet block, starting at 0.
+5. Read the answer. The boundary below the host address is the network. The next boundary minus 1 is the broadcast. Usable hosts run from network plus 1 to broadcast minus 1.
+
+If the prefix is a multiple of 8, the block size lives in the last octet and the arithmetic is easy. If the prefix falls inside an octet, the block still starts at a multiple of the octet block size.
+
+*** WORKED EXAMPLE (numbers changed on purpose): a host inside a /26
+
+Host address 192.168.10.130/26.
+
+#+begin_example
+Step 1  block size    = 2^(32-26) = 2^6 = 64 addresses
+Step 2  mask          = 255.255.255.192, interesting octet is the 4th
+Step 3  octet block   = 256 - 192 = 64 addresses
+Step 4  boundaries    = 0, 64, 128, 192 in the 4th octet
+Step 5  130 lies between 128 and 191, so network = 192.168.10.128
+        broadcast     = 192.168.10.191
+        usable range  = 192.168.10.129 to 192.168.10.190
+        usable hosts  = 64 - 2 = 62 hosts
+#+end_example
+
+| Network | Mask dotted | Prefix | First usable | Last usable | Broadcast | Hosts |
+|---------+-------------+--------+--------------+-------------+-----------+-------|
+| 192.168.10.128 | 255.255.255.192 | /26 | 192.168.10.129 | 192.168.10.190 | 192.168.10.191 | 62 |
+
+*** WORKED EXAMPLE (numbers changed on purpose): a /20 that cuts the third octet
+
+Host address 172.20.130.45/20.
+
+#+begin_example
+Step 1  block size    = 2^(32-20) = 2^12 = 4096 addresses
+Step 2  mask          = 255.255.240.0, interesting octet is the 3rd
+Step 3  octet block   = 256 - 240 = 16 values of the 3rd octet
+Step 4  boundaries    = 0,16,32,...,112,128,144,... in the 3rd octet
+Step 5  130 lies between 128 and 143, so network = 172.20.128.0
+        broadcast     = 172.20.143.255
+        usable range  = 172.20.128.1 to 172.20.143.254
+        usable hosts  = 4096 - 2 = 4094 hosts
+#+end_example
+
+| Network | Mask dotted | Prefix | First usable | Last usable | Broadcast | Hosts |
+|---------+-------------+--------+--------------+-------------+-----------+-------|
+| 172.20.128.0 | 255.255.240.0 | /20 | 172.20.128.1 | 172.20.143.254 | 172.20.143.255 | 4094 |
+
+The second example is the one that catches people. The block of 16 sits in the third octet. The fourth octet runs from 0 to 255 inside that block.
+
+*** The host-count ladder and the reverse rule
+
+For a subnet that must hold H hosts, find the smallest prefix where 2^(32-prefix) - 2 is at least H.
+
+#+begin_example
+prefix  block  usable hosts
+/30     4      2
+/29     8      6
+/28     16     14
+/27     32     30
+/26     64     62
+/25     128    126
+/24     256    254
+/23     512    510
+/22     1024   1022
+#+end_example
+
+Memorise the ladder. Exam numbers are usually 2, 6, 14, 30, 62, 126, 254. Read the ladder upward until the value reaches H, then take that prefix.
+
+*** Trap
+Do not count the network and broadcast addresses as hosts. A /27 holds 32 addresses and only 30 hosts. An answer of 32 hosts is wrong.
+
+*** Trap
+A /31 and a /32 break the minus-two rule. RFC 3021 allows a /31 on a point-to-point link, and both addresses are usable. A /32 names one host, as a loopback or a host route. Never apply the ladder to these two prefixes.
+
+*** Trap
+The block size belongs to the interesting octet, not always the last octet. A /20 moves the third octet in steps of 16, while the fourth octet sweeps the full 0 to 255.
+
+** VLSM: the method the papers actually ask for
+SUMMARY: VLSM assigns a different prefix to each block, largest block first, so that no address space is wasted.
+KUROSE: 4.3.2, CIDR and subnet allocation
+EXAM: core. CNE4 asks for five blocks from 192.168.5.0/24. CNE5 asks for six blocks from 102.168.1.0/24. CNE6 asks for three blocks from 192.168.5.0/24.
+PRIORITY: core
+
+*** The algorithm
+
+1. Sort the blocks by device count, largest first.
+2. For each block, pick the smallest prefix that fits. Use the ladder from the previous topic.
+3. Assign from the start of the given address block. Keep every subnet aligned to its own block size.
+4. Track the running address after each allocation.
+5. Report the free ranges at the end.
+
+The alignment rule is the whole trick. A subnet network address must be a multiple of its own block size. A /27 must start on a multiple of 32. A /28 must start on a multiple of 16.
+
+If the running address is not a multiple of the new block size, round up to the next multiple. The addresses you skip are waste, and you must report them as free or lost.
+
+*** WORKED EXAMPLE (numbers changed on purpose): five departments from 192.168.20.0/24
+
+Given block 192.168.20.0/24. The departments need 100, 10, 30, 6, and 2 devices.
+
+#+begin_example
+Sort        Engineering 100, Support 30, Sales 10, Lab 6, Admin 2
+Engineering 100 hosts needs /25, block 128, starts at .0
+            runs .0 to .127, next free address .128
+Support     30 hosts needs /27, block 32, .128 is a multiple of 32
+            runs .128 to .159, next free address .160
+Sales       10 hosts needs /28, block 16, .160 is a multiple of 16
+            runs .160 to .175, next free address .176
+Lab         6 hosts needs /29, block 8, .176 is a multiple of 8
+            runs .176 to .183, next free address .184
+Admin       2 hosts needs /30, block 4, .184 is a multiple of 4
+            runs .184 to .187, next free address .188
+Free        .188 to .255, that is 68 addresses
+#+end_example
+
+| Block | Network | Mask dotted | Prefix | Usable range | Broadcast |
+|-------+---------+-------------+--------+--------------+-----------|
+| Engineering | 192.168.20.0 | 255.255.255.128 | /25 | .1 to .126 | .127 |
+| Support | 192.168.20.128 | 255.255.255.224 | /27 | .129 to .158 | .159 |
+| Sales | 192.168.20.160 | 255.255.255.240 | /28 | .161 to .174 | .175 |
+| Lab | 192.168.20.176 | 255.255.255.248 | /29 | .177 to .182 | .183 |
+| Admin | 192.168.20.184 | 255.255.255.252 | /30 | .185 to .186 | .187 |
+
+The range column is relative to 192.168.20.0. Read .1 to .126 as 192.168.20.1 to 192.168.20.126.
+
+Free ranges: 192.168.20.188 to 192.168.20.255. That is one /30 at .188 plus one /26 at .192, or 68 addresses.
+
+Now watch the alignment. Suppose Support took a /28 at .128 instead, so it ends at .143. The next /27 cannot start at .144, because 144 is not a multiple of 32. It starts at .160 and loses .144 to .159.
+
+*** Why VLSM saves addresses
+
+Fixed-length subnetting gives every block the same prefix, so the smallest block sets the size for all. VLSM gives each block only the bits it needs. The saved addresses stay available for later subnets or for growth.
+
+Three sentences for the answer: Fixed-length subnetting rounds every block up to the largest requirement. VLSM rounds each block up only to its own requirement. The difference is the free space at the end of the major block.
+
+*** Trap
+A /26 ends at .63, so the next address .64 is a multiple of 32 and a /27 fits there. The failure comes after a smaller block. Take a /28 at .64, which ends at .79. A /27 placed at .80 is invalid, because 80 is not a multiple of 32. The next legal boundary is .96, so .80 to .95 is lost. Writing .80/27 is worse, because the mask resolves it to .64/27 and overlaps the /28.
+
+*** Trap
+A common wrong answer sorts the blocks smallest first. That fragments the space and forces overlaps. Always allocate the largest block first.
+
+** NAT
+SUMMARY: NAT rewrites private source addresses to one public address at the border router, and NAPT also rewrites the port.
+KUROSE: 4.3.3
+EXAM: CNE1 asks for the purpose of NAT, the component that implements it, and how it works. CNE5 and CNE6 touch private addressing inside VLSM questions.
+PRIORITY: core
+
+*** Why NAT exists
+
+IPv4 has about 4.3 billion addresses. The world ran out of free blocks in 2011. NAT lets a whole site share one public address. It also hides internal addresses from the outside.
+
+*** Where NAT sits
+
+NAT runs on the gateway router or border router. That router sits between the private network and the internet. It owns one public address on the WAN side and a private address on the LAN side.
+
+*** How NAT works
+
+The router keeps a translation table. On an outgoing datagram it replaces the private source address with the public address. It records the pair in the table. On an incoming datagram it looks up the public destination and restores the private address.
+
+Plain NAT breaks when two hosts use the same source port. NAPT fixes this. NAPT also rewrites the source port to a unique value, so one public address can serve thousands of flows.
+
+#+begin_example
+NAT translation table on the border router
+LAN side            WAN side
+10.0.0.5:4100       198.51.100.7:6001
+10.0.0.9:4100       198.51.100.7:6002
+#+end_example
+
+*** WORKED EXAMPLE (numbers changed on purpose): two hosts reach the same web server
+
+Both hosts open a connection to 203.0.113.80 on port 80. The border router owns 198.51.100.7.
+
+#+begin_example
+Before NAT, host 1
+  source      10.0.0.5 : 4100
+  destination 203.0.113.80 : 80
+
+After NAT, host 1
+  source      198.51.100.7 : 6001
+  destination 203.0.113.80 : 80
+
+Before NAT, host 2
+  source      10.0.0.9 : 4100
+  destination 203.0.113.80 : 80
+
+After NAT, host 2
+  source      198.51.100.7 : 6002
+  destination 203.0.113.80 : 80
+#+end_example
+
+The server sees two different source ports on one address. It answers each flow separately.
+
+#+begin_example
+Reply for host 1 arrives
+  203.0.113.80 : 80  ->  198.51.100.7 : 6001
+Router looks up 6001 and rewrites the destination
+  203.0.113.80 : 80  ->  10.0.0.5 : 4100
+Reply for host 2 arrives
+  203.0.113.80 : 80  ->  198.51.100.7 : 6002
+Router looks up 6002 and rewrites the destination
+  203.0.113.80 : 80  ->  10.0.0.9 : 4100
+#+end_example
+
+*** Benefits and limitations
+
+Benefits: one public address serves the whole site. The site can change ISP without touching internal hosts. Internal hosts are not directly reachable from outside.
+
+Limitations: NAT breaks the end-to-end argument because a network device edits the transport header. An inbound connection has no table entry, so it fails unless you add port forwarding. Protocols that embed addresses inside the payload break, such as FTP active mode, SIP, and some games. NAT also hides hosts from logging and from external monitoring.
+
+*** NAT traversal and STUN
+
+A host behind NAT asks an external STUN server what public address and port it sees, then uses that mapping to arrange a direct flow.
+
+*** Trap
+NAT rewrites the source on the way out and the destination on the way in. Do not rewrite the destination on the way out. That mistake sends the packet to the wrong place.
+
+*** Trap
+The translation table is keyed on the port as well as the address. Two hosts with the same port still get different public ports.
+
+** DHCP
+SUMMARY: DHCP gives a host its IP address, mask, gateway, and DNS server automatically when it joins a network.
+KUROSE: 4.3.2, obtaining a host address
+EXAM: CNE1 asks for the steps that fetch an IP allocation. CNE5 asks for a short note on DHCP.
+PRIORITY: core
+
+*** The problem it solves
+
+A host needs four values before it can use the network: an address, a mask, a default gateway, and a DNS server. Typing them by hand does not scale and breaks when users move. DHCP delivers them automatically and reclaims them when a host leaves.
+
+*** The four steps: DORA
+
+#+begin_example
+client 0.0.0.0:68                        server 192.168.1.1:67
+   |  DISCOVER  dst 255.255.255.255:67, yiaddr 0.0.0.0  |
+   |--------------------------------------------------->|
+   |  OFFER     yiaddr 192.168.1.57, lease 3600 s       |
+   |<---------------------------------------------------|
+   |  REQUEST   dst 255.255.255.255:67, wants .57       |
+   |--------------------------------------------------->|
+   |  ACK       lease confirmed, options delivered      |
+   |<---------------------------------------------------|
+#+end_example
+
+Discover goes from 0.0.0.0 port 68 to 255.255.255.255 port 67. The client has no address, so it must broadcast.
+
+Offer comes from the server port 67 to port 68. It carries the offered address in yiaddr and the lease time.
+
+Request also broadcasts from 0.0.0.0 port 68. The broadcast tells every server which offer the client accepted. The chosen server then commits the address.
+
+Acknowledge confirms the lease and carries the mask, gateway, and DNS options.
+
+*** The relay agent
+
+A broadcast stops at the first router. A DHCP server on another subnet never sees it. The router runs a relay agent. The agent forwards the request as a unicast and fills in the giaddr field with the subnet address. The server then knows which pool to use.
+
+*** Lease time and renewal
+
+Every address comes with a lease in seconds. The client may renew at half of the lease by unicasting a request to the server that granted it. If that fails, the client broadcasts at 87.5 percent of the lease. When the lease expires, the address returns to the pool.
+
+*** The three allocation methods
+
+- Automatic: the server gives the same address to the same client forever.
+- Dynamic: the server lends an address for a fixed lease and reclaims it later.
+- Manual: an administrator binds a fixed address to a MAC address, and DHCP only delivers it.
+
+*** Trap
+DHCP gives an address. DNS maps a name to an address. They are different protocols on different ports. DHCP uses UDP 67 and 68, DNS uses UDP 53. A DHCP question never asks for name resolution.
+
+** ICMP
+SUMMARY: ICMP is the network-layer signalling protocol that reports errors and carries echo requests and replies.
+KUROSE: 5.6
+EXAM: not asked in the 6 papers. Learn the four types, because they explain ping and traceroute.
+PRIORITY: extra
+
+*** Purpose and format
+
+Routers and hosts use ICMP to report a problem with a datagram. ICMP messages travel inside IP datagrams with protocol number 1. An ICMP message carries a type, a code, a checksum, four bytes of type-specific data, and often the start of the offending datagram.
+
+#+begin_example
+ 0        8       16                              31
++--------+--------+-------------------------------+
+|  type  |  code  |          checksum             |
++--------+--------+-------------------------------+
+|        rest of header, four bytes               |
++-------------------------------------------------+
+|   original IP header plus first 8 bytes of data |
++-------------------------------------------------+
+#+end_example
+
+The original header and the first eight payload bytes let the sender match the error to the flow that caused it.
+
+*** The types that matter
+
+#+begin_example
+type  code  meaning
+0     0     echo reply
+3     0     destination network unreachable
+3     1     destination host unreachable
+3     3     destination port unreachable
+3     4     fragmentation needed, DF was set
+8     0     echo request
+11    0     time exceeded, TTL reached 0
+11    1     time exceeded, reassembly timer expired
+#+end_example
+
+*** How ping uses ICMP
+
+Ping sends an echo request of type 8. The target replies with type 0. Ping measures the round trip and the loss rate. It needs no port, because the kernel answers ICMP directly.
+
+*** How traceroute uses ICMP and TTL
+
+Traceroute sends probes with TTL set to 1, then 2, then 3. Each router that drops a probe returns type 11. The source reads the router address from that message and prints one line per hop. The classic version sends UDP to a high port. The destination answers with port unreachable, type 3 code 3.
+
+*** Why ICMP is not a transport protocol
+
+ICMP carries no application data and has no ports or connections. It helps IP report conditions, so it belongs to the network layer.
+
+*** Trap
+ICMP error messages are never sent about another ICMP error. That rule stops an infinite storm when a router is unreachable.
+
+*** Trap
+Ping can fail while TCP works, because firewalls often block ICMP. A failed ping is not proof that the host is down.
+
+** Fragmentation
+SUMMARY: A router splits a datagram that is larger than the next link MTU, and the receiver reassembles it from offsets.
+KUROSE: 4.3.1, fragmentation fields
+EXAM: not asked in the 6 papers. It is a standard numerical, so learn the procedure as insurance.
+PRIORITY: extra
+
+*** Why fragmentation exists
+
+Every link has a maximum transmission unit. Ethernet allows 1500 bytes. A datagram can be 65535 bytes. When the next link MTU is smaller than the datagram, the router must split it.
+
+IPv4 lets any router fragment. IPv6 lets only the source fragment, which is one reason IPv6 routers are faster.
+
+*** The three fields involved
+
+Identification carries the same 16-bit value in every fragment of one datagram. The receiver groups fragments by this value.
+
+Flags hold DF and MF. DF forbids fragmentation. MF says more fragments follow.
+
+Fragment offset gives the position of this fragment payload in the original payload. The field counts 8-byte units, so the real byte offset is the field value times 8.
+
+*** The two rules
+
+Rule 1: the offset counts 8-byte units, so every offset must be a multiple of 8 in bytes.
+
+Rule 2: the payload of every fragment except the last must be a multiple of 8 bytes. Otherwise the next offset cannot be expressed.
+
+The maximum payload per fragment is the MTU minus 20 bytes of header, rounded down to a multiple of 8.
+
+*** WORKED EXAMPLE (numbers changed on purpose): 3000 bytes across an 800-byte MTU
+
+Original datagram is 3000 bytes. Header is 20 bytes. MTU is 800 bytes.
+
+#+begin_example
+Step 1  payload            = 3000 - 20 = 2980 B
+Step 2  largest payload    = 800 - 20 = 780 B
+Step 3  round down to 8    = 776 B per full fragment
+Step 4  three full pieces  = 3 x 776 = 2328 B
+Step 5  remainder          = 2980 - 2328 = 652 B
+Step 6  frame lengths      = 796, 796, 796, 672 B
+Step 7  offsets in units   = 0, 97, 194, 291
+Step 8  check on the wire  = 796+796+796+672 = 3060 B
+Step 9  check by headers   = 2980 payload + 4 x 20 = 3060 B
+#+end_example
+
+Two checks confirm the answer. The frame lengths add to 3060 bytes. The payload plus four headers also gives 3060 bytes.
+
+| Fragment | Total length | Payload | Offset in units | Offset in bytes | MF |
+|----------+--------------+---------+-----------------+-----------------+----|
+| 1 | 796 B | 776 B | 0 | 0 | 1 |
+| 2 | 796 B | 776 B | 97 | 776 | 1 |
+| 3 | 796 B | 776 B | 194 | 1552 | 1 |
+| 4 | 672 B | 652 B | 291 | 2328 | 0 |
+
+Every fragment fits inside the 800-byte MTU. Only the last one carries MF equal to 0.
+
+*** Trap
+The offset field counts 8-byte units. A payload of 776 bytes gives offset 97, not 776. Writing 776 into the field overflows 13 bits and shifts every later fragment.
+
+*** Trap
+The payload of a middle fragment must be a multiple of 8 bytes. Choosing 780 bytes looks right because 780 plus 20 is 800. It is wrong because 780 is not a multiple of 8.
+
+** IPv4 versus IPv6
+SUMMARY: IPv6 keeps the datagram idea but uses 128-bit addresses and a fixed 40-byte header with no checksum.
+KUROSE: 4.3.4
+EXAM: CNE2 asks for a comparison of the two headers and a recommendation. CNE5 asks what happens on a path that crosses both networks.
+PRIORITY: core
+
+*** Side-by-side comparison
+
+#+begin_example
+Item            IPv4                      IPv6
+Address size    32 b                      128 b
+Header size     20 B base, 60 B maximum   40 B fixed
+Header fields   version, hlen, ToS, len,   version, class, label,
+                id, flags, offset, TTL,   payload len, next header,
+                protocol, checksum, src,  hop limit, src, dst
+                dst, options
+Checksum        header checksum           none
+Fragmentation   routers and source        source only
+Options         inside the base header    extension headers
+Address setup   manual or DHCP            SLAAC, DHCPv6
+NAT need        high                      low
+Security        IPsec optional            IPsec in the standard
+Broadcast       yes, 255.255.255.255      no, multicast only
+#+end_example
+
+*** The IPv6 header, field by field
+
+#+begin_example
+     0      4       12                          31
++-----------------------------------------------------------+
+|  ver  | traffic class |             flow label            |
+|  4 b  |      8 b      |                20 b               |
++-----------------------------------------------------------+
+|    payload length    |  next hdr |       hop limit        |
+|         16 b         |    8 b    |          8 b           |
++-----------------------------------------------------------+
+|                   source address (128 b)                  |
++-----------------------------------------------------------+
+|                destination address (128 b)                |
++-----------------------------------------------------------+
+#+end_example
+
+Version is 4 bits and holds 6. Traffic class is 8 bits and marks priority. Flow label is 20 bits and labels a flow. Payload length is 16 bits. Next header is 8 bits and names the upper protocol or the next extension header. Hop limit is 8 bits and replaces TTL.
+
+*** What is gone and why routers get faster
+
+The header checksum is gone. The link layer already checks most errors, and the transport layer checks the payload. Dropping it means a router never recomputes a checksum after it subtracts the hop limit.
+
+The fragmentation fields are gone from the base header. Only the source may fragment, and it uses an extension header. A router in the middle never splits a packet.
+
+The options are gone from the base header. They became extension headers that a router reads only when the next header field points to them. The base header is always 40 bytes, so lookup is a fixed offset.
+
+*** The three transition mechanisms
+
+Dual stack: a host or router runs both protocols. It picks the version from the destination, often after a DNS lookup.
+
+Tunnelling: an IPv6 datagram travels as the payload of an IPv4 datagram between two dual-stack routers. The IPv4 core never inspects the inner packet.
+
+Translation: a gateway rewrites headers between the two versions. NAT64 with DNS64 is the common form.
+
+*** Which one to recommend, and why
+
+Use dual stack wherever both endpoints can run both protocols. It keeps the path native and needs no payload rewriting. Use tunnelling only across an IPv4-only transit region, because it leaves the IPv4 core untouched. Use translation only at the edge where a legacy host must reach an IPv6-only server.
+
+*** Mixed IPv4 and IPv6 path (CNE5 question)
+
+Host A speaks IPv6. Host B speaks IPv6. An IPv4-only region sits between them. Router R1 at the tunnel entrance is dual stack. It puts the whole IPv6 datagram inside an IPv4 datagram with protocol number 41. The outer source is R1 and the outer destination is router R2 at the far end.
+
+The IPv4 routers forward the outer datagram as ordinary traffic. They never look inside. Router R2 removes the outer header and forwards the original IPv6 datagram toward B.
+
+The inner hop limit does not change inside the tunnel. The tunnel therefore looks like one hop to the IPv6 path. The outer header adds 20 bytes, so the usable MTU inside the tunnel drops by 20 bytes.
+
+*** Trap
+The tunnel endpoints rewrite the outer header only. The inner source and destination addresses stay as A and B. A diagram that shows the inner addresses changing is wrong.
+
+*** Trap
+A dual-stack host is not a tunnel. Dual stack sends one version or the other. Tunnelling sends one version inside the other.
+
+** IPv4 address conservation
+SUMMARY: Six techniques stretch the IPv4 space, and exam answers list them with one line each.
+KUROSE: 4.3.2, 4.3.3, 4.3.4
+EXAM: CNE5 question 8 asks directly for the methods that conserve IPv4 addresses.
+PRIORITY: core
+
+- CIDR: variable-length prefixes replace fixed classes, so a site takes only the block it needs.
+- NAT: many private hosts share one public address at the border router.
+- Private addressing: RFC 1918 blocks are reused inside every site and never routed on the internet.
+- VLSM: each subnet gets only the prefix its host count needs, which removes internal waste.
+- DHCP: addresses are leased and reclaimed, so idle hosts do not hold addresses.
+- IPv6: 128-bit addresses remove the shortage itself and make the other five temporary.
+
+Write the answer as a numbered list. Add one sentence of explanation after each item.
+
+** Drills
+SUMMARY: Six drills cover the numerical shapes that the paper can ask.
+KUROSE: 4.3.2
+EXAM: pattern practice for CNE4, CNE5, and CNE6.
+PRIORITY: core
+
+*** Drill 1: subnet from a prefix
+Find the network, broadcast, and usable range for 172.16.40.200/27.
+
+*** Drill 2: subnet from a prefix, third octet
+Find the network, broadcast, and usable range for 10.20.30.77/21.
+
+*** Drill 3: reverse subnetting from a host count
+A subnet must hold 500 hosts. Give the smallest prefix and the number of usable hosts.
+
+*** Drill 4: VLSM plan
+Plan 192.168.100.0/24 for blocks of 90, 40, 12, 5, and 2 devices. Give the table and the free ranges.
+
+*** Drill 5: fragmentation
+A 2500-byte datagram with a 20-byte header crosses a link with an MTU of 600 bytes. Give the fragment table.
+
+*** Drill 6: NAT table
+Hosts 192.168.1.8:5000 and 192.168.1.12:5000 both open a connection to 198.51.100.20:443. The border router is 203.0.113.9 and uses ports 7001 and 7002. Give the translation table and the two return tuples.
+
+** Drill answers
+SUMMARY: Worked answers to the six drills.
+KUROSE: 4.3.2
+EXAM: self check before the paper.
+PRIORITY: core
+
+*** Drill 1 answer
+#+begin_example
+block        = 2^(32-27) = 32 addresses
+mask         = 255.255.255.224, 4th octet, 256-224 = 32
+boundaries   = 0, 32, 64, ..., 192, 224
+200          = inside 192 to 223
+network      = 172.16.40.192/27
+broadcast    = 172.16.40.223
+usable       = 172.16.40.193 to 172.16.40.222
+hosts        = 30
+#+end_example
+
+*** Drill 2 answer
+#+begin_example
+block        = 2^(32-21) = 2048 addresses
+mask         = 255.255.248.0, 3rd octet, 256-248 = 8
+boundaries   = 0, 8, 16, 24, 32 in the 3rd octet
+30           = inside 24 to 31
+network      = 10.20.24.0/21
+broadcast    = 10.20.31.255
+usable       = 10.20.24.1 to 10.20.31.254
+hosts        = 2046
+#+end_example
+
+*** Drill 3 answer
+#+begin_example
+need         = 500 hosts
+try /23      = 2^9 - 2 = 510 hosts, which fits
+try /24      = 2^8 - 2 = 254 hosts, too small
+answer       = /23, mask 255.255.254.0, 510 usable hosts
+#+end_example
+
+*** Drill 4 answer
+#+begin_example
+Sorted       = 90, 40, 12, 5, 2
+90 hosts     = /25, block 128, .0 to .127
+40 hosts     = /26, block 64, .128 to .191
+12 hosts     = /28, block 16, .192 to .207
+5 hosts      = /29, block 8, .208 to .215
+2 hosts      = /30, block 4, .216 to .219
+free         = .220 to .255, that is 36 addresses
+#+end_example
+
+| Block | Network | Mask dotted | Prefix | Usable range | Broadcast |
+|-------+---------+-------------+--------+--------------+-----------|
+| A | 192.168.100.0 | 255.255.255.128 | /25 | .1 to .126 | .127 |
+| B | 192.168.100.128 | 255.255.255.192 | /26 | .129 to .190 | .191 |
+| C | 192.168.100.192 | 255.255.255.240 | /28 | .193 to .206 | .207 |
+| D | 192.168.100.208 | 255.255.255.248 | /29 | .209 to .214 | .215 |
+| E | 192.168.100.216 | 255.255.255.252 | /30 | .217 to .218 | .219 |
+
+*** Drill 5 answer
+#+begin_example
+payload      = 2500 - 20 = 2480 B
+max payload  = 600 - 20 = 580 B
+round to 8   = 576 B
+four full    = 4 x 576 = 2304 B
+remainder    = 2480 - 2304 = 176 B
+lengths      = 596, 596, 596, 596, 196 B
+offsets      = 0, 72, 144, 216, 288
+check        = 4 x 596 + 196 = 2580 B = 2500 + 4 x 20
+#+end_example
+
+| Fragment | Total length | Payload | Offset in units | Offset in bytes | MF |
+|----------+--------------+---------+-----------------+-----------------+----|
+| 1 | 596 B | 576 B | 0 | 0 | 1 |
+| 2 | 596 B | 576 B | 72 | 576 | 1 |
+| 3 | 596 B | 576 B | 144 | 1152 | 1 |
+| 4 | 596 B | 576 B | 216 | 1728 | 1 |
+| 5 | 196 B | 176 B | 288 | 2304 | 0 |
+
+*** Drill 6 answer
+#+begin_example
+NAT table
+LAN side            WAN side
+192.168.1.8:5000    203.0.113.9:7001
+192.168.1.12:5000   203.0.113.9:7002
+
+Outbound, host 1
+  192.168.1.8:5000  ->  203.0.113.9:7001     to 198.51.100.20:443
+Outbound, host 2
+  192.168.1.12:5000 ->  203.0.113.9:7002     to 198.51.100.20:443
+
+Return for host 1
+  198.51.100.20:443 -> 203.0.113.9:7001
+  rewritten to 198.51.100.20:443 -> 192.168.1.8:5000
+Return for host 2
+  198.51.100.20:443 -> 203.0.113.9:7002
+  rewritten to 198.51.100.20:443 -> 192.168.1.12:5000
+#+end_example

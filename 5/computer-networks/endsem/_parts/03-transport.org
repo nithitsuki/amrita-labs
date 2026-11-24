@@ -1,0 +1,1379 @@
+** UDP: header and checksum
+SUMMARY: UDP adds only ports and a weak error check to the datagram, so applications avoid paying for reliability.
+KUROSE: 3.3
+EXAM: CNE2 asks for the UDP header format for 4 marks. CNE4 gives three lines of binary and asks whether the datagram has an error. Nothing else in the six papers touches UDP directly.
+PRIORITY: core
+
+*** The four header fields
+
+A /UDP segment/ is 8 bytes of header followed by the application data. The header
+has four fields and nothing else.
+
+#+begin_example
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-------------------------------+-------------------------------+
+|        source port 16         |        dest port 16           |
++-------------------------------+-------------------------------+
+|          length 16            |        checksum 16            |
++-------------------------------+-------------------------------+
+|                   application data ...                        |
++---------------------------------------------------------------+
+  8 bytes of header = 16 + 16 + 16 + 16 = 64 bits
+#+end_example
+
+- =source port= is 16 bits. It is the sending process port. The reply comes
+  back to this port. UDP needs it so that the receiver can answer.
+- =dest port= is 16 bits. The receiving host uses it to pick the socket. This
+  field is the whole of UDP demultiplexing.
+- =length= is 16 bits. It counts the header plus the data, in bytes. The
+  minimum legal value is 8. It never counts the IP header.
+- =checksum= is 16 bits. It holds the one's-complement sum of the segment and a
+  pseudo-header. It is the only error detection UDP has.
+
+The two port fields give 2^16 = 65536 possible ports per host, from =0= to
+=65535=.
+
+*** Why the header is so small
+
+UDP is an /unreliable/ datagram service. It gives no acknowledgement, no
+retransmission, no ordering and no flow control. Every job that UDP refuses to
+do is a field that UDP does not need.
+
+- No sequence number, because UDP does not reorder or retransmit.
+- No acknowledgement number, because nothing gets acknowledged.
+- No window, because UDP never blocks the sender.
+- No flags, because there is no connection to manage.
+- No data offset, because the header is always 8 bytes.
+
+The result is 8 bytes against 20 bytes for TCP. Take a voice payload of 160
+bytes and compare the header share.
+
+#+begin_example
+with UDP
+  packet  = 160 bytes + 8 bytes  = 168 bytes
+  header  = 8 bytes / 168 bytes  = 4.8 percent
+
+with TCP
+  packet  = 160 bytes + 20 bytes = 180 bytes
+  header  = 20 bytes / 180 bytes = 11.1 percent
+#+end_example
+
+For a short message the header is a large fraction of the cost. A DNS query is
+often under 50 bytes. A handshake before that query would cost more bytes than
+the query itself.
+
+*** The pseudo-header
+
+The UDP checksum covers more than the UDP segment. It also covers a
+/pseudo-header/ built from fields of the IP header.
+
+#+begin_example
++---------------------------------------------------------------+
+|                  source IP address   (32)                     |
++---------------------------------------------------------------+
+|               destination IP address  (32)                    |
++---------------+---------------+-------------------------------+
+|   zero  (8)   | protocol (8)  |       UDP length  (16)        |
++---------------+---------------+-------------------------------+
+  total = 32 + 32 + 8 + 8 + 16 = 96 bits = 12 bytes
+  protocol field value for UDP = 17
+#+end_example
+
+The pseudo-header is not transmitted. It is rebuilt from the IP header at both
+ends and used only for the sum.
+
+It exists to catch a specific failure. The IP header holds the source and
+destination addresses. A router can corrupt an address bit. The UDP header
+would look perfect and the segment would be handed to the wrong process. The
+pseudo-header puts the addresses inside the sum, so that corruption fails the
+check.
+
+The =zero= field is 8 bits of zero. It pads the block to a 16-bit boundary. The
+=protocol= field repeats the IP protocol number, so a UDP sum cannot be confused
+with a TCP sum. The length field appears twice, once in the real header and once
+in the pseudo-header, so a wrong length also fails the check.
+
+*** The sender side: building the checksum
+
+The method is the /Internet checksum/. It is a one's-complement sum of 16-bit
+words.
+
+#+begin_example
+step 1  Take the pseudo-header, the UDP header, and the data.
+step 2  Pad the data with a zero byte if the length is odd.
+        Now the whole block is an even number of bytes.
+        That makes a whole number of 16-bit words.
+step 3  Set the checksum field to zero for now.
+step 4  Add all 16-bit words using one's-complement arithmetic.
+        If a sum produces a carry out of bit 15,
+        add that carry back into bit 0. This is the end-around carry.
+step 5  Take the one's complement of the final sum.
+        That means flip every bit.
+step 6  Write that value into the checksum field and transmit.
+#+end_example
+
+One's-complement addition has a property that makes verification easy. The sum
+of a number and its complement is all ones. So the sum of every word, including
+the checksum, must be =0xFFFF=.
+
+*** The receiver side: verifying the checksum
+
+You never recompute the checksum and compare it. You add everything, checksum
+included, and look at the result.
+
+#+begin_example
+step 1  Take the received pseudo-header, UDP header, and data.
+step 2  Pad to an even number of bytes.
+step 3  Add every 16-bit word, including the checksum field,
+        with end-around carry.
+step 4  Look at the final 16-bit sum.
+        result = 0xFFFF  -> no error detected, accept the segment
+        result != 0xFFFF -> error detected, discard the segment
+#+end_example
+
+Step 3 is the whole trick. If the data is intact, the words sum to some value S
+and the checksum is ~S. Then S + ~S = 0xFFFF. Any single flipped bit shifts the
+total away from =0xFFFF=.
+
+A non-=0xFFFF= result means at least one bit changed in flight, or the sender
+built the checksum wrongly. The receiver throws the datagram away. UDP has no
+retransmission, so the loss is silent. The application must notice for itself.
+
+The reverse is not true. A result of =0xFFFF= means no error was detected. It
+does not prove the data is correct. Two compensating bit errors can cancel.
+
+*** WORKED EXAMPLE (numbers changed on purpose)
+
+Four data words and one checksum word. The sender computed =0xE12D=. Verify it.
+
+#+begin_example
+The five 16-bit words, in binary and in hex:
+
+W1  1011 0100 1100 0011   0xB4C3
+W2  1001 1110 0010 1000   0x9E28
+W3  0111 0001 1101 0110   0x71D6
+W4  0101 1010 0000 1111   0x5A0F
+CK  1110 0001 0010 1101   0xE12D
+#+end_example
+
+Add them one at a time. Every line is a 16-bit word.
+
+#+begin_example
+W1 + W2
+  1011 0100 1100 0011
++ 1001 1110 0010 1000
+---------------------
+1 0101 0010 1110 1011     carry out of bit 15
+  0101 0010 1110 1011     0x52EB  low 16 bits
++                   1     end-around carry
+---------------------
+  0101 0010 1110 1100     0x52EC
+
+running sum + W3
+  0101 0010 1110 1100     0x52EC
++ 0111 0001 1101 0110     0x71D6
+---------------------
+  1100 0100 1100 0010     0xC4C2   no carry out
+
+running sum + W4
+  1100 0100 1100 0010     0xC4C2
++ 0101 1010 0000 1111     0x5A0F
+---------------------
+1 0001 1110 1101 0001     carry out of bit 15
+  0001 1110 1101 0001     0x1ED1  low 16 bits
++                   1     end-around carry
+---------------------
+  0001 1110 1101 0010     0x1ED2
+
+running sum + checksum
+  0001 1110 1101 0010     0x1ED2
++ 1110 0001 0010 1101     0xE12D
+---------------------
+  1111 1111 1111 1111     0xFFFF   no carry out
+#+end_example
+
+Result is =0xFFFF=. The segment is accepted. Two end-around carries were needed.
+
+Now prove the check has teeth. Flip bit 4 of W3. =0x71D6= becomes =0x71C6=.
+The word drops by =0x10=.
+
+#+begin_example
+one's-complement sum without the flip   0x1ED2
+drop caused by the flip               - 0x0010
+---------------------------------------------
+new sum                                 0x1EC2
+new sum + checksum
+  0x1EC2 + 0xE12D = 0xFFEF
+0xFFEF != 0xFFFF  -> error detected, segment discarded
+#+end_example
+
+The difference from =0xFFFF= is exactly =0x10=. That is the weight of the bit
+that moved. The checksum does not repair. It only reports.
+
+*** Trap: checksum field versus length field
+
+Students swap the two middle fields of the UDP header and count 8 bytes wrong.
+The fix is to remember the order: port, port, length, checksum. The length is
+the left-hand field of the second row and the checksum is the right-hand one.
+
+A second version of the same mistake: the length counts the header too. A
+segment with 4 bytes of data has =length = 12=, not =4=.
+
+*** Trap: the dropped end-around carry
+
+The usual error is to keep the carry out of bit 15 as a 17th bit, or to throw it
+away, instead of adding it back at bit 0. The fix is to say the carry aloud and
+add it into the units column before moving on to the next word.
+
+Do it on every addition, including the checksum addition. If a step writes a
+carry out of bit 15, add 1 into bit 0 of that same 16-bit result. If the folded
+sum still produces a carry, fold it again.
+
+*** Where the checksum is optional
+
+In IPv4 the UDP checksum is optional. A sender may put all zeros in the field,
+and that means "no checksum computed". The receiver then skips the check.
+
+A computed checksum of zero is a problem, because zero already means "no
+checksum". The sender must therefore transmit =0xFFFF= instead of =0x0000=.
+Both represent a one's-complement zero.
+
+In IPv6 the checksum is mandatory. IPv6 has no header checksum of its own, so
+the transport checksum is the only check on the addresses. A zero UDP checksum
+is illegal over IPv6.
+
+** TCP: header and fields
+SUMMARY: TCP carries sequence numbers, acknowledgements, flags and a window in a 20-byte header, giving applications a reliable byte stream.
+KUROSE: 3.5.1, 3.5.2
+EXAM: CNE1 asks for a comparison of the transport protocols with their header format for 10 marks. CNE2 asks what the acknowledgement field is for, for 3 marks. CNE5 tests flag field values inside a 10-mark comparison question.
+PRIORITY: core
+
+*** The full header layout
+
+The fixed part of a TCP header is 20 bytes. The options add up to 40 more.
+
+#+begin_example
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-------------------------------+-------------------------------+
+|        source port 16         |        dest port 16           |
++-------------------------------+-------------------------------+
+|                  sequence number 32                           |
++-------------------------------+-------------------------------+
+|               acknowledgement number 32                       |
++--------+------+--+----------------+---------------------------+
+|data off| rsv  |NS|    flags 8     |       window 16           |
+|   4    |  3   | 1|                |                           |
++--------+------+--+----------------+---------------------------+
+|         checksum 16           |     urgent pointer 16         |
++-------------------------------+-------------------------------+
+|            options (variable, 0 to 40 bytes)                  |
++-------------------------------+-------------------------------+
+|                  application data ...                         |
++---------------------------------------------------------------+
+#+end_example
+
+Count the control row of the header. 4 + 3 + 1 + 8 = 16 bits. Add the 16-bit
+window field and that row is 32 bits.
+
+The whole fixed header is five rows of 32 bits. 5 x 32 = 160 bits = 20 bytes.
+That is the minimum. Options push it up to 60 bytes.
+
+The header length must be a multiple of 4 bytes, so the options are padded with
+zeros to reach a 4-byte boundary.
+
+*** Field by field, and what each one is for
+
+- =source port=, 16 bits. Identifies the sending process. Needed for the reply
+  and for the 4-tuple.
+- =dest port=, 16 bits. Identifies the receiving process on the destination
+  host.
+- =sequence number=, 32 bits. Holds the byte number of the first data byte in
+  this segment. It lets the receiver rebuild the byte stream in order.
+- =acknowledgement number=, 32 bits. Holds the next byte the sender expects from
+  the other side. It is the cumulative acknowledgement.
+- =data offset=, 4 bits. Holds the header length in 32-bit words. The value 5
+  means 20 bytes. It tells the receiver where the data starts.
+- =reserved=, 3 bits. Must be zero. Held for future use.
+- =NS=, 1 bit. The nonce-sum bit for ECN concealment. Almost always zero.
+- =flags=, 8 bits. Carries the control bits that open, close and describe the
+  connection.
+- =window=, 16 bits. Holds the receive window =rwnd=. It is the free space in
+  the receiver buffer, in bytes.
+- =checksum=, 16 bits. Covers the header, the data and a pseudo-header. It
+  detects corruption.
+- =urgent pointer=, 16 bits. Points to the last byte of urgent data. Only
+  meaningful when the URG flag is set.
+- =options=, 0 to 40 bytes. Carries MSS, window scale, SACK and timestamps.
+- =padding=, 0 to 3 bytes. Fills the options out to a 4-byte boundary.
+
+Two fields are 32 bits and the rest of the fixed header is 16 bits or less.
+That asymmetry is the point. Byte numbering needs a wide field. Port numbering
+does not.
+
+*** The nine flag bits
+
+#+begin_example
+ bit    8   7   6   5   4   3   2   1    (NS sits beside these)
+      +---+---+---+---+---+---+---+---+
+      |CWR|ECE|URG|ACK|PSH|RST|SYN|FIN|
+      +---+---+---+---+---+---+---+---+
+#+end_example
+
+- =CWR=, congestion window reduced. The sender tells the receiver it acted on an
+  ECN echo.
+- =ECE=, ECN echo. The receiver reports that a router marked a packet as
+  congested.
+- =URG=, urgent. The urgent pointer is valid and urgent data is present.
+- =ACK=, acknowledgement. The acknowledgement number field is valid. It is set
+  on every segment after the first SYN.
+- =PSH=, push. Deliver the data to the application at once, without waiting for
+  the buffer to fill.
+- =RST=, reset. Abort the connection immediately. Used to refuse a connection or
+  to recover from a crash.
+- =SYN=, synchronise. Requests a connection and carries the initial sequence
+  number.
+- =FIN=, finish. The sender has no more data. This closes one direction.
+
+Only four of the nine matter for the exam: SYN, ACK, FIN, RST. The rest are
+hints or congestion signals.
+
+A segment with SYN set and ACK clear is a connection request. A segment with SYN
+and ACK both set is a connection accept. A segment with neither SYN nor FIN set
+carries ordinary data.
+
+*** Options
+
+The option field is variable and its size is reported by the data offset. Real
+headers use four options.
+
+- /MSS/, maximum segment size. Sent in the SYN. It states the largest payload
+  the sender will accept, so the peer does not build segments that must be
+  fragmented. Its value is the link MTU minus 40 bytes of IP and TCP headers.
+- /Window scaling/. The window field is only 16 bits, so 65535 bytes is the
+  largest it can advertise. The scale option multiplies that value by 2^k. A
+  scale of 7 allows windows up to 8 MB.
+- /SACK/, selective acknowledgement. The receiver lists the byte ranges it
+  holds out of order. The sender then retransmits only the gap, not everything
+  after it.
+- /Timestamps/. Each segment carries a send time and an echo of the peer time.
+  It gives a better round-trip sample and protects against old duplicate
+  segments from a previous connection.
+
+The MSS option appears only in the SYN. Window scaling is agreed once, at
+connection setup. SACK and timestamps need both sides to agree.
+
+*** The checksum and its pseudo-header
+
+The TCP checksum uses the same one's-complement method as UDP. The block it
+covers is larger.
+
+#+begin_example
++---------------------------------------------------------------+
+|                  source IP address   (32)                     |
++---------------------------------------------------------------+
+|               destination IP address  (32)                    |
++---------------+---------------+-------------------------------+
+|   zero  (8)   | protocol (8)  |       TCP length  (16)        |
++---------------+---------------+-------------------------------+
+  total = 32 + 32 + 8 + 8 + 16 = 96 bits = 12 bytes
+  protocol field value for TCP = 6
+  TCP length = TCP header + data, in bytes
+#+end_example
+
+The pseudo-header is the same shape as the UDP one. Only the protocol number and
+the meaning of the length differ. The whole TCP segment is then added, with the
+checksum field set to zero.
+
+Unlike UDP over IPv4, the TCP checksum is always mandatory. There is no "zero
+means skip" shortcut.
+
+The verification is identical to UDP. Add every word including the checksum.
+A result of =0xFFFF= means no error detected.
+
+*** TCP against UDP, field by field
+
+| Field            | TCP bits | UDP bits | What TCP gains      |
+|------------------+----------+----------+---------------------|
+| source port      | 16       | 16       | nothing, same job   |
+| dest port        | 16       | 16       | nothing, same job   |
+| sequence number  | 32       | none     | byte ordering       |
+| ack number       | 32       | none     | cumulative ack      |
+| data offset      | 4        | none     | variable header     |
+| reserved and NS  | 4        | none     | future use          |
+| flags            | 8        | none     | connection control  |
+| window           | 16       | none     | flow control        |
+| length           | none     | 16       | UDP needs its own   |
+| checksum         | 16       | 16       | same method         |
+| urgent pointer   | 16       | none     | priority data       |
+| options          | 0 to 40  | none     | MSS and SACK        |
+| fixed total      | 20 bytes | 8 bytes  | 12 bytes of control |
+
+Notice that TCP has no length field. TCP learns its payload length from the IP
+total length field, minus the IP header and the TCP header. UDP carries its own
+length because UDP is the last thing that knows the boundary.
+
+** TCP: sequence and acknowledgement numbers
+SUMMARY: TCP numbers bytes rather than segments, so a sequence number and a cumulative ACK track exactly which bytes arrived.
+KUROSE: 3.5.2
+EXAM: CNE3 gives sequence 90 and 110 and asks for the first segment size and the ACK after a loss, for 3 marks. CNE5 gives seq X and ack Y with a 500-byte packet and asks for the reverse direction, for 5 marks. These two questions repeat in some form every year.
+PRIORITY: core
+
+*** TCP counts bytes, not segments
+
+This single idea unlocks every TCP calculation.
+
+A /sequence number/ is the byte number of the first data byte inside the
+segment. It is not a segment counter. If segment 7 starts at byte 4000, its
+sequence number is 4000.
+
+The sender views its data as one long stream of bytes. It cuts the stream into
+segments wherever it likes. The numbers stay attached to the bytes, so the cuts
+can move without breaking anything.
+
+Suppose a host sends 1000 bytes at a time, starting at byte 500.
+
+#+begin_example
+segment  1  seq =  500   holds bytes  500 .. 1499   1000 bytes
+segment  2  seq = 1500   holds bytes 1500 .. 2499   1000 bytes
+segment  3  seq = 2500   holds bytes 2500 .. 3499   1000 bytes
+#+end_example
+
+The pattern is simple. The next sequence number is the current one plus the
+payload size.
+
+#+begin_example
+next seq = seq + payload length
+         =  500 + 1000
+         = 1500
+#+end_example
+
+A 32-bit sequence number wraps around after 2^32 bytes, which is 4 GB. Wrap
+around is handled by modular arithmetic and is not a practical exam issue.
+
+*** The initial sequence number
+
+The /initial sequence number/ (ISN) is chosen at random when the connection
+opens. It is not zero.
+
+Random choice protects the connection. An old segment from a previous
+connection with the same 4-tuple could otherwise be accepted as valid new data.
+A random start makes that collision unlikely.
+
+Both sides pick their own ISN. Host A picks =x= and Host B picks =y=. The two
+number spaces are independent.
+
+The ISN is carried in the SYN flag segment. It is not data.
+
+*** The acknowledgement number
+
+The /acknowledgement number/ is the sequence number of the next byte the
+receiver expects.
+
+If a host has correctly received every byte up to and including byte 1499, the
+next byte it wants is 1500. So it sends =ack = 1500=.
+
+The acknowledgement is /cumulative/. One number acknowledges every byte before
+it. A single =ack = 1500= confirms bytes 500 through 1499 all arrived. There is
+no need to acknowledge them one at a time.
+
+The =ACK= flag must be set. If =ACK= is 0 the acknowledgement field is ignored,
+whatever number sits in it. The first SYN of a connection has =ACK= clear for
+this reason.
+
+A /duplicate ACK/ is an acknowledgement number the sender has already seen. The
+receiver repeats it when a gap appears. Repeated duplicate ACKs are the signal
+for fast retransmit.
+
+*** The reverse-direction rule
+
+This is the rule the exam wants. Learn it as one sentence.
+
+If A sends a segment with =seq = X=, =ack = Y= and N bytes of payload, then the
+segment from B to A carries =seq = Y= and =ack = X + N=.
+
+Why it works: A said "my first byte here is X, and I have received everything
+before Y". B answers "my first byte here is Y, and I have now received
+everything before X plus the N bytes you just sent".
+
+The rule runs in both directions indefinitely. Each side's ACK number tracks the
+other side's stream.
+
+*** WORKED EXAMPLE (numbers changed on purpose)
+
+Host A opens a connection with ISN = 1200. Host B opens with ISN = 8000.
+Packet sizes are 400 bytes, 200 bytes and 150 bytes.
+
+#+begin_example
++----------------+                    +----------------+
+|     Host A     |                    |     Host B     |
+|   ISN = 1200   |                    |   ISN = 8000   |
+|  next byte =   |                    |  next byte =   |
+|     1201       |                    |     8001       |
++--------+-------+                    +--------+-------+
+         |                                     |
+         |  SYN        seq=1200   (0 bytes)    |
+         |------------------------------------>|
+         |                                     |
+         |  SYN+ACK    seq=8000   ack=1201     |
+         |<------------------------------------|
+         |                                     |
+         |  ACK        seq=1201   ack=8001     |
+         |------------------------------------>|
+         |                                     |
+         |  DATA 400B  seq=1201   ack=8001     |
+         |------------------------------------>|
+         |                                     |
+         |  DATA 200B  seq=8001   ack=1601     |
+         |<------------------------------------|
+         |                                     |
+         |  DATA 150B  seq=1601   ack=8201     |
+         |------------------------------------>|
+         |                                     |
+         |  ACK        seq=8201   ack=1751     |
+         |<------------------------------------|
++--------+-------+                    +--------+-------+
+#+end_example
+
+Check every number with the rule.
+
+#+begin_example
+A sends 400 bytes from seq 1201
+  last byte = 1201 + 400 - 1 = 1600
+  next byte = 1601
+  so B must ack 1601                      correct
+
+B sends 200 bytes from seq 8001
+  last byte = 8001 + 200 - 1 = 8200
+  next byte = 8201
+  so A must ack 8201                      correct
+
+A sends 150 bytes from seq 1601
+  last byte = 1601 + 150 - 1 = 1750
+  next byte = 1751
+  so B must ack 1751                      correct
+#+end_example
+
+The pattern to memorise: the ACK number in one direction equals the next
+sequence number in the other direction.
+
+#+begin_example
+A->B seg 400B  seq 1201  ack 8001
+B->A seg 200B  seq 8001  ack 1601
+A->B seg 150B  seq 1601  ack 8201
+B->A ACK       seq 8201  ack 1751
+#+end_example
+
+Read each line as "my next byte, your next byte".
+
+*** The "first segment, second segment" question
+
+The question gives two sequence numbers and asks for the size of the first
+segment, then for the ACK after a loss. There is a fixed method.
+
+Method, when the first segment has sequence A and the second has sequence B:
+
+#+begin_example
+step 1  size of first segment = B - A
+step 2  ACK sent by the receiver after only the second arrives = A
+step 3  reason: the receiver still waits for byte A
+#+end_example
+
+Step 2 surprises people. The second segment arrives, but it is out of order. The
+receiver cannot deliver it because a hole sits in front of it. It sends a
+duplicate ACK for the hole, which is A.
+
+Now run the method with fresh numbers. First sequence = 5000. Second sequence =
+5600.
+
+#+begin_example
+step 1  size of first segment
+        = 5600 - 5000
+        = 600 bytes
+
+step 2  first segment is lost, second arrives intact
+        receiver expected byte 5000
+        receiver still expects byte 5000
+        ACK number sent = 5000
+
+step 3  what happens next
+        sender receives 3 duplicate ACKs for 5000
+        sender fast-retransmits from byte 5000
+#+end_example
+
+The 600-byte answer also tells you the second segment starts at byte 5600. It
+holds bytes 5600 onward. Nothing is known about the size of the second segment
+from these two numbers alone.
+
+A variant of the question gives the size instead. If the first segment is 600
+bytes and starts at 5000, the second starts at 5600. That is the same
+subtraction read backwards.
+
+*** Trap: SYN and FIN each eat a number
+
+The SYN flag and the FIN flag each consume one sequence number, even though
+neither carries data. Students forget this and are off by one for the whole
+question.
+
+So if the SYN has =seq = x=, the first data byte is =x + 1=, not =x=. The fix is
+to count the SYN as a one-byte phantom payload before you start.
+
+The same applies to FIN. A FIN with =seq = u= is followed by data starting at
+=u + 1=. Both handshake and close therefore shift every number by one.
+
+A pure ACK consumes no sequence number. It carries =seq= equal to the next byte
+the sender will use, and sends no data.
+
+** TCP: connection management
+SUMMARY: TCP opens with a three-way handshake and closes with a four-way exchange, so both hosts agree on sequence numbers first.
+KUROSE: 3.5.6
+EXAM: No paper draws the handshake. CNE5 asks about flag field values inside a 10-mark connection-oriented question. The SYN, ACK and FIN flags are the examinable part.
+PRIORITY: core
+
+*** Why a handshake at all
+
+Two hosts must agree on four things before data flows.
+
+- Both sides are alive and willing to talk.
+- Both initial sequence numbers are known.
+- Both maximum segment sizes are known.
+- Both receive buffers are known.
+
+A two-way handshake cannot do this safely. With variable delay and
+retransmission, a delayed duplicate request can arrive after the connection
+closed. The server then opens a half-open connection with no client. A third
+message removes that ambiguity.
+
+*** The three-way handshake
+
+#+begin_example
+           Host A (client)                   Host B (server)
+          CLOSED |                                   |
+                 |                                   | LISTEN
+                 |------- SYN  seq=x --------------->|
+        SYN_SENT |                                   | SYN_RCVD
+                 |<--- SYN+ACK  seq=y ack=x+1 -------|
+                 |                                   |
+           ESTAB |------- ACK  ack=y+1 ------------->|
+                 |                                   | ESTAB
+                 |<======== data flows =============>|
+#+end_example
+
+Step 1, the SYN. A picks ISN = x and sends SYN with =seq = x=. This says "I want
+to open, and my bytes start at x". It also carries the MSS option. After this
+step A is in SYN_SENT.
+
+Step 2, the SYN-ACK. B picks ISN = y. It replies with SYN and ACK both set,
+=seq = y= and =ack = x + 1=. The =+1= acknowledges the SYN, which used one
+sequence number. This says "I accept, my bytes start at y, and I have your SYN".
+After this step B is in SYN_RCVD.
+
+Step 3, the ACK. A sends =seq = x + 1= and =ack = y + 1=. This says "I have your
+SYN too". Both sides are now ESTABLISHED.
+
+The third segment may carry data. That saves a round trip on short transfers.
+
+What each step establishes:
+
+| Step | Message  | What it proves           |
+|------+----------+--------------------------|
+| 1    | SYN      | client is alive, ISN x   |
+| 2    | SYN+ACK  | server is alive, ISN y   |
+| 3    | ACK      | client heard the server  |
+
+Step 3 is not redundant. Without it the server cannot tell whether its SYN-ACK
+arrived. It would have to keep half-open state forever.
+
+*** The four-way close
+
+Either side may close first. TCP is full duplex, so each direction closes on its
+own.
+
+#+begin_example
+           Host A (client)                   Host B (server)
+           ESTAB |                                   |
+                 |------- FIN  seq=u --------------->| CLOSE_WAIT
+                 |<------ ACK  ack=u+1 --------------|
+      FIN_WAIT_2 |                                   | app sending
+                 |<------ FIN  seq=w ----------------|
+                 |                                   | LAST_ACK
+                 |------- ACK  ack=w+1 ------------->|
+       TIME_WAIT |                                   | CLOSED
+                 |   wait 2 x MSL                    |
+                 |------- gone --------------------->|
+#+end_example
+
+Step 1, A sends FIN with =seq = u=. This means "I have no more data". A moves to
+FIN_WAIT_1.
+
+Step 2, B sends ACK with =ack = u + 1=. The =+1= acknowledges the FIN, which used
+one sequence number. B moves to CLOSE_WAIT. A moves to FIN_WAIT_2.
+
+Step 3, B sends its own FIN with =seq = w= when its application is done. B moves
+to LAST_ACK.
+
+Step 4, A sends ACK with =ack = w + 1=. B moves to CLOSED. A moves to TIME_WAIT.
+
+This is a /half-close/. After step 2, A can no longer send but B can still send.
+The connection is open in one direction only. That is why four segments are
+needed rather than two.
+
+The ACK in step 2 can be combined with the FIN in step 3. Then only three
+segments appear. Both forms are correct.
+
+*** TIME_WAIT and why it lasts 2 x MSL
+
+/MSL/ is the maximum segment lifetime, the longest a segment can survive in the
+network. Typical value is 2 minutes.
+
+After sending the final ACK, the closing host waits 2 x MSL before it releases
+the connection. With MSL = 2 minutes the wait is 4 minutes.
+
+Two reasons.
+
+First, the final ACK might be lost. If B retransmits its FIN, A must still be
+there to answer. Waiting covers one full round trip of a lost ACK plus the
+retransmitted FIN.
+
+Second, old duplicates must die. If the same 4-tuple is reused immediately, a
+stale segment from the previous connection could be accepted as new data. Two
+MSL guarantees every old segment has expired.
+
+#+begin_example
+TIME_WAIT duration
+  = 2 x MSL
+  = 2 x 120 seconds
+  = 240 seconds
+  = 4 minutes
+#+end_example
+
+TIME_WAIT applies to the side that closes first. The other side goes straight to
+CLOSED.
+
+*** Simultaneous open
+
+Both hosts send SYN at the same moment, each without knowing about the other.
+Each receives a SYN while in SYN_SENT and answers with SYN and ACK together.
+Both then reach ESTABLISHED after one exchange, and one connection exists.
+
+Simultaneous close works the same way. Both send FIN, both ACK, and both pass
+through TIME_WAIT.
+
+*** SYN flooding and SYN cookies
+
+A /SYN flood/ is a denial of service attack. The attacker sends many SYNs and
+never completes the third step. The server allocates state for each one and
+exhausts its backlog, so real clients cannot connect.
+
+/SYN cookies/ remove the state. The server encodes the connection details into
+the sequence number it sends back. It keeps nothing locally. When the final ACK
+returns, the server rebuilds the state from the ACK number.
+
+The cost is that the cookie sequence number is not random, and options cannot be
+stored in it.
+
+*** Trap: three segments does not mean three round trips
+
+The handshake uses three segments but costs one round trip. Students often write
+"3 RTT to connect" and lose the mark.
+
+The fix is to count time, not packets. The SYN takes half a round trip, the
+SYN-ACK takes the other half, and the final ACK rides along with the first data
+or arrives at the start of the second round trip.
+
+So connection setup is 1 RTT. A request and its reply then take 2 RTT in total
+from a cold start. For non-persistent HTTP with one small object the answer is
+2 RTT plus transmission time.
+
+** TCP: flow control
+SUMMARY: Flow control stops a fast sender from drowning a slow receiver, using the rwnd field to advertise free buffer space.
+KUROSE: 3.5.5
+EXAM: Not asked standalone in the six papers, but CO3 names buffer management, so it appears inside comparison questions.
+PRIORITY: core
+
+*** The receive buffer and rwnd
+
+Every TCP socket owns a /receive buffer/. Incoming data lands there before the
+application reads it.
+
+The buffer has a fixed size called =RcvBuffer=. A typical default is 4096 bytes,
+and modern systems auto-tune it.
+
+Two events compete. The network delivers data into the buffer. The application
+removes data out of it. If delivery is faster, the buffer fills and data is
+lost.
+
+#+begin_example
+ RcvBuffer = 5000 bytes, 1 character = 100 bytes
+
+ +--------------------------------------------------+
+ |############|                                     |
+ |            |            free = 3800 B            |
+ |   in use   |                                     |
+ +------------+-------------------------------------+
+ 0          1200                                 5000
+
+ advertised:  rwnd = 3800
+#+end_example
+
+The receiver computes free space after every segment and puts it in the
+=window= field. That value is /rwnd/.
+
+#+begin_example
+rwnd = RcvBuffer - (bytes already buffered)
+     = 5000 bytes - 1200 bytes
+     = 3800 bytes
+#+end_example
+
+The sender obeys a hard limit. The bytes it has sent but not yet had
+acknowledged must never exceed the last advertised rwnd.
+
+#+begin_example
+LastByteSent - LastByteAcked <= rwnd
+#+end_example
+
+If 3800 bytes are advertised and 3800 bytes are already in flight, the sender
+must stop. It may resume only when an ACK raises rwnd or lowers the in-flight
+count.
+
+This guarantees the receive buffer never overflows. That is the entire job of
+flow control.
+
+*** The zero window
+
+If the application stops reading, the buffer fills. Then =rwnd = 0=, and the
+sender must stop completely.
+
+This is a /deadlock/ risk. The sender is waiting for a window update. The
+receiver sends an update only when it has something to say. A window update is
+a pure ACK with no data. Pure ACKs are not retransmitted by TCP.
+
+So the update can be lost. The sender waits forever and so does the receiver.
+
+The fix is the /zero-window probe/. When the sender sees =rwnd = 0=, it starts a
+timer. On expiry it sends one byte of data, or a segment one byte beyond the
+window. The receiver answers with its current window. Even a zero answer proves
+the path is alive and resets the timer.
+
+Probes continue at increasing intervals until the window opens.
+
+*** Flow control against congestion control
+
+Flow control protects one receiver from one sender. The receiver states its free
+buffer space, and the sender respects that number.
+
+Congestion control protects the network from all senders. The sender infers
+trouble from loss and delay, and reduces its rate with no help from the
+receiver.
+
+The sender obeys the smaller of the two limits. The effective window is
+=min(rwnd, cwnd)=.
+
+#+begin_example
+effective window = min(rwnd, cwnd)
+                 = min(3800 bytes, 2000 bytes)
+                 = 2000 bytes
+#+end_example
+
+*** Silly window syndrome
+
+/Silly window syndrome/ is the pathology where the receiver advertises tiny
+windows of a few bytes, so the sender emits tiny segments with 40 bytes of
+header for 1 byte of data.
+
+The cure is on both sides. The receiver holds the window at zero until it can
+advertise at least one MSS or half the buffer. The sender waits until it can
+send a full MSS or has data to flush.
+
+** TCP: reliable transfer mechanisms
+SUMMARY: TCP hides loss, corruption, reordering and duplication from applications using sequence numbers, cumulative ACKs, timers and fast retransmit.
+KUROSE: 3.5.3, 3.5.4
+EXAM: CNE6 asks directly how TCP achieves reliable transfer given loss and reordering, for 5 marks. CNE2 asks what the acknowledgement field does. The mechanisms are the expected answer.
+PRIORITY: core
+
+*** Sequence numbers make order
+
+Every byte has a number. The receiver uses the number to place each byte in the
+right slot of the buffer, and to detect a gap.
+
+Reordering is repaired with no extra work. A segment that arrives early is held
+until the missing bytes arrive. Then the whole run is delivered in order.
+
+Duplication is repaired by the number. A repeated byte with a number already
+delivered is discarded silently.
+
+*** Cumulative acknowledgements
+
+An ACK number says "I have every byte below this number". One number covers a
+whole run of segments.
+
+#+begin_example
+receiver holds bytes 1000 .. 2999 and nothing above
+  it sends  ack = 3000
+  that single ACK confirms 2000 bytes
+#+end_example
+
+Cumulative ACKs are cheap. They also make a lost ACK harmless. If ACK 2000 is
+lost but ACK 3000 arrives, the sender learns everything up to 2999 arrived in
+one step.
+
+Cumulative ACKs have one weakness. The sender cannot tell which of several
+segments arrived when a gap appears. It only knows the lowest missing byte.
+
+*** Duplicate ACKs
+
+When a segment arrives out of order, the receiver repeats the ACK for the
+highest in-order byte. That repeated value is a /duplicate ACK/.
+
+#+begin_example
+receiver expected 1000, got 1000-1999   -> sends ack 2000
+got 3000-3999 (gap at 2000)            -> sends ack 2000
+got 4000-4999 (gap still at 2000)      -> sends ack 2000
+got 5000-5999 (gap still at 2000)      -> sends ack 2000
+#+end_example
+
+One duplicate ACK means little. It could be simple reordering. Three of them in
+a row are strong evidence of loss, because reordering rarely persists that long.
+
+*** The retransmission timer and RTO
+
+The sender keeps one timer, started when it sends a segment with data. The timer
+covers the oldest unacknowledged byte.
+
+On expiry the sender retransmits that segment and restarts the timer. The
+interval is the /retransmission timeout/, =RTO=.
+
+Setting =RTO= is a trade-off.
+
+- Too short, and the sender retransmits segments that were merely slow. The
+  network carries useless copies.
+- Too long, and a single loss stalls the connection for a long time.
+
+So =RTO= must track the measured round trip. TCP estimates it with a smoothed
+average and a safety margin.
+
+#+begin_example
+EstimatedRTT = (1 - a) x EstimatedRTT + a x SampleRTT
+              with a = 0.125
+
+DevRTT = (1 - b) x DevRTT + b x |SampleRTT - EstimatedRTT|
+         with b = 0.25
+
+TimeoutInterval = EstimatedRTT + 4 x DevRTT
+#+end_example
+
+*** WORKED EXAMPLE (numbers changed on purpose)
+
+Old =EstimatedRTT= is 100 ms. Old =DevRTT= is 12 ms. The new =SampleRTT= is
+140 ms.
+
+#+begin_example
+step 1  update EstimatedRTT
+        = 0.875 x 100 ms + 0.125 x 140 ms
+        = 87.5 ms + 17.5 ms
+        = 105 ms
+
+step 2  update DevRTT
+        = 0.75 x 12 ms + 0.25 x |140 ms - 100 ms|
+        = 9 ms + 0.25 x 40 ms
+        = 9 ms + 10 ms
+        = 19 ms
+
+step 3  compute the timeout
+        TimeoutInterval = 105 ms + 4 x 19 ms
+                        = 105 ms + 76 ms
+                        = 181 ms
+#+end_example
+
+The safety margin is 76 ms, which is larger than the estimate itself would
+suggest. A jumpy sample inflates =DevRTT= and therefore inflates the timeout.
+That is deliberate. Uncertainty should buy patience.
+
+/Karn's algorithm/ says never take a round-trip sample from a retransmitted
+segment, and double =RTO= on every timeout until a clean sample arrives.
+
+*** Fast retransmit
+
+Waiting for a timer is slow. If three duplicate ACKs arrive, the sender
+retransmits the missing segment immediately, without waiting for =RTO=.
+
+#+begin_example
+sender                          receiver
+  |                               |
+  |---- seg 2000 ---------------->|  ack 3000
+  |---- seg 3000 ----------------X|  lost
+  |---- seg 4000 ---------------->|  ack 3000  dup 1
+  |---- seg 5000 ---------------->|  ack 3000  dup 2
+  |---- seg 6000 ---------------->|  ack 3000  dup 3
+  |---- seg 3000 resend --------->|
+  |<---- ack 7000 ----------------|
+  |                               |
+#+end_example
+
+Three duplicates prove that later segments are arriving. The path works. The
+hole is a lost segment rather than a congestion collapse. Retransmitting at once
+saves roughly one =RTO= of idle time.
+
+*** Why SACK helps
+
+With plain cumulative ACKs a single loss forces the sender to choose. It can
+retransmit only the hole, and hope. Or it can go back and resend everything
+after the hole.
+
+/SACK/ removes the guess. The receiver lists the exact byte ranges it holds.
+
+#+begin_example
+without SACK   sender knows:  everything below 2000 arrived
+               sender guesses: 3000-5999 may be present
+
+with SACK      receiver says: blocks 4000-4999 and 5000-5999 held
+               sender knows:  only 2000-3999 is missing
+#+end_example
+
+The sender retransmits exactly one segment instead of three. On a long fat path
+with a high bandwidth-delay product this saves a lot of bandwidth.
+
+*** The checksum
+
+The checksum catches corruption that sequence numbers cannot detect. A corrupted
+sequence number would otherwise place good data in the wrong slot.
+
+Every segment is checked on arrival. A bad checksum causes silent discard, with
+no ACK. The sender then retransmits after =RTO= or after duplicate ACKs.
+
+The checksum is weak but it is enough. The link layer adds its own stronger
+check on most paths.
+
+*** Each mechanism against its failure
+
+| Failure     | Mechanism that fixes it            |
+|-------------+------------------------------------|
+| loss        | retransmission timer, fast retrans |
+| corruption  | checksum, then retransmission      |
+| reordering  | sequence numbers, cumulative ACK   |
+| duplication | sequence numbers, discard repeats  |
+| lost ACK    | cumulative ACK covering later data |
+
+The table is the answer to a 5-mark reliability question. Name the failure, name
+the mechanism, say one line about how it works.
+
+** TCP versus UDP, and connection-oriented versus connectionless
+SUMMARY: TCP and UDP make opposite trades at the same layer, and the papers ask for those trades stated precisely.
+KUROSE: 3.1, 3.3, 3.5
+EXAM: CNE6 asks for a comparison of TCP and UDP services for HTTP, DNS and FTP for 5 marks. CNE5 asks for connection-oriented against connectionless with flag values for 10 marks. CNE1 asks for a 10-mark comparison with header formats.
+PRIORITY: core
+
+*** The table
+
+| Property        | TCP                  | UDP                |
+|-----------------+----------------------+--------------------|
+| setup           | 3-way handshake      | none               |
+| reliability     | reliable, ACKed      | best effort        |
+| ordering        | in-order bytes       | none               |
+| flow control    | yes, rwnd            | no                 |
+| congestion ctrl | yes, cwnd and AIMD   | no                 |
+| header size     | 20 bytes minimum     | 8 bytes            |
+| state           | per connection       | none               |
+| speed           | slower, more delay   | faster, less delay |
+| multicast       | no                   | yes                |
+| message bounds  | none, byte stream    | one per datagram   |
+| typical use     | web, mail, file, SSH | DNS, voice, video  |
+
+Speed needs a careful sentence. UDP is not faster in raw bit rate. UDP is faster
+because it spends no round trips on setup and no time on recovery. On a clean
+link the difference is one round trip. On a lossy link TCP can stall for an
+=RTO=.
+
+That is why DNS uses UDP. A single query and reply costs no handshake. A lost
+query is simply repeated by the client.
+
+*** Connection-oriented, as a concept
+
+/Connection-oriented/ means the two ends agree on state before data flows and
+keep that state until the end.
+
+The state is real. Each side stores the peer address and port, both sequence
+numbers, the receive buffer size, the MSS and the congestion window.
+
+State buys three things. Ordering is possible because numbers were agreed.
+Recovery is possible because a timer and a buffer exist. Accounting is possible
+because both sides know what was sent and what was acknowledged.
+
+State costs three things. Setup takes a round trip. Memory is held per
+connection. A crash loses the state, so the connection dies with it.
+
+/Connectionless/ means each message is independent. The sender keeps nothing
+and the receiver keeps nothing. There is no setup, no teardown and no recovery.
+
+*** Which flag implements which state
+
+| Flag sent | From state   | To state    |
+|-----------+--------------+-------------|
+| SYN       | CLOSED       | SYN_SENT    |
+| SYN + ACK | LISTEN       | SYN_RCVD    |
+| ACK       | SYN_SENT     | ESTAB       |
+| ACK       | SYN_RCVD     | ESTAB       |
+| FIN       | ESTAB        | FIN_WAIT_1  |
+| FIN       | ESTAB        | CLOSE_WAIT  |
+| FIN       | CLOSE_WAIT   | LAST_ACK    |
+| ACK       | LAST_ACK     | CLOSED      |
+| RST       | any          | CLOSED      |
+
+The two FIN rows from ESTAB are not a contradiction. They describe the two
+ends of one connection. The side that closes first goes to FIN_WAIT_1. The
+side that receives the FIN goes to CLOSE_WAIT.
+
+UDP has no flags because UDP has no state. That absence is the whole comparison
+in one line.
+
+=PSH=, =URG=, =CWR= and =ECE= do not change connection state. They carry a hint
+or a congestion signal. Only =SYN=, =FIN=, =ACK= and =RST= move the state
+machine.
+
+*** When to choose UDP
+
+Choose UDP when a late message is worse than a lost one.
+
+- Voice and video. A retransmitted frame arrives after its playout time. The
+  decoder skips it anyway, so the retransmission was wasted bandwidth.
+- Live games. Position updates go stale in tens of milliseconds. The newest
+  update matters, not the missing one.
+- DNS. One short query, one short reply. A handshake would triple the cost.
+- DHCP. A new client has no address yet, so it cannot run a connection.
+- SNMP and syslog. Small fire-and-forget reports.
+- Any protocol that builds its own reliability. HTTP/3 runs QUIC over UDP and
+  puts ordering and recovery in user space.
+
+Unreliability is the right choice when the application can tolerate loss but not
+delay. TCP will always choose correctness over timeliness. Some applications
+need the opposite choice.
+
+** Transport layer: multiplexing and demultiplexing
+SUMMARY: Multiplexing lets many processes share one link, and demultiplexing uses header fields to hand each segment to the right socket.
+KUROSE: 3.2
+EXAM: CNE6 asks for multiplexing and demultiplexing with a diagram for 5 marks. CNE2 asks which addresses identify a TCP connection between a client and a server, for 3 marks. CNE2 also asks for the port numbers of FTP.
+PRIORITY: core
+
+*** The two directions
+
+/Multiplexing/ happens at the sender. Many processes hand data down to one
+transport entity. The transport layer adds a header to each block and passes
+the result to one network interface. The header is what makes later separation
+possible.
+
+/Demultiplexing/ happens at the receiver. One IP datagram arrives. The host
+reads the port numbers, sometimes the addresses, and delivers the payload to one
+socket. The choice is made by a /socket identifier/.
+
+UDP uses a 2-tuple. The identifier is the destination IP address and the
+destination port. Any two datagrams with the same destination port go to the
+same socket, whatever their source. That is why one UDP socket can receive from
+many clients at once.
+
+TCP uses a 4-tuple. The identifier is the source IP, source port, destination IP
+and destination port. All four must match to reach a socket. That is why a busy
+web server can hold thousands of connections to port 80 at once. Each client
+pair gets its own socket, its own buffer and its own sequence numbers.
+
+#+begin_example
+ client A                    server                    client C
++---------+              +-----------+              +---------+
+| a.1.5   |              |  b.4.9    |              | c.7.2   |
+| 49152   |              |  port 80  |              | 58700   |
++----+----+              +-----+-----+              +----+----+
+     |                         |                         |
+     |      seg 1              |      seg 2              |
+     +------------------------>|<------------------------+
+                               |
+                    +----------+-----------+
+                    |   demux by 4-tuple   |
+                    +----------+-----------+
+                               |
+              +----------------+----------------+
+              |                                 |
+     +--------+---------+              +--------+---------+
+     | socket 1         |              | socket 2         |
+     | (a.1.5, 49152,   |              | (c.7.2, 58700,   |
+     |  b.4.9, 80)      |              |  b.4.9, 80)      |
+     +------------------+              +------------------+
+#+end_example
+
+Both segments have destination port 80. They still reach different sockets,
+because the source side of the 4-tuple differs. With UDP both would land in the
+single socket bound to port 80.
+
+*** Port ranges
+
+A port number is 16 bits, so the range is =0= to =65535=. It is split into three
+bands by convention.
+
+| Range          | Name       | Who uses it              |
+|----------------+------------+--------------------------|
+| 0 to 1023      | well known | system servers, root     |
+| 1024 to 49151  | registered | vendor applications      |
+| 49152 to 65535 | ephemeral  | temporary client ports   |
+
+The /ephemeral/ band is what a client picks when it connects. The operating
+system chooses a free one. That number lives only for the life of the
+connection.
+
+The well-known band needs elevated privilege. That rule stops an ordinary user
+from impersonating a system service.
+
+*** The port numbers the papers use
+
+| Service | Port      | Transport |
+|---------+-----------+-----------|
+| FTP     | 20, 21    | TCP       |
+| SSH     | 22        | TCP       |
+| Telnet  | 23        | TCP       |
+| SMTP    | 25        | TCP       |
+| DNS     | 53        | UDP, TCP  |
+| DHCP    | 67, 68    | UDP       |
+| HTTP    | 80        | TCP       |
+| POP3    | 110       | TCP       |
+| IMAP    | 143       | TCP       |
+| HTTPS   | 443       | TCP       |
+
+FTP uses two ports. Port 21 is the control connection, which stays open for the
+whole session. Port 20 is the data connection, opened for each transfer.
+
+DHCP uses two ports because the roles differ. Port 67 is the server, port 68 is
+the client. The client has no IP address yet, so it broadcasts.
+
+DNS uses 53 on both. Most queries are UDP. A response too large for one datagram
+switches to TCP, and zone transfers always use TCP.
+
+** Drills
+SUMMARY: Five timed drills that rehearse the exact calculations and identifications the transport questions reward.
+KUROSE: 3.2, 3.3, 3.5
+EXAM: Each drill mirrors a question type that appears in the six papers.
+PRIORITY: core
+
+*** Drill 1, checksum verification, 2 minutes
+
+A receiver gets a UDP segment whose 16-bit words, checksum included, are these.
+Decide whether to accept it. Show the carries.
+
+#+begin_example
+W1  0x1234
+W2  0x5678
+W3  0x9ABC
+W4  0xDEF0
+CK  0x1DA6
+#+end_example
+
+*** Drill 2, sequence and ACK, 2 minutes
+
+Host A sends a segment with =seq = 3000=, =ack = 7000= and 250 bytes of payload.
+Host B answers with a segment carrying 80 bytes of data.
+
+Give B's sequence number and B's acknowledgement number.
+
+*** Drill 3, header field identification, 2 minutes
+
+A TCP header has =data offset = 8=. Answer three things.
+
+- How many bytes is the whole header.
+- How many bytes of options are present.
+- Where does the application data begin, counting from byte 1.
+
+*** Drill 4, flag interpretation, 2 minutes
+
+A captured segment has =SYN = 1=, =ACK = 1=, =seq = 500=, =ack = 901=, and no
+payload.
+
+Say what is happening and which host sent it.
+
+*** Drill 5, flow control, 2 minutes
+
+A receiver has =RcvBuffer = 8000= bytes and 6500 bytes currently buffered.
+
+- What =rwnd= does it advertise.
+- The application then reads 2000 bytes. What =rwnd= is advertised next.
+- The sender has 1000 bytes in flight at that moment. How many more bytes may it
+  send.
+
+** Drill answers
+SUMMARY: Answers to the five drills, kept at the end so the drills can be attempted first.
+KUROSE: 3.2, 3.3, 3.5
+EXAM: Self-check only, not a past paper answer.
+PRIORITY: core
+
+*** Drill 1 answer
+
+#+begin_example
+W1 + W2
+  0x1234 + 0x5678 = 0x68AC          no carry
+
+running sum + W3
+  0x68AC + 0x9ABC = 0x1_0368        carry out of bit 15
+  0x0368 + 0x1    = 0x0369          end-around carry
+
+running sum + W4
+  0x0369 + 0xDEF0 = 0xE259          no carry
+
+running sum + checksum
+  0xE259 + 0x1DA6 = 0xFFFF          no carry
+
+result = 0xFFFF  ->  accept the segment
+#+end_example
+
+*** Drill 2 answer
+
+#+begin_example
+B's sequence number   = A's ack number       = 7000
+B's ack number        = A's seq + A's bytes
+                      = 3000 + 250
+                      = 3250
+#+end_example
+
+Check: A sent bytes 3000 to 3249. The next byte B expects is 3250. B's own
+stream starts at 7000 because A acknowledged up to 6999.
+
+*** Drill 3 answer
+
+#+begin_example
+header bytes   = data offset x 4
+               = 8 x 4
+               = 32 bytes
+
+options bytes  = header bytes - fixed header
+               = 32 bytes - 20 bytes
+               = 12 bytes
+
+data starts at byte 33
+#+end_example
+
+The options must be padded to a multiple of 4 bytes, and 12 already is.
+
+*** Drill 4 answer
+
+This is the second step of a three-way handshake. It is a SYN-ACK from the
+server.
+
+The server's initial sequence number is 500. Its =ack = 901= says the client's
+SYN carried =seq = 900=, because the SYN consumed one number. The server is in
+SYN_RCVD and now waits for the client's ACK with =ack = 501=.
+
+*** Drill 5 answer
+
+#+begin_example
+initial rwnd = RcvBuffer - buffered
+             = 8000 bytes - 6500 bytes
+             = 1500 bytes
+
+after the app reads 2000 bytes
+  buffered   = 6500 bytes - 2000 bytes
+             = 4500 bytes
+  rwnd       = 8000 bytes - 4500 bytes
+             = 3500 bytes
+
+sender in flight = 1000 bytes, rwnd = 3500 bytes
+  may still send = 3500 bytes - 1000 bytes
+                 = 2500 bytes
+#+end_example
+
+The rule is =LastByteSent - LastByteAcked <= rwnd=. The window is a limit on
+outstanding bytes, not on total bytes.
